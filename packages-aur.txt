@@ -1,0 +1,8 @@
+android-studio
+brave-bin
+eww
+onlyoffice-bin
+spotify
+yay
+yay-debug
+zen-browser-bin

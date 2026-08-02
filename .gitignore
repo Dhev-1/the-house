@@ -1,0 +1,17 @@
+# caches / state that leak into copied configs
+home/**/.cache/
+home/**/*.log
+home/**/cache*/
+home/kvantum/.config/Kvantum/**/*.cache
+
+# eww runtime state
+home/**/eww-*.log
+home/**/.daemon*
+
+# editor / OS cruft
+*.swp
+*~
+.DS_Store
+
+# personal GTK bookmarks (local mount paths) — uncomment to exclude
+# home/gtk/.config/gtk-3.0/bookmarks

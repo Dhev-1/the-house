@@ -1,0 +1,74 @@
+# house-noir — btop on the Noir table.
+# Black lacquer background, champagne gold accents, card-red highs:
+# graphs climb from felt green through gold to crimson, like a bet going wrong.
+
+# Main background and foreground
+theme[main_bg]="#0e0b0d"
+theme[main_fg]="#e8ddc4"
+
+# Title and highlight
+theme[title]="#e8ddc4"
+theme[hi_fg]="#d4af5f"
+
+# Selected box
+theme[selected_bg]="#2a2320"
+theme[selected_fg]="#d4af5f"
+
+# Inactive/dimmed
+theme[inactive_fg]="#8a7f6d"
+theme[graph_text]="#8a7f6d"
+
+# Process box misc
+theme[proc_misc]="#d4af5f"
+
+# Box outlines
+theme[cpu_box]="#55432a"
+theme[mem_box]="#55432a"
+theme[net_box]="#55432a"
+theme[proc_box]="#55432a"
+theme[div_line]="#2a2320"
+
+# Temperature graph
+theme[temp_start]="#5e8d5a"
+theme[temp_mid]="#d4af5f"
+theme[temp_end]="#c13a4e"
+
+# CPU graph
+theme[cpu_start]="#5e8d5a"
+theme[cpu_mid]="#d4af5f"
+theme[cpu_end]="#c13a4e"
+
+# Mem/Disk free meter
+theme[free_start]="#55432a"
+theme[free_mid]="#d4af5f"
+theme[free_end]="#f0e0b8"
+
+# Mem/Disk cached meter
+theme[cached_start]="#55432a"
+theme[cached_mid]="#d4af5f"
+theme[cached_end]="#f0e0b8"
+
+# Mem/Disk available meter
+theme[available_start]="#55432a"
+theme[available_mid]="#d4af5f"
+theme[available_end]="#f0e0b8"
+
+# Mem/Disk used meter
+theme[used_start]="#5e8d5a"
+theme[used_mid]="#d4af5f"
+theme[used_end]="#c13a4e"
+
+# Download graph
+theme[download_start]="#5e8d5a"
+theme[download_mid]="#7fa08c"
+theme[download_end]="#9dc0aa"
+
+# Upload graph
+theme[upload_start]="#7a2a3a"
+theme[upload_mid]="#c13a4e"
+theme[upload_end]="#e05a6e"
+
+# Process box color gradient
+theme[process_start]="#5e8d5a"
+theme[process_mid]="#d4af5f"
+theme[process_end]="#c13a4e"

@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+
+import argparse
+import re
+import sys
+from dataclasses import dataclass
+
+from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
+
+SITE_URL = "https://walkccc.me/LeetCode/"
+TITLE_SELECTORS = [
+    "article h1",
+    "article h2",
+    "main h1",
+    "main h2",
+]
+
+
+@dataclass(frozen=True)
+class ProblemSpec:
+    raw: str
+    number: str | None
+    title: str | None
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="lsol",
+        description="Fetch LeetCode solutions from walkccc.me.",
+    )
+    parser.add_argument("problems", nargs="+", help="Problem number or '<num> <title>'")
+    parser.add_argument(
+        "--lang",
+        default="python",
+        choices=["python", "all"],
+        help="Language to print. Default: python.",
+    )
+    parser.add_argument(
+        "--max-blocks",
+        type=int,
+        default=1,
+        help="Maximum number of code blocks to print when --lang=all. Default: 1.",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=int,
+        default=10,
+        help="Selenium wait timeout in seconds. Default: 10.",
+    )
+    parser.add_argument(
+        "--show-browser",
+        action="store_true",
+        help="Show the Firefox window instead of running headless.",
+    )
+    parser.add_argument(
+        "--code-only",
+        action="store_true",
+        help="Print only code for successful matches.",
+    )
+    return parser.parse_args()
+
+
+def parse_problem_spec(raw: str) -> ProblemSpec:
+    match = re.match(r"^\s*(\d+)(?:[\s.:,-]+(.*?))?\s*$", raw)
+    if not match:
+        return ProblemSpec(raw=raw, number=None, title=None)
+
+    number = match.group(1)
+    title = (match.group(2) or "").strip() or None
+    return ProblemSpec(raw=raw, number=number, title=title)
+
+
+def build_query(spec: ProblemSpec) -> str:
+    if spec.number and spec.title:
+        return f"{spec.number}. {spec.title}"
+    if spec.number:
+        return f"{spec.number}. "
+    return spec.raw.strip()
+
+
+def normalize_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def title_matches(spec: ProblemSpec, title: str) -> bool:
+    normalized = normalize_text(title)
+    if spec.number and not re.search(rf"\b{re.escape(spec.number)}\b", normalized):
+        return False
+    if spec.title and normalize_text(spec.title) not in normalized:
+        return False
+    return True
+
+
+def find_search_box(wait: WebDriverWait):
+    return wait.until(EC.element_to_be_clickable((By.NAME, "query")))
+
+
+def get_first_visible_text(driver, selectors: list[str]) -> str:
+    for selector in selectors:
+        elements = driver.find_elements(By.CSS_SELECTOR, selector)
+        for element in elements:
+            text = element.text.strip()
+            if text:
+                return text
+    return ""
+
+
+def wait_for_matching_title(driver, wait: WebDriverWait, spec: ProblemSpec, previous_title: str):
+    def _matches(_driver):
+        title = get_first_visible_text(_driver, TITLE_SELECTORS)
+        if not title:
+            return False
+        if previous_title and normalize_text(title) == normalize_text(previous_title):
+            return False
+        if not title_matches(spec, title):
+            return False
+        return title
+
+    return wait.until(_matches)
+
+
+def looks_like_python(code: str) -> bool:
+    lines = [line for line in code.splitlines() if line.strip()]
+    if not lines:
+        return False
+
+    score = 0
+    if any(line.rstrip().endswith(":") for line in lines[:5]):
+        score += 2
+    if any(line.lstrip().startswith(("def ", "class ", "if ", "for ", "while ", "return ")) for line in lines):
+        score += 2
+    if "self" in code:
+        score += 1
+    if "{" in code or "};" in code or "public:" in code:
+        score -= 3
+    if re.search(r"\b(public|private|final|String|vector|List<|ArrayList)\b", code):
+        score -= 3
+    return score > 0
+
+
+def extract_code_blocks(driver) -> list[str]:
+    blocks = driver.find_elements(By.CSS_SELECTOR, "article pre > code")
+    return [block.text.rstrip() for block in blocks if block.text.strip()]
+
+
+def select_blocks(blocks: list[str], lang: str, max_blocks: int) -> list[str]:
+    if lang == "all":
+        return blocks[:max_blocks]
+
+    python_blocks = [block for block in blocks if looks_like_python(block)]
+    if python_blocks:
+        return python_blocks[:1]
+    return []
+
+
+def print_result_header(spec: ProblemSpec, title: str, code_only: bool) -> None:
+    if code_only:
+        return
+    print("\n==============================")
+    print(f"LeetCode {spec.raw}")
+    if title:
+        print(title)
+    print("==============================")
+
+
+def print_blocks(blocks: list[str], lang: str, code_only: bool) -> None:
+    for index, block in enumerate(blocks, start=1):
+        if not code_only:
+            label = "PYTHON" if lang == "python" else f"CODE BLOCK {index}"
+            print(f"\n----- {label} -----\n")
+        print(block)
+
+
+def run_search(driver, wait: WebDriverWait, spec: ProblemSpec, lang: str, max_blocks: int, code_only: bool) -> bool:
+    previous_title = get_first_visible_text(driver, TITLE_SELECTORS)
+    query = build_query(spec)
+
+    try:
+        search_box = find_search_box(wait)
+        search_box.click()
+        search_box.send_keys(Keys.CONTROL, "a")
+        search_box.send_keys(Keys.DELETE)
+        search_box.send_keys(query)
+        search_box.send_keys(Keys.RETURN)
+
+        title = wait_for_matching_title(driver, wait, spec, previous_title)
+        blocks = extract_code_blocks(driver)
+        selected_blocks = select_blocks(blocks, lang, max_blocks)
+
+        print_result_header(spec, title, code_only)
+
+        if not selected_blocks:
+            if not code_only:
+                if lang == "python":
+                    print("No Python solution found")
+                else:
+                    print("No code found")
+            return False
+
+        print_blocks(selected_blocks, lang, code_only)
+        return True
+    except TimeoutException:
+        if not code_only:
+            print("\n==============================")
+            print(f"LeetCode {spec.raw}")
+            print("==============================")
+            print("Timed out waiting for a matching result")
+        return False
+
+
+def build_driver(show_browser: bool):
+    options = Options()
+    options.add_argument("--disable-gpu")
+    if not show_browser:
+        options.add_argument("--headless")
+    return webdriver.Firefox(service=Service(), options=options)
+
+
+def main() -> int:
+    args = parse_args()
+    specs = [parse_problem_spec(problem) for problem in args.problems]
+    success = True
+
+    driver = build_driver(args.show_browser)
+    wait = WebDriverWait(driver, args.timeout)
+
+    try:
+        driver.get(SITE_URL)
+        for spec in specs:
+            ok = run_search(
+                driver,
+                wait,
+                spec,
+                args.lang,
+                args.max_blocks,
+                args.code_only,
+            )
+            success = success and ok
+    finally:
+        driver.quit()
+
+    return 0 if success else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
