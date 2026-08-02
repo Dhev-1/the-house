@@ -60,6 +60,24 @@ ShellRoot {
         }
     }
 
+    // The power menu popout, for a keybind:
+    //   qs -p ~/cloon/newdot/house ipc call power toggle
+    IpcHandler {
+        target: "power"
+
+        function toggle(): void {
+            PowerPanel.toggle();
+        }
+
+        function open(): void {
+            PowerPanel.open = true;
+        }
+
+        function close(): void {
+            PowerPanel.close();
+        }
+    }
+
     // The theme picker overlay, for a keybind:
     //   qs -p ~/cloon/newdot/house ipc call theme toggle
     IpcHandler {
@@ -99,6 +117,10 @@ ShellRoot {
             }
 
             ThemePicker {
+                monitor: scope.modelData
+            }
+
+            PowerMenu {
                 monitor: scope.modelData
             }
 
