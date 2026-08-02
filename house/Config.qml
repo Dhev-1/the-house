@@ -183,6 +183,16 @@ Singleton {
 
     readonly property string font: "JetBrainsMono Nerd Font"
 
+    // Table sounds: a card flick when a table is committed. One switch to mute.
+    readonly property bool sounds: true
+
+    function playSound(name: string): void {
+        if (!sounds)
+            return;
+        const wav = Qt.resolvedUrl("sounds/" + name).toString().replace("file://", "");
+        Quickshell.execDetached(["paplay", wav]);
+    }
+
     // --- Theming -------------------------------------------------------------
     //
     // Every widget reads its colours through Config.colours, so swapping the
