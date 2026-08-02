@@ -101,6 +101,41 @@ MouseArea {
         onTriggered: root.modelData.expire()
     }
 
+    // Dealt onto the table: the card slides in from the bar side, straightens
+    // out of a slight tilt, and fades up - all on the background, so the layout
+    // height (which the stack animates separately) never jumps.
+    Component.onCompleted: dealIn.start()
+
+    ParallelAnimation {
+        id: dealIn
+
+        NumberAnimation {
+            target: background
+            property: "x"
+            from: 48
+            to: 0
+            duration: 260
+            easing.type: Easing.OutCubic
+        }
+
+        NumberAnimation {
+            target: background
+            property: "rotation"
+            from: 4
+            to: 0
+            duration: 260
+            easing.type: Easing.OutCubic
+        }
+
+        NumberAnimation {
+            target: background
+            property: "opacity"
+            from: 0
+            to: 1
+            duration: 200
+        }
+    }
+
     Rectangle {
         id: background
 
@@ -114,11 +149,58 @@ MouseArea {
         border.width: Config.notifFrameWidth
         border.color: root.palette.frame
 
+        // The inner hairline of a card back, inset inside the frame.
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 3
+            radius: Math.max(2, Config.notifRadius - 3)
+            color: "transparent"
+            border.width: 1
+            border.color: root.palette.frame
+            opacity: 0.45
+        }
+
+        // The corner pip, indexed by urgency like a card's rank: clubs are
+        // small talk, spades the table standard, hearts the high stakes. The
+        // heart beats, because a critical card never leaves on its own.
+        Text {
+            id: pip
+
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.topMargin: 5
+            anchors.rightMargin: 8
+            text: root.palette === Config.notifCritical ? "♥" : root.palette === Config.notifLow ? "♣" : "♠"
+            color: root.palette.accent
+            font.family: Config.notifFont
+            font.pointSize: Config.notifFontSize - 1
+
+            SequentialAnimation on scale {
+                running: root.palette === Config.notifCritical
+                loops: Animation.Infinite
+
+                NumberAnimation {
+                    from: 1
+                    to: 1.35
+                    duration: 500
+                    easing.type: Easing.InOutQuad
+                }
+
+                NumberAnimation {
+                    from: 1.35
+                    to: 1
+                    duration: 500
+                    easing.type: Easing.InOutQuad
+                }
+            }
+        }
+
         RowLayout {
             id: layout
 
             anchors.fill: parent
             anchors.margins: Config.notifPadding
+            anchors.rightMargin: Config.notifPadding + 14 // room for the pip
             spacing: Config.notifPadding
 
             // icon_position = left, vertical_alignment = center.
@@ -199,6 +281,7 @@ MouseArea {
                     visible: root.progress >= 0
 
                     implicitHeight: Config.notifProgressHeight
+                    radius: 3
                     color: "transparent"
                     border.width: Config.notifProgressFrame
                     border.color: root.palette.frame
@@ -261,6 +344,7 @@ MouseArea {
 
                             Rectangle {
                                 anchors.fill: parent
+                                radius: 4
                                 color: button.containsMouse ? root.palette.frame : "transparent"
                                 border.width: 1
                                 border.color: root.palette.frame
