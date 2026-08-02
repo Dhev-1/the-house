@@ -140,6 +140,10 @@ ShellRoot {
                 screen: scope.modelData
             }
 
+            BottomBar {
+                screen: scope.modelData
+            }
+
             Exclusions {
                 screen: scope.modelData
             }

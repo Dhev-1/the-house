@@ -36,12 +36,14 @@ PanelWindow {
                 height: root.height
             }
 
-            // The cutout. Its right edge stops where the bar starts.
+            // The cutout. Its right edge stops where the bar starts, and its
+            // bottom where the bottom bar does - the frame is an L of bars now,
+            // border on the other two sides.
             PathRectangle {
                 x: Config.borderThickness
                 y: Config.borderThickness
                 width: root.width - Config.borderThickness - Config.barWidth
-                height: root.height - Config.borderThickness * 2
+                height: root.height - Config.borderThickness - Config.bottomBarWidth
                 radius: Config.borderRounding
             }
         }

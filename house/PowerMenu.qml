@@ -145,9 +145,10 @@ PanelWindow {
         id: card
 
         anchors.left: parent.left
-        anchors.bottom: trigger.top
+        anchors.bottom: parent.bottom
         anchors.leftMargin: Config.borderThickness
-        anchors.bottomMargin: 8
+        // Above the bottom bar, which the trigger chip rides on.
+        anchors.bottomMargin: Config.bottomBarWidth + 8
 
         implicitWidth: content.implicitWidth + 20
         implicitHeight: content.implicitHeight + 16

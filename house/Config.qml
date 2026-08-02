@@ -6,6 +6,7 @@ import Quickshell.Io
 
 Singleton {
     readonly property int barWidth: 44
+    readonly property int bottomBarWidth: 22 // the bottom leg of the L, half the bar
     readonly property int borderThickness: 10
     readonly property int borderRounding: 24
 
@@ -147,8 +148,9 @@ Singleton {
 
     // The service tray: a handle under the top edge, near the top-right corner,
     // that drops a little column of icon buttons down beneath it. Each button
-    // starts, stops and reflects a systemd --user unit - the hermes-gateway and
-    // voice-bridge toggles carried over from the waybar config this replaced.
+    // starts, stops and reflects a systemd --user unit - today just the
+    // voice-bridge mic toggle. The unit itself is machine-local, not stowed;
+    // on a box without it the button simply reads stopped.
     //
     // The widget (ButtonTray) is generic: it only shows icons and reports clicks.
     // ServiceTray wires those to the units below, and the Systemd service does
@@ -170,14 +172,47 @@ Singleton {
     // and stopped states. Hermes shows the same one either way, voice-bridge swaps.
     readonly property var trayServices: [
         {
-            unit: "hermes-gateway.service",
-            iconOn: "⚕",
-            iconOff: "⚕"
-        },
-        {
             unit: "voice-bridge.service",
             iconOn: "󰢴",
             iconOff: "󰢳"
+        }
+    ]
+
+    // The pit: the games tray at the top-left, one button per game in
+    // ~/cloon/widgames. Each entry is the wrapper qml `qs -p` launches, the
+    // game's IPC target (how a running one is told to quit), and its glyph.
+    // Pit.qml drives these; the buttons light while the game's process is up.
+    readonly property string pitRepo: "/home/delta/cloon/widgames"
+    readonly property var pitGames: [
+        {
+            dir: "bjak",
+            file: "blackjack.qml",
+            target: "blackjack",
+            icon: "󰇊" // nf-md-dice, face 1
+        },
+        {
+            dir: "pokr",
+            file: "poker.qml",
+            target: "poker",
+            icon: "󰇋" // nf-md-dice, face 2
+        },
+        {
+            dir: "rolt",
+            file: "roulette.qml",
+            target: "roulette",
+            icon: "󰇌" // nf-md-dice, face 3
+        },
+        {
+            dir: "bons",
+            file: "bns.qml",
+            target: "bones",
+            icon: "󰇍" // nf-md-dice, face 4
+        },
+        {
+            dir: "busride",
+            file: "ridethebus.qml",
+            target: "ridethebus",
+            icon: "󰇎" // nf-md-dice, face 5
         }
     ]
 

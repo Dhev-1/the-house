@@ -7,7 +7,7 @@ import qs
 
 // State and control for the systemd --user units the service tray exposes.
 //
-// This is the QML port of the waybar custom modules it replaced: hermes-toggle.sh
+// This is the QML port of the waybar custom modules it replaced: the *-toggle.sh
 // and vb-toggle.sh both polled `systemctl --user is-active` on a 5s timer and
 // flipped the unit with start/stop on click. Same contract, one probe covering
 // every unit at once rather than a script per module.

@@ -16,7 +16,7 @@ champagne gold, green felt and neon marquee. The house always wins.
 | **Terminal** | kitty |
 | **Launcher** | rofi |
 | **Notifications** | quickshell `house` (replaces dunst) |
-| **Wallpaper** | swww / awww |
+| **Wallpaper** | awww |
 | **GTK / Qt theming** | GTK 3/4 + Kvantum |
 | **Font** | JetBrainsMono Nerd Font |
 
@@ -63,7 +63,8 @@ yay -S --needed - < packages-aur.txt
   `~/cloon/newdot`, or find-and-replace that path across
   `home/hypr/.config/hypr/*.conf` to match where you put it.
 - Wallpapers per table live in `wallpapers/` — set one with
-  `swww img wallpapers/noir.png` (or `felt` / `vegas`).
+  `awww img wallpapers/noir.png` (or `felt` / `vegas` / `daylight`) — though the
+  table picker (`Super+T`) sets it for you.
 
 ## Layout
 
@@ -71,7 +72,7 @@ yay -S --needed - < packages-aur.txt
 newdot/
 ├── house/           # quickshell config (bar/dock/notifications/table picker)
 ├── home/            # GNU Stow packages, mirror $HOME
-│   ├── hypr/  kitty/  rofi/  btop/  dunst/  gtk/  kvantum/
+│   ├── hypr/  kitty/  rofi/  btop/  gtk/  kvantum/  starship/  icons/
 ├── wallpapers/      # generated casino wallpapers, one per table
 ├── assets/screenshots/
 ├── packages.txt        # native (pacman -Qqen)

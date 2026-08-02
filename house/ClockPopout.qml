@@ -40,10 +40,10 @@ PanelWindow {
     anchors.right: true
     anchors.bottom: true
 
-    // Against the bar, and lined up with the bar's bottom padding so the card's
-    // foot sits level with the clock.
+    // Against the bar, resting on the bottom bar so the card's foot sits just
+    // above it, by the clock.
     margins.right: Config.barWidth
-    margins.bottom: Config.borderThickness
+    margins.bottom: Config.bottomBarWidth
 
     // Fixed so the surface isn't resized as the card animates or the view swaps.
     // Tall enough for the calendar; the shorter time card just anchors to the

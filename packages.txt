@@ -11,6 +11,8 @@ btop
 chntpw
 chromium
 clamav
+cmatrix
+code
 ddcutil
 discord
 dmidecode
@@ -80,14 +82,18 @@ qt6ct
 quickshell
 ripgrep
 rofi
+rustup
 satty
 sddm
 seahorse
 slurp
 smartmontools
 starship
+steam
+stow
+strace
 stress-ng
-swaync
+syncthing
 tailscale
 tesseract
 tesseract-data-eng
@@ -99,6 +105,7 @@ tmux
 tree
 ttf-jetbrains-mono-nerd
 unzip
+usbutils
 uv
 vlc
 vulkan-icd-loader

@@ -2,8 +2,8 @@ import Quickshell
 import Quickshell.Wayland
 import qs
 
-// The bar reserves the right edge itself; these reserve the other three
-// so tiled windows sit inside the border instead of under it.
+// The bars reserve the right and bottom edges themselves; these reserve the
+// other two so tiled windows sit inside the border instead of under it.
 Scope {
     id: root
 
@@ -15,10 +15,6 @@ Scope {
 
     Zone {
         anchors.top: true
-    }
-
-    Zone {
-        anchors.bottom: true
     }
 
     component Zone: PanelWindow {
