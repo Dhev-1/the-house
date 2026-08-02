@@ -1,0 +1,41 @@
+/* the house — GTK3 on the Noir table.
+ * Adwaita-dark recoloured through named colours: lacquer surfaces, ivory text,
+ * champagne-gold selection. Sits on top of gtk-theme-name in settings.ini. */
+
+@define-color theme_bg_color #14100e;
+@define-color theme_base_color #0e0b0d;
+@define-color theme_fg_color #e8ddc4;
+@define-color theme_text_color #e8ddc4;
+
+@define-color theme_selected_bg_color #d4af5f;
+@define-color theme_selected_fg_color #0e0b0d;
+
+@define-color theme_unfocused_bg_color #120e0c;
+@define-color theme_unfocused_base_color #0e0b0d;
+@define-color theme_unfocused_fg_color #8a7f6d;
+@define-color theme_unfocused_text_color #8a7f6d;
+@define-color theme_unfocused_selected_bg_color #55432a;
+@define-color theme_unfocused_selected_fg_color #e8ddc4;
+
+@define-color borders #2a2320;
+@define-color unfocused_borders #221c19;
+
+@define-color insensitive_bg_color #14100e;
+@define-color insensitive_fg_color #6a6154;
+@define-color insensitive_base_color #0e0b0d;
+
+@define-color error_color #c13a4e;
+@define-color warning_color #d4af5f;
+@define-color success_color #5e8d5a;
+
+/* The titlebar is the table rail: a touch darker than the window, gold text
+ * only on the focused one. */
+headerbar, .titlebar {
+    background: #0e0b0d;
+    color: #e8ddc4;
+    border-bottom: 1px solid #2a2320;
+}
+
+headerbar:backdrop, .titlebar:backdrop {
+    color: #8a7f6d;
+}

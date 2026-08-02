@@ -1,0 +1,49 @@
+/* the house — GTK4/libadwaita on the Noir table.
+ * libadwaita ignores gtk-theme-name but honours these named colours. */
+
+@define-color window_bg_color #14100e;
+@define-color window_fg_color #e8ddc4;
+
+@define-color view_bg_color #0e0b0d;
+@define-color view_fg_color #e8ddc4;
+
+@define-color headerbar_bg_color #0e0b0d;
+@define-color headerbar_fg_color #e8ddc4;
+@define-color headerbar_border_color #2a2320;
+@define-color headerbar_backdrop_color #120e0c;
+@define-color headerbar_shade_color rgba(0, 0, 0, 0.36);
+
+@define-color card_bg_color #1e1813;
+@define-color card_fg_color #e8ddc4;
+@define-color card_shade_color rgba(0, 0, 0, 0.36);
+
+@define-color popover_bg_color #1a1512;
+@define-color popover_fg_color #e8ddc4;
+
+@define-color dialog_bg_color #14100e;
+@define-color dialog_fg_color #e8ddc4;
+
+@define-color sidebar_bg_color #120e0c;
+@define-color sidebar_fg_color #e8ddc4;
+@define-color sidebar_backdrop_color #0e0b0d;
+@define-color sidebar_shade_color rgba(0, 0, 0, 0.36);
+
+@define-color accent_bg_color #d4af5f;
+@define-color accent_fg_color #0e0b0d;
+@define-color accent_color #d4af5f;
+
+@define-color destructive_bg_color #c13a4e;
+@define-color destructive_fg_color #e8ddc4;
+@define-color destructive_color #c13a4e;
+
+@define-color warning_bg_color #d4af5f;
+@define-color warning_fg_color #0e0b0d;
+@define-color warning_color #d4af5f;
+
+@define-color error_bg_color #c13a4e;
+@define-color error_fg_color #e8ddc4;
+@define-color error_color #c13a4e;
+
+@define-color success_bg_color #5e8d5a;
+@define-color success_fg_color #0e0b0d;
+@define-color success_color #5e8d5a;

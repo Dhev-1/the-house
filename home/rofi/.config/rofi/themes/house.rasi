@@ -1,15 +1,11 @@
-/* house.rasi — the Noir table.
- * Black lacquer window, champagne-gold selection, ivory text.
+/* house.rasi — the active table.
+ * Structure lives here; the palette comes from table-colours.rasi, which
+ * apply-theme.sh regenerates whenever a table is chosen in the picker.
  * Loaded from ../config.rasi. */
 
-* {
-    surface:                 #0e0b0dE6;
-    lacquer:                 #1e1813;
-    gold:                    #d4af5f;
-    ivory:                   #e8ddc4;
-    smoke:                   #8a7f6d;
-    crimson:                 #c13a4e;
+@import "table-colours.rasi"
 
+* {
     background-color:        transparent;
     text-color:              @ivory;
     border-color:            @gold;
@@ -45,7 +41,7 @@ inputbar {
     orientation:             horizontal;
     children:                [ "prompt", "entry" ];
     border:                  0px 0px 1px 0px;
-    border-color:            #2a2320;
+    border-color:            @lacquer;
 }
 
 prompt {
@@ -111,7 +107,7 @@ element normal.active {
 
 element selected.normal {
     background-color:        @gold;
-    text-color:              #0e0b0d;
+    text-color:              @onaccent;
 }
 element selected.urgent {
     background-color:        @crimson;
@@ -119,7 +115,7 @@ element selected.urgent {
 }
 element selected.active {
     background-color:        @gold;
-    text-color:              #0e0b0d;
+    text-color:              @onaccent;
 }
 
 element alternate.normal {

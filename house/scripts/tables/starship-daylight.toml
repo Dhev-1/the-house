@@ -1,0 +1,86 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# the house — starship on the Daylight table.
+# The same curved powerline train as before, redealt: champagne gold into
+# bronze into lacquer, a spade opening the hand and closing the prompt.
+
+format = """
+[](#9c7a1e)\
+${custom.suit}\
+$directory\
+[](fg:#9c7a1e bg:#d8ccae)\
+$git_branch\
+$git_status\
+[](fg:#d8ccae bg:#e6dcc6)\
+$nodejs\
+$rust\
+$golang\
+$php\
+$python\
+[](fg:#e6dcc6 bg:none)\
+\n$character"""
+
+[fill]
+symbol = " "
+style = "bg:#e6dcc6"
+
+[username]
+show_always = false
+format = "[ $user ](fg:#f5efe2 bg:#9c7a1e)"
+
+[hostname]
+ssh_only = true
+format = "[@$hostname](fg:#f5efe2 bg:#9c7a1e)"
+
+[directory]
+style = "fg:#f5efe2 bg:#9c7a1e"
+format = "[ $path ]($style)"
+truncation_length = 0
+
+[directory.substitutions]
+
+[git_branch]
+symbol = ""
+style = "bg:#d8ccae"
+format = '[[ $symbol $branch ](fg:#46392c bg:#d8ccae)]($style)'
+
+[git_status]
+style = "bg:#d8ccae"
+format = '[[ $all_status$ahead_behind ](fg:#9c7a1e bg:#d8ccae)]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:#e6dcc6"
+format = '[[ $symbol ($version) ](fg:#9c7a1e bg:#e6dcc6)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:#e6dcc6"
+format = '[[ $symbol ($version) ](fg:#9c7a1e bg:#e6dcc6)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:#e6dcc6"
+format = '[[ $symbol ($version) ](fg:#9c7a1e bg:#e6dcc6)]($style)'
+
+[php]
+symbol = ""
+style = "bg:#e6dcc6"
+format = '[[ $symbol ($version) ](fg:#9c7a1e bg:#e6dcc6)]($style)'
+
+[python]
+symbol = ""
+style = "bg:#e6dcc6"
+format = '[[ $symbol ($version) ](fg:#9c7a1e bg:#e6dcc6)]($style)'
+
+# The bet: gold when the last hand won, crimson when it lost.
+[character]
+success_symbol = "[❯](fg:#9c7a1e)"
+error_symbol = "[❯](fg:#b3372f)"
+
+[custom.suit]
+command = "printf '♠\\n♥\\n♦\\n♣\\n' | shuf -n1"
+when = true
+shell = ["sh"]
+style = "bg:#9c7a1e fg:#f5efe2"
+format = "[ $output ]($style)"

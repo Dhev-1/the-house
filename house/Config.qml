@@ -58,7 +58,7 @@ Singleton {
     readonly property int notifOffsetX: 20     // offset, x. From the bar, not the
     readonly property int notifOffsetY: 40     // offset, y. screen edge - see Popups.
     readonly property int notifPadding: 10     // padding, horizontal_padding
-    readonly property int notifIconSize: 32    // min_icon_size
+    readonly property int notifIconSize: 44    // min_icon_size (bumped from dunst's 32)
 
     // Not dunst's: it drew the stack as one flat slab (corner_radius = 0,
     // gap_size = 0, a 3px frame around the lot). Separate rounded cards with a
@@ -411,7 +411,7 @@ Singleton {
         // scripts/apply-theme.sh, resolved next to this file. execDetached wants a
         // plain path, so drop the file:// the url carries.
         const script = Qt.resolvedUrl("scripts/apply-theme.sh").toString().replace("file://", "");
-        Quickshell.execDetached(["sh", script, c.surface, c.text, c.subtext, c.accent, c.idle, c.urgent]);
+        Quickshell.execDetached(["sh", script, c.name, c.surface, c.text, c.subtext, c.accent, c.idle, c.urgent]);
     }
 
     // Sync Hyprland to the saved theme once at startup, so the compositor matches
