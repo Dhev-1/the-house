@@ -6,7 +6,7 @@ set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-PACKAGES=(hypr kitty rofi btop dunst gtk kvantum)
+PACKAGES=(hypr kitty rofi btop dunst gtk kvantum starship)
 [ "$#" -gt 0 ] && PACKAGES=("$@")
 
 if ! command -v stow >/dev/null 2>&1; then

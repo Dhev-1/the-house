@@ -40,7 +40,7 @@ up in the table's accent.
 
 ```bash
 # 1. clone
-git clone git@github.com:Dhev-1/newdot.git ~/cloon/newdot
+git clone git@github.com:Dhev-1/the-house.git ~/cloon/newdot
 cd ~/cloon/newdot
 
 # 2. install packages

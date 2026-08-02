@@ -152,6 +152,68 @@ ColumnLayout {
         }
         onWheel: event => icon.scrolled(event.angleDelta.y)
 
+        // The chip: hover an icon and a poker chip slides in underneath it and
+        // starts a slow spin - six accent inlays around the rim, like the edge
+        // stripes on a real one. Pressing "bets" it: a quick extra kick.
+        Item {
+            id: chip
+
+            anchors.centerIn: parent
+            width: 30
+            height: 30
+            opacity: icon.containsMouse ? 1 : 0
+            scale: icon.containsMouse ? 1 : 0.6
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 150
+                }
+            }
+
+            Behavior on scale {
+                NumberAnimation {
+                    duration: 150
+                    easing.type: Easing.OutBack
+                }
+            }
+
+            RotationAnimator on rotation {
+                running: icon.containsMouse
+                loops: Animation.Infinite
+                from: 0
+                to: 360
+                duration: 8000
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                radius: width / 2
+                color: Config.colours.idle
+                border.color: Config.colours.accent
+                border.width: 1
+            }
+
+            Repeater {
+                model: 6
+
+                Item {
+                    required property int index
+
+                    anchors.fill: chip
+                    rotation: index * 60
+
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        y: 1
+                        width: 2
+                        height: 5
+                        radius: 1
+                        color: Config.colours.accent
+                    }
+                }
+            }
+        }
+
         Text {
             id: label
 

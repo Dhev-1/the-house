@@ -4,14 +4,16 @@ import Quickshell
 import qs
 import qs.services
 
-// The clock at the foot of the bar: HH over mm. Left-click opens the time+date
-// card, right-click opens the calendar - both drawn by ClockPopout, toggled
-// through the ClockPanel singleton.
+// The clock at the foot of the bar: the time dealt as a two-card hand. The hour
+// is the top card (spade pip), the minutes the bottom one (heart pip), each
+// tilted a few degrees the way a dealer leaves them. Left-click opens the
+// time+date card, right-click the calendar - both drawn by ClockPopout,
+// toggled through the ClockPanel singleton.
 MouseArea {
     id: root
 
-    implicitWidth: col.implicitWidth + 12
-    implicitHeight: col.implicitHeight + 8
+    implicitWidth: hand.implicitWidth + 10
+    implicitHeight: hand.implicitHeight + 10
 
     hoverEnabled: true
     cursorShape: Qt.PointingHandCursor
@@ -44,26 +46,82 @@ MouseArea {
     }
 
     ColumnLayout {
-        id: col
+        id: hand
 
         anchors.centerIn: parent
-        spacing: -2
+        spacing: -3
 
-        Text {
+        Card {
             Layout.alignment: Qt.AlignHCenter
-            text: Qt.formatDateTime(clock.date, "HH")
-            color: Config.colours.text
-            font.family: Config.font
-            font.pointSize: 11
-            font.weight: Font.DemiBold
+            rank: Qt.formatDateTime(clock.date, "HH")
+            pip: "♠"
+            pipColour: Config.colours.surface
+            tilt: root.containsMouse ? -7 : -4
+        }
+
+        Card {
+            Layout.alignment: Qt.AlignHCenter
+            rank: Qt.formatDateTime(clock.date, "mm")
+            pip: "♥"
+            pipColour: Config.colours.urgent
+            tilt: root.containsMouse ? 7 : 4
+        }
+    }
+
+    // A mini card face: theme text colour for the stock (ivory on the dark
+    // tables), the rank centred, the pip tucked in the top-left corner.
+    component Card: Rectangle {
+        property string rank
+        property string pip
+        property color pipColour
+        property real tilt: 0
+
+        implicitWidth: 26
+        implicitHeight: 30
+        radius: 5
+        color: Config.colours.text
+        border.color: Config.colours.idle
+        border.width: 1
+        rotation: tilt
+
+        Behavior on rotation {
+            NumberAnimation {
+                duration: 150
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        Behavior on color {
+            ColorAnimation {
+                duration: 150
+            }
         }
 
         Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: Qt.formatDateTime(clock.date, "mm")
-            color: Config.colours.subtext
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: 1
+            text: parent.rank
+            color: Config.colours.surface
             font.family: Config.font
-            font.pointSize: 11
+            font.pointSize: 9
+            font.weight: Font.DemiBold
+
+            Behavior on color {
+                ColorAnimation {
+                    duration: 150
+                }
+            }
+        }
+
+        Text {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: 1
+            anchors.leftMargin: 3
+            text: parent.pip
+            color: parent.pipColour
+            font.family: Config.font
+            font.pointSize: 5
         }
     }
 }

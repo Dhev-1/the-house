@@ -37,15 +37,22 @@ ColumnLayout {
                     readonly property bool active: Hyprland.focusedWorkspace?.id === wsId
                     readonly property bool occupied: Hyprland.workspaces.values.some(w => w.id === suit.wsId && w.lastIpcObject.windows > 0)
 
-                    // One suit per table, dealt in bridge order; the fifth seat is
-                    // the joker's star. Workspaces past five cycle back through.
-                    readonly property var glyphs: ["♠", "♥", "♦", "♣", "★"]
+                    // Two hands of suits, dealt in bridge order (1-4 and 5-8),
+                    // then plain chips for the last two seats.
+                    readonly property var glyphs: ["♠", "♥", "♦", "♣"]
+                    readonly property bool isChip: index >= 8
 
                     Layout.alignment: Qt.AlignHCenter
 
-                    text: glyphs[index % glyphs.length]
+                    // The first five seats are always dealt; the rest only sit
+                    // at the table while something occupies them (or is focused
+                    // there). Hiding collapses the slot, so the column never
+                    // holds space for empty back seats.
+                    visible: wsId <= 5 || occupied || active
+
+                    text: isChip ? "●" : glyphs[index % glyphs.length]
                     font.family: Config.font
-                    font.pixelSize: active ? 20 : 14
+                    font.pixelSize: isChip ? (active ? 14 : 9) : (active ? 20 : 14)
                     color: active ? Config.colours.accent : occupied ? Config.colours.subtext : Config.colours.idle
 
                     Behavior on font.pixelSize {

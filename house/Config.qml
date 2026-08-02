@@ -10,7 +10,7 @@ Singleton {
     readonly property int borderRounding: 24
 
     // Workspaces 1..shown are always drawn, empty or not
-    readonly property int workspacesShown: 5
+    readonly property int workspacesShown: 10
 
     // Tray items whose id matches any of these are not drawn. nm-applet is
     // hidden because the status icons already show the network; it stays
