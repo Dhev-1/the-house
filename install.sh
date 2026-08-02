@@ -6,7 +6,7 @@ set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
 
-PACKAGES=(hypr kitty rofi btop dunst gtk kvantum starship)
+PACKAGES=(hypr kitty rofi btop dunst gtk kvantum starship icons)
 [ "$#" -gt 0 ] && PACKAGES=("$@")
 
 if ! command -v stow >/dev/null 2>&1; then
@@ -16,6 +16,12 @@ fi
 
 echo ":: stowing: ${PACKAGES[*]}"
 stow -d home -t "$HOME" --restow "${PACKAGES[@]}"
+
+# GTK on Wayland reads the icon theme from gsettings, not settings.ini, so the
+# House icon theme (gold folders) has to be set there too.
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.interface icon-theme 'House-Noir' || true
+fi
 
 echo
 echo ":: done.  Manual follow-ups:"

@@ -1,41 +1,99 @@
-/* the house — GTK3 on the Noir table.
- * Adwaita-dark recoloured through named colours: lacquer surfaces, ivory text,
- * champagne-gold selection. Sits on top of gtk-theme-name in settings.ini. */
+/* the house — GTK3 on the active table.
+ * Structure lives here; the palette comes from table-colours.css, regenerated
+ * by house/scripts/apply-theme.sh whenever a table is chosen in the picker.
+ *
+ * GTK reads this once at app startup, so already-running GTK apps keep the old
+ * table until relaunched (thunar: `thunar -q` first, it daemonises). */
 
-@define-color theme_bg_color #14100e;
-@define-color theme_base_color #0e0b0d;
-@define-color theme_fg_color #e8ddc4;
-@define-color theme_text_color #e8ddc4;
+@import url("table-colours.css");
 
-@define-color theme_selected_bg_color #d4af5f;
-@define-color theme_selected_fg_color #0e0b0d;
+/* Window chrome and general surfaces. */
+window, .background {
+    background-color: @house_window;
+    color: @house_text;
+}
 
-@define-color theme_unfocused_bg_color #120e0c;
-@define-color theme_unfocused_base_color #0e0b0d;
-@define-color theme_unfocused_fg_color #8a7f6d;
-@define-color theme_unfocused_text_color #8a7f6d;
-@define-color theme_unfocused_selected_bg_color #55432a;
-@define-color theme_unfocused_selected_fg_color #e8ddc4;
+menubar, toolbar, .primary-toolbar, actionbar, searchbar, statusbar {
+    background-color: @house_surface;
+    color: @house_text;
+}
 
-@define-color borders #2a2320;
-@define-color unfocused_borders #221c19;
-
-@define-color insensitive_bg_color #14100e;
-@define-color insensitive_fg_color #6a6154;
-@define-color insensitive_base_color #0e0b0d;
-
-@define-color error_color #c13a4e;
-@define-color warning_color #d4af5f;
-@define-color success_color #5e8d5a;
-
-/* The titlebar is the table rail: a touch darker than the window, gold text
- * only on the focused one. */
 headerbar, .titlebar {
-    background: #0e0b0d;
-    color: #e8ddc4;
-    border-bottom: 1px solid #2a2320;
+    background: @house_surface;
+    color: @house_text;
+    border-bottom: 1px solid @house_idle;
 }
 
 headerbar:backdrop, .titlebar:backdrop {
-    color: #8a7f6d;
+    color: @house_subtext;
+}
+
+/* Content views: file lists, text views, icon grids. */
+.view, iconview, textview text, treeview.view, list, listbox row {
+    background-color: @house_surface;
+    color: @house_text;
+}
+
+.sidebar, placessidebar, placessidebar list {
+    background-color: @house_sunken;
+    color: @house_text;
+}
+
+/* The accent: selections everywhere. */
+*:selected,
+.view:selected,
+iconview:selected,
+textview text selection,
+treeview.view:selected,
+list row:selected,
+listbox row:selected,
+placessidebar row:selected,
+menuitem:hover {
+    background-color: @house_accent;
+    color: @house_onaccent;
+}
+
+/* Inputs and buttons: chips on the rail. */
+entry {
+    background-color: @house_raised;
+    color: @house_text;
+    border-color: @house_idle;
+}
+
+entry:focus {
+    border-color: @house_accent;
+}
+
+button {
+    background-image: none;
+    background-color: @house_idle;
+    color: @house_text;
+    border-color: @house_border_dim;
+}
+
+button:hover {
+    background-color: @house_hover;
+}
+
+button:checked, button:active {
+    background-color: @house_active;
+    color: @house_bright;
+}
+
+/* Menus and popovers. */
+menu, .menu, popover, popover.background {
+    background-color: @house_raised;
+    color: @house_text;
+    border: 1px solid @house_idle;
+}
+
+/* Progress and scales climb in the accent. */
+progressbar progress, scale highlight {
+    background-color: @house_accent;
+}
+
+tooltip, tooltip.background {
+    background-color: @house_raised;
+    color: @house_text;
+    border: 1px solid @house_active;
 }

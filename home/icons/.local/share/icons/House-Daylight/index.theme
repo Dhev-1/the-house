@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=House-Daylight
+Comment=Adwaita with Daylight-table folders — part of the-house dotfiles
+Inherits=Adwaita,hicolor
+Directories=scalable/places
+
+[scalable/places]
+Context=Places
+Size=128
+MinSize=8
+MaxSize=512
+Type=Scalable
