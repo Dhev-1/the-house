@@ -42,6 +42,10 @@ ColumnLayout {
                     readonly property var glyphs: ["♠", "♥", "♦", "♣"]
                     readonly property bool isChip: index >= 8
 
+                    // The heart renders visually heavier than the other suits at
+                    // the same pixel size, so it alone keeps the original scale.
+                    readonly property bool isHeart: !isChip && index % 4 === 1
+
                     Layout.alignment: Qt.AlignHCenter
 
                     // The first five seats are always dealt; the rest only sit
@@ -52,7 +56,7 @@ ColumnLayout {
 
                     text: isChip ? "●" : glyphs[index % glyphs.length]
                     font.family: Config.font
-                    font.pixelSize: isChip ? (active ? 14 : 9) : (active ? 20 : 14)
+                    font.pixelSize: isChip ? (active ? 14 : 9) : isHeart ? (active ? 20 : 14) : (active ? 24 : 17)
                     color: active ? Config.colours.accent : occupied ? Config.colours.subtext : Config.colours.idle
 
                     Behavior on font.pixelSize {

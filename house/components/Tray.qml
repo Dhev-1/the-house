@@ -26,8 +26,8 @@ ColumnLayout {
             required property SystemTrayItem modelData
 
             Layout.alignment: Qt.AlignHCenter
-            implicitWidth: 18
-            implicitHeight: 18
+            implicitWidth: 22
+            implicitHeight: 22
 
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: Qt.PointingHandCursor

@@ -36,7 +36,7 @@ MouseArea {
         text: "♠" // pick your table
         color: root.containsMouse || ThemePanel.open ? Config.colours.accent : Config.colours.subtext
         font.family: Config.font
-        font.pointSize: 13
+        font.pointSize: 16
         scale: root.pressed ? 0.85 : 1
 
         Behavior on color {

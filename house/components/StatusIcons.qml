@@ -159,8 +159,8 @@ ColumnLayout {
             id: chip
 
             anchors.centerIn: parent
-            width: 30
-            height: 30
+            width: 34
+            height: 34
             opacity: icon.containsMouse ? 1 : 0
             scale: icon.containsMouse ? 1 : 0.6
 
@@ -220,7 +220,7 @@ ColumnLayout {
             anchors.centerIn: parent
             color: icon.containsMouse ? Config.colours.accent : icon.colour
             font.family: Config.font
-            font.pointSize: 12
+            font.pointSize: 15
             scale: icon.pressed ? 0.85 : 1
 
             Behavior on color {
