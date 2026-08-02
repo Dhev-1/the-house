@@ -178,11 +178,22 @@ Singleton {
         }
     ]
 
-    // The pit: the games tray at the top-left, one button per game in
-    // ~/cloon/widgames. Each entry is the wrapper qml `qs -p` launches, the
-    // game's IPC target (how a running one is told to quit), and its glyph.
-    // Pit.qml drives these; the buttons light while the game's process is up.
-    readonly property string pitRepo: "/home/delta/cloon/widgames"
+    // The pit: the games on the bottom bar, one button per game. Each entry is
+    // the wrapper qml `qs -p` launches, the game's IPC target (how a running
+    // one is told to quit), and its glyph. Pit.qml drives these; the buttons
+    // light while the game's process is up.
+    //
+    // The games are their own repo, checked out at <repo>/games as a submodule
+    // (`git submodule update --init`). The path is derived from where the shell
+    // was launched from rather than written out, so the house works wherever it
+    // is cloned - and Pit only shows the games it can actually find, so a
+    // checkout without the submodule just gets a bare bottom bar rather than
+    // five dead buttons. Point this somewhere else if the games live elsewhere.
+    //
+    // shellPath(), not Qt.resolvedUrl(): singletons are compiled into
+    // quickshell's qrc, so a relative url from in here resolves against
+    // qrc:/qs-blackhole and never touches the disk.
+    readonly property string pitRepo: Quickshell.shellPath("../games")
     readonly property var pitGames: [
         {
             dir: "bjak",

@@ -8,8 +8,8 @@ import qs
 import qs.services
 
 // The bottom bar: the right-edge bar's other leg, same breadth, running along
-// the bottom so the two make an L. It carries the pit - one chip per game in
-// Config.pitGames, lit while that game's process is up; clicking deals the
+// the bottom so the two make an L. It carries the pit - one chip per game Pit
+// found checked out, lit while that game's process is up; clicking deals the
 // game in or folds it, via Pit. The power chip in the far corner rides on its
 // own surface (PowerMenu) and visually sits on this bar's left end.
 PanelWindow {
@@ -35,7 +35,10 @@ PanelWindow {
         spacing: 18
 
         Repeater {
-            model: Config.pitGames
+            // Pit.games, not Config.pitGames: only the ones actually checked
+            // out. Without the games submodule this is empty and the bar is
+            // bare, which is the intended fallback.
+            model: Pit.games
 
             Rectangle {
                 id: button

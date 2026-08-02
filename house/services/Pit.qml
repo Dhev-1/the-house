@@ -16,8 +16,33 @@ Singleton {
     // poll below.
     property var running: []
 
+    // Game dirs whose wrapper actually exists on disk, filled by the scan
+    // below. Empty until it lands, which is the honest answer: nothing is
+    // launchable yet.
+    property var found: []
+
+    // What the bar draws. The games are an optional submodule, so a checkout
+    // without them shows no buttons at all rather than five that do nothing.
+    readonly property var games: Config.pitGames.filter(g => root.found.includes(g.dir))
+
     function isRunning(dir: string): bool {
         return root.running.includes(dir);
+    }
+
+    // One shell pass over every wrapper, printing the dirs that are there.
+    // Runs once at startup: a submodule does not appear mid-session, and
+    // re-checking on a timer would be a stat per game per tick for nothing.
+    Process {
+        id: scan
+
+        running: true
+        command: ["sh", "-c", Config.pitGames.map(g => `[ -f '${Config.pitRepo}/${g.dir}/${g.file}' ] && echo '${g.dir}'`).join("\n") + "\nexit 0"]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.found = this.text.trim().split("\n").filter(l => l.length > 0);
+            }
+        }
     }
 
     function toggle(game: var): void {
