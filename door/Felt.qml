@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Shapes
+import "Palette.js" as Palette
 
 // The room: cloth, lamp, lattice, vignette, rail. Everything with no behaviour.
 //
@@ -9,7 +10,7 @@ import QtQuick.Shapes
 //
 // The lamp is the whole composition. A casino table is lit from directly
 // above, hard, and everything the light misses falls away fast; that single
-// cone is what stops a flat green rectangle from reading as a flat green
+// cone is what stops a flat black rectangle from reading as a flat black
 // rectangle. Shapes' RadialGradient does it without pulling in the Qt5Compat
 // effects module, which is not guaranteed to be installed on a machine that
 // only has sddm.
@@ -29,7 +30,7 @@ Item {
     // --- the cloth ------------------------------------------------------------
     Rectangle {
         anchors.fill: parent
-        color: Palette.feltDeep
+        color: Palette.tableDeep
     }
 
     // --- the lamp -------------------------------------------------------------
@@ -53,11 +54,11 @@ Item {
 
                 GradientStop {
                     position: 0.0
-                    color: Qt.rgba(Palette.feltLit.r, Palette.feltLit.g, Palette.feltLit.b, 1.0)
+                    color: Palette.tableLit
                 }
                 GradientStop {
                     position: 0.35
-                    color: Qt.rgba(Palette.feltLit.r, Palette.feltLit.g, Palette.feltLit.b, 0.55)
+                    color: Palette.alpha(Palette.tableLit, 0.55)
                 }
                 GradientStop {
                     position: 1.0
@@ -87,7 +88,7 @@ Item {
     }
 
     // --- the lattice ----------------------------------------------------------
-    // The pattern printed on good baize: a diamond grid, at the threshold of
+    // The pattern printed on good cloth: a diamond grid, at the threshold of
     // visible. It exists to give the light something to fall across - under the
     // lamp you can just make it out, at the corners it is gone entirely, and
     // that difference is most of what sells the cone above as a light source.
@@ -126,16 +127,16 @@ Item {
                 rotation: 45
                 color: "transparent"
                 border.width: 1
-                border.color: Qt.rgba(Palette.feltLine.r, Palette.feltLine.g, Palette.feltLine.b, 0.55 * (1 - fall))
+                border.color: Palette.alpha(Palette.tableLine, 0.55 * (1 - fall))
             }
         }
     }
 
     // --- the vignette ---------------------------------------------------------
     // The cone above lights the middle; this puts the corners out. Separate
-    // because they are not the same operation - one adds green, one removes
-    // everything, and doing it in one gradient means the corners go dark green
-    // rather than dark.
+    // because they are not the same operation - one adds warmth, one removes
+    // everything, and doing it in one gradient means the corners go a dead
+    // brown rather than going properly black.
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
@@ -183,7 +184,7 @@ Item {
     }
 
     // --- the rail -------------------------------------------------------------
-    // The padded mahogany edge. Rounded on all four corners with the bottom two
+    // The padded lacquer edge. Rounded on all four corners with the bottom two
     // pushed off-screen, which is cheaper and steadier than clipping a shape.
     Rectangle {
         id: rail
@@ -215,7 +216,7 @@ Item {
         }
     }
 
-    // The brass beading where the rail meets the cloth. One hairline, and the
+    // The gold beading where the rail meets the cloth. One hairline, and the
     // single brightest edge on the screen - it is the only thing telling you the
     // rail is raised and not just a darker patch of table.
     Rectangle {
@@ -224,7 +225,7 @@ Item {
         anchors.bottom: rail.top
         anchors.bottomMargin: -1
         height: 1
-        color: Palette.brass
+        color: Palette.gold
         opacity: 0.7
     }
 

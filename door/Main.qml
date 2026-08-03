@@ -1,19 +1,20 @@
 import QtQuick
+import "Palette.js" as Palette
 
 // The Door — an SDDM greeter.
 //
-// The conceit is that logging in is a hand of cards. You are a card, the
-// session is a card, your password is a bet: every character you type drops a
-// clay chip onto a stack, and pressing enter pushes the bet into the pot and
-// deals a showdown. Get in and it is a royal flush. Get it wrong and the hand
-// is mucked and the table is swept.
+// The conceit is that logging in is a hand of blackjack. You are a card, your
+// password is a bet: every character you type drops a clay chip onto a stack,
+// and pressing enter pushes the bet into the pot and deals. Get it right and
+// the hand is twenty-one. Get it wrong and it is seventeen, the house makes you
+// take a third card, and you bust.
 //
 // Deliberately not connected to the four tables the desktop inside can wear.
-// See Palette.qml for why.
+// See Palette.js for why.
 //
 // Layout, top to bottom: the marquee (house name and clock), the players' cards
 // (one per account, fanned, face up on the selected one), the pit (betting
-// circle, bet, and where the showdown lands), and the mahogany rail carrying
+// circle, bet, and where the showdown lands), and the lacquered rail carrying
 // the session plaque and the power chips.
 //
 // Keys:
@@ -29,7 +30,15 @@ Rectangle {
     // SDDM does not resize the theme to the view; the theme states its size.
     width: Screen.width
     height: Screen.height
-    color: Palette.feltDeep
+    color: Palette.tableDeep
+
+    // Everything on this screen is laid out in pixels against a 1080p table and
+    // then multiplied by this. A greeter is the one surface with no user, no
+    // session and therefore no scale factor to inherit - it gets whatever panel
+    // the machine happens to have - so a fixed layout is a layout that is tiny
+    // on a 4K monitor and clipped on a laptop. Clamped at both ends: past 1.6
+    // the cards stop reading as cards and start reading as posters.
+    readonly property real u: Math.max(0.8, Math.min(1.6, height / 1080))
 
     // --- configuration --------------------------------------------------------
     // theme.conf, with a working default for every key so the theme still runs
@@ -54,6 +63,12 @@ Rectangle {
     property string verdict: ""
     property bool dealt: false
 
+    // Whether the losing hand has taken its third card yet. The bust is two
+    // beats, not one - seventeen on the table, then the card that kills it -
+    // because a hand that is simply born bust is a picture, and a hand that is
+    // made to take another card is a decision being made about you.
+    property bool hit: false
+
     // Which seat and which session. Both start where SDDM says they last were.
     property int seat: userModel.lastIndex
     property int sessionIndex: sessionModel.lastIndex
@@ -68,10 +83,14 @@ Rectangle {
     property string pitBoss: ""
 
     // --- the hands ------------------------------------------------------------
-    // Fixed hands, not random: the point is that the outcome is legible in half
-    // a second by anyone who has seen a deck before. A royal flush in spades is
-    // the best hand there is; seven-two off is famously the worst, and the rest
-    // of the losing hand is chosen to miss every draw.
+    // Fixed hands, not random. The whole point is that the outcome is legible
+    // in half a second to anyone who has ever seen a deck: ace and a king is
+    // twenty-one and there is no better hand in the game, and a seventeen that
+    // gets hit is the most familiar way in the world to lose.
+    //
+    // Both hands open on two cards, so the deal is identical either way until
+    // they turn over - nothing about the cards on their way out tells you what
+    // is coming.
     readonly property var winHand: [
         {
             rank: "A",
@@ -80,43 +99,43 @@ Rectangle {
         {
             rank: "K",
             suit: "♠"
-        },
-        {
-            rank: "Q",
-            suit: "♠"
-        },
-        {
-            rank: "J",
-            suit: "♠"
-        },
-        {
-            rank: "10",
-            suit: "♠"
         }
     ]
     readonly property var loseHand: [
         {
+            rank: "K",
+            suit: "♦"
+        },
+        {
             rank: "7",
-            suit: "♦"
-        },
-        {
-            rank: "2",
             suit: "♣"
-        },
-        {
-            rank: "9",
-            suit: "♥"
-        },
-        {
-            rank: "4",
-            suit: "♠"
-        },
-        {
-            rank: "J",
-            suit: "♦"
         }
     ]
-    readonly property var hand: verdict === "win" ? winHand : loseHand
+    // The card that busts it. Eight, so seventeen goes to twenty-two: over by
+    // the smallest margin the hand allows, which stings more than being over by
+    // six and is the closest a login screen gets to a joke about a typo.
+    readonly property var bustCard: ({
+            rank: "8",
+            suit: "♠"
+        })
+
+    readonly property var hand: verdict === "win" ? winHand : (hit ? loseHand.concat([bustCard]) : loseHand)
+
+    // What the pot reads once the hand is turned over. Blank until then - the
+    // count is the verdict, and showing it early would give the game away
+    // before the cards do.
+    readonly property string count: {
+        if (root.phase !== "in" && root.phase !== "denied")
+            return "";
+        if (root.verdict === "win")
+            return "21";
+        return root.hit ? "22" : "17";
+    }
+    readonly property string countLabel: {
+        if (root.verdict === "win" && root.phase === "in")
+            return "BLACKJACK";
+        return root.hit ? "BUST" : "";
+    }
 
     // --- the deal -------------------------------------------------------------
 
@@ -127,6 +146,7 @@ Rectangle {
         root.pitBoss = "";
         root.verdict = "";
         root.dealt = false;
+        root.hit = false;
         root.phase = "deal";
 
         if (root.showdown)
@@ -143,8 +163,10 @@ Rectangle {
         if (!root.dealt || root.verdict === "")
             return;
         root.phase = root.verdict === "win" ? "in" : "denied";
+        // A losing hand is not swept straight away: it sits at seventeen for a
+        // beat, takes the third card, and only then does the table clear.
         if (root.phase === "denied")
-            sweepClock.start();
+            hitClock.start();
     }
 
     // Everything back to an empty table: chips off, cards in the muck, bet
@@ -154,6 +176,7 @@ Rectangle {
         bet.text = "";
         root.verdict = "";
         root.dealt = false;
+        root.hit = false;
         root.phase = "bet";
         bet.forceActiveFocus();
     }
@@ -161,9 +184,12 @@ Rectangle {
     Timer {
         id: dealClock
 
-        // Long enough for five cards to slide out and settle - Hand.qml staggers
-        // them 70ms apart with a 320ms travel, so the last one lands at 600.
-        interval: 620
+        // Long enough for both cards to slide out and settle - Hand.qml staggers
+        // them 70ms apart with a 320ms travel, so the second lands at 390. The
+        // margin on top is deliberate: this races the session starting, and a
+        // reveal that begins before the cards have stopped moving reads worse
+        // than one that begins a moment late.
+        interval: 460
         onTriggered: {
             root.dealt = true;
             root.reveal();
@@ -171,11 +197,24 @@ Rectangle {
     }
 
     Timer {
+        id: hitClock
+
+        // Seventeen on the table, then the house hits it. Long enough to read
+        // the two cards and understand you are not being let in yet.
+        interval: 620
+        onTriggered: {
+            root.hit = true;
+            sweepClock.start();
+        }
+    }
+
+    Timer {
         id: sweepClock
 
-        // How long a losing hand stays face up before the table is cleared. Long
-        // enough to read the cards, short enough not to be a punishment.
-        interval: 1600
+        // How long the busted hand stays face up before the table is cleared.
+        // Long enough to read the third card, short enough not to be a
+        // punishment - you are going to be typing again in a moment.
+        interval: 1500
         onTriggered: root.sweep()
     }
 
@@ -227,9 +266,9 @@ Rectangle {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: root.houseName.toUpperCase()
-            color: Palette.brass
+            color: Palette.gold
             font.family: root.face
-            font.pixelSize: 15
+            font.pixelSize: Math.round(15 * root.u)
             // Wide tracking is what makes six lowercase letters read as signage
             // rather than as a label.
             font.letterSpacing: 7
@@ -242,7 +281,7 @@ Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             color: Palette.text
             font.family: root.face
-            font.pixelSize: 62
+            font.pixelSize: Math.round(62 * root.u)
             font.letterSpacing: 2
 
             // Rebuilt every second rather than bound to a ticking property: the
@@ -267,7 +306,7 @@ Rectangle {
             text: Qt.formatDate(new Date(), "dddd d MMMM").toLowerCase()
             color: Palette.muted
             font.family: root.face
-            font.pixelSize: 13
+            font.pixelSize: Math.round(13 * root.u)
             font.letterSpacing: 3
         }
     }
@@ -280,9 +319,9 @@ Rectangle {
         id: seats
 
         anchors.horizontalCenter: table.horizontalCenter
-        y: table.height * 0.28
+        y: table.height * 0.30
         width: fan.width
-        height: 190
+        height: Math.round(200 * root.u)
 
         // Out of the way while the hand is being dealt: two sets of cards on a
         // table at once reads as a mess, and the showdown is the one that
@@ -301,7 +340,7 @@ Rectangle {
             anchors.centerIn: parent
             // Negative, so the cards overlap the way a fan does. The corner index
             // on Card.qml is placed to survive exactly this.
-            spacing: userModel.count > 1 ? -22 : 0
+            spacing: userModel.count > 1 ? Math.round(-22 * root.u) : 0
 
             Repeater {
                 model: userModel
@@ -346,7 +385,7 @@ Rectangle {
                         id: card
 
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 104
+                        width: Math.round(122 * root.u)
                         fontFamily: root.face
 
                         // The rank is the first letter of the account name and
@@ -359,7 +398,7 @@ Rectangle {
 
                         // The chosen card is pulled out of the fan and stood
                         // slightly proud; the others lie back at a fan angle.
-                        y: seatCard.chosen ? 0 : 26
+                        y: seatCard.chosen ? 0 : Math.round(26 * root.u)
                         rotation: seatCard.chosen ? 0 : (seatCard.index - root.seat) * 5
 
                         Behavior on y {
@@ -391,17 +430,17 @@ Rectangle {
         }
     }
 
-    // The name on the brass, under the fan.
+    // The name on the gold, under the fan.
     Text {
         id: nameplate
 
         anchors.horizontalCenter: table.horizontalCenter
         anchors.top: seats.bottom
-        anchors.topMargin: 10
+        anchors.topMargin: Math.round(10 * root.u)
         text: root.seatRealName.toUpperCase()
-        color: Palette.brassBright
+        color: Palette.goldBright
         font.family: root.face
-        font.pixelSize: 16
+        font.pixelSize: Math.round(16 * root.u)
         font.letterSpacing: 5
         font.bold: true
         opacity: root.phase === "bet" ? 1 : 0.3
@@ -421,9 +460,9 @@ Rectangle {
         id: pit
 
         anchors.horizontalCenter: table.horizontalCenter
-        y: table.height * 0.70
-        width: 460
-        height: 200
+        y: table.height * 0.60
+        width: Math.round(460 * root.u)
+        height: Math.round(200 * root.u)
 
         // The circle. An ellipse, not a circle: everything else in this room is
         // drawn as though seen from a player's chair, including the chips, and a
@@ -432,22 +471,22 @@ Rectangle {
             id: circle
 
             anchors.horizontalCenter: parent.horizontalCenter
-            y: 120
-            width: 300
-            height: 108
+            y: Math.round(120 * root.u)
+            width: Math.round(300 * root.u)
+            height: Math.round(108 * root.u)
             radius: height / 2
             color: Qt.rgba(0, 0, 0, 0.18)
             border.width: 2
-            border.color: Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, 0.40)
+            border.color: Palette.alpha(Palette.gold, 0.40)
 
             // The inner ring the chips actually go inside.
             Rectangle {
                 anchors.fill: parent
-                anchors.margins: 9
+                anchors.margins: Math.round(9 * root.u)
                 radius: height / 2
                 color: "transparent"
                 border.width: 1
-                border.color: Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, 0.22)
+                border.color: Palette.alpha(Palette.gold, 0.22)
             }
         }
 
@@ -458,7 +497,7 @@ Rectangle {
             text: "PLACE YOUR BET"
             color: Palette.muted
             font.family: root.face
-            font.pixelSize: 12
+            font.pixelSize: Math.round(12 * root.u)
             font.letterSpacing: 4
             opacity: (root.phase === "bet" && bet.text.length === 0) ? 0.75 : 0
 
@@ -466,6 +505,41 @@ Rectangle {
                 NumberAnimation {
                     duration: 200
                 }
+            }
+        }
+
+        // What the hand came to, printed in the pot the chips just went into.
+        // The same spot the bet occupied a moment ago, which is the point: you
+        // put chips in, and this is what came back out.
+        Column {
+            anchors.centerIn: circle
+            spacing: Math.round(2 * root.u)
+            opacity: root.count.length ? 1 : 0
+
+            Behavior on opacity {
+                NumberAnimation {
+                    duration: 220
+                }
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.count
+                color: root.verdict === "win" ? Palette.goldBright : Palette.hot
+                font.family: root.face
+                font.pixelSize: Math.round(40 * root.u)
+                font.bold: true
+                font.letterSpacing: 2
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root.countLabel
+                color: root.verdict === "win" ? Palette.gold : Palette.hot
+                font.family: root.face
+                font.pixelSize: Math.round(11 * root.u)
+                font.letterSpacing: 4
+                visible: text.length > 0
             }
         }
 
@@ -477,7 +551,7 @@ Rectangle {
 
             anchors.horizontalCenter: circle.horizontalCenter
             anchors.bottom: circle.verticalCenter
-            anchors.bottomMargin: -18
+            anchors.bottomMargin: Math.round(-18 * root.u)
             width: chips.width
             height: chips.height
 
@@ -516,7 +590,7 @@ Rectangle {
 
                 count: bet.text.length
                 maxStack: root.maxStack
-                chipWidth: 84
+                chipWidth: Math.round(96 * root.u)
             }
         }
 
@@ -526,8 +600,13 @@ Rectangle {
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: circle.top
-            anchors.bottomMargin: -30
+            // Clear of the circle, not overlapping it: the cards are the hand
+            // and the circle is what it paid, and a total printed under the
+            // corner of a king reads as neither.
+            anchors.bottomMargin: Math.round(16 * root.u)
             fontFamily: root.face
+            cardWidth: Math.round(100 * root.u)
+            gap: Math.round(14 * root.u)
             cards: root.hand
             // The hand is on the table for every phase but "bet"; dropping back
             // to "bet" is what pulls the cards back off it, which is the muck.
@@ -550,7 +629,7 @@ Rectangle {
         text: root.pitBoss
         color: root.phase === "denied" ? Palette.hot : Palette.muted
         font.family: root.face
-        font.pixelSize: 13
+        font.pixelSize: Math.round(13 * root.u)
         font.letterSpacing: 1
         opacity: text.length ? 1 : 0
 
@@ -567,8 +646,8 @@ Rectangle {
     Row {
         anchors.horizontalCenter: table.horizontalCenter
         anchors.bottom: table.bottom
-        anchors.bottomMargin: 18
-        spacing: 10
+        anchors.bottomMargin: Math.round(18 * root.u)
+        spacing: Math.round(10 * root.u)
         opacity: keyboard.capsLock ? 1 : 0
 
         Behavior on opacity {
@@ -578,8 +657,8 @@ Rectangle {
         }
 
         Chip {
-            width: 22
-            height: 22
+            width: Math.round(22 * root.u)
+            height: Math.round(22 * root.u)
             body: Palette.powerChipHot.body
             spot: Palette.powerChipHot.spot
             ink: Palette.powerChipHot.ink
@@ -591,22 +670,23 @@ Rectangle {
             text: "CAPS LOCK"
             color: Palette.hot
             font.family: root.face
-            font.pixelSize: 12
+            font.pixelSize: Math.round(12 * root.u)
             font.letterSpacing: 4
             font.bold: true
         }
     }
 
     // --- the rail -------------------------------------------------------------
-    // Session on the left, power on the right, both sitting on the mahogany.
+    // Session on the left, power on the right, both sitting on the lacquer.
     SessionPlaque {
         id: sessionPlaque
 
         anchors.left: parent.left
-        anchors.leftMargin: 34
+        anchors.leftMargin: Math.round(34 * root.u)
         anchors.bottom: parent.bottom
         anchors.bottomMargin: (felt.railHeight - height) / 2
         fontFamily: root.face
+        u: root.u
         index: root.sessionIndex
         onPicked: index => {
             root.sessionIndex = index;
@@ -618,10 +698,11 @@ Rectangle {
         id: power
 
         anchors.right: parent.right
-        anchors.rightMargin: 34
+        anchors.rightMargin: Math.round(34 * root.u)
         anchors.bottom: parent.bottom
         anchors.bottomMargin: (felt.railHeight - height) / 2
         fontFamily: root.face
+        u: root.u
     }
 
     // --- the keyboard ---------------------------------------------------------

@@ -1,6 +1,7 @@
 import QtQuick
+import "Palette.js" as Palette
 
-// The session picker, as the brass plaque screwed to the rail in front of your
+// The session picker, as the gold plaque screwed to the rail in front of your
 // seat. Click it and the list of what this machine can deal comes up off the
 // rail; click a line to take it.
 //
@@ -13,6 +14,10 @@ Item {
 
     property int index: 0
     property string fontFamily: "JetBrainsMono Nerd Font"
+
+    // Layout scale, handed down from Main so the rail furniture grows with the
+    // rest of the table rather than staying laptop-sized on a big panel.
+    property real u: 1
 
     signal picked(int index)
 
@@ -27,12 +32,12 @@ Item {
     Rectangle {
         id: plaque
 
-        width: plaqueRow.width + 30
-        height: 34
-        radius: 5
+        width: plaqueRow.width + Math.round(30 * root.u)
+        height: Math.round(34 * root.u)
+        radius: Math.round(5 * root.u)
         color: Qt.rgba(0, 0, 0, menu.open ? 0.45 : 0.28)
         border.width: 1
-        border.color: Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, menu.open || hover.hovered ? 0.75 : 0.35)
+        border.color: Palette.alpha(Palette.gold, menu.open || hover.hovered ? 0.75 : 0.35)
 
         Behavior on color {
             ColorAnimation {
@@ -49,24 +54,24 @@ Item {
             id: plaqueRow
 
             anchors.centerIn: parent
-            spacing: 9
+            spacing: Math.round(9 * root.u)
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 // nf-fa-window_restore: a session is a desktop, and this is the
                 // one glyph that says desktop without saying Linux.
                 text: ""
-                color: Palette.brass
+                color: Palette.gold
                 font.family: root.fontFamily
-                font.pixelSize: 13
+                font.pixelSize: Math.round(13 * root.u)
             }
 
             Text {
                 anchors.verticalCenter: parent.verticalCenter
                 text: root.label.toUpperCase()
-                color: hover.hovered || menu.open ? Palette.brassBright : Palette.brass
+                color: hover.hovered || menu.open ? Palette.goldBright : Palette.gold
                 font.family: root.fontFamily
-                font.pixelSize: 12
+                font.pixelSize: Math.round(12 * root.u)
                 font.letterSpacing: 3
             }
         }
@@ -92,12 +97,12 @@ Item {
         anchors.bottom: plaque.top
         anchors.bottomMargin: 10
 
-        width: Math.max(plaque.width, 240)
+        width: Math.max(plaque.width, Math.round(240 * root.u))
         height: menuColumn.height + 14
         radius: 6
         color: Qt.rgba(0.02, 0.06, 0.04, 0.96)
         border.width: 1
-        border.color: Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, 0.45)
+        border.color: Palette.alpha(Palette.gold, 0.45)
 
         visible: opacity > 0
         opacity: open ? 1 : 0
@@ -141,18 +146,18 @@ Item {
                     }
 
                     width: menuColumn.width
-                    height: 30
+                    height: Math.round(30 * root.u)
                     radius: 4
-                    color: lineHover.hovered ? Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, 0.16) : "transparent"
+                    color: lineHover.hovered ? Palette.alpha(Palette.gold, 0.16) : "transparent"
 
                     Text {
                         anchors.left: parent.left
                         anchors.leftMargin: 10
                         anchors.verticalCenter: parent.verticalCenter
                         text: line.name
-                        color: line.chosen ? Palette.brassBright : Palette.text
+                        color: line.chosen ? Palette.goldBright : Palette.text
                         font.family: root.fontFamily
-                        font.pixelSize: 13
+                        font.pixelSize: Math.round(13 * root.u)
                     }
 
                     // The tick on the one you are already using.
@@ -162,9 +167,9 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: line.chosen
                         text: "♠"
-                        color: Palette.brass
+                        color: Palette.gold
                         font.family: root.fontFamily
-                        font.pixelSize: 12
+                        font.pixelSize: Math.round(12 * root.u)
                     }
 
                     HoverHandler {

@@ -1,10 +1,11 @@
 import QtQuick
+import "Palette.js" as Palette
 
 // Power controls as chips on the rail — cash out, re-buy, step away.
 //
 // Deliberately not in the denominations. These are house chips, dark clay with
-// a brass inlay, because a purple 500 that shuts the machine down is a purple
-// 500 somebody is going to click while looking at the stack they are building.
+// a gold inlay, because a gold 500 that shuts the machine down is a gold 500
+// somebody is going to click while looking at the stack they are building.
 // Colour here means "not part of the bet".
 //
 // Each one only appears if logind will actually do it: a suspend chip on a
@@ -13,9 +14,13 @@ Row {
     id: root
 
     property string fontFamily: "JetBrainsMono Nerd Font"
-    property int chipSize: 44
 
-    spacing: 12
+    // Layout scale, handed down from Main - see SessionPlaque.
+    property real u: 1
+
+    property int chipSize: Math.round(44 * u)
+
+    spacing: Math.round(12 * u)
 
     // The label rides above whichever chip is under the pointer, so four chips
     // on a rail are not four mystery glyphs.
@@ -23,12 +28,12 @@ Row {
 
     Text {
         anchors.bottom: parent.top
-        anchors.bottomMargin: 8
+        anchors.bottomMargin: Math.round(8 * root.u)
         anchors.right: parent.right
         text: root.hovered.toUpperCase()
-        color: Palette.brass
+        color: Palette.gold
         font.family: root.fontFamily
-        font.pixelSize: 11
+        font.pixelSize: Math.round(11 * root.u)
         font.letterSpacing: 3
         opacity: root.hovered.length ? 1 : 0
 
@@ -90,7 +95,7 @@ Row {
 
                 body: clay.body
                 spot: clay.spot
-                ink: chipHover.hovered ? Palette.brassBright : clay.ink
+                ink: chipHover.hovered ? Palette.goldBright : clay.ink
 
                 // Lifts off the rail on hover, presses into it on click - a chip
                 // you are picking up, then putting down.

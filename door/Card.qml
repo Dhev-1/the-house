@@ -1,4 +1,5 @@
 import QtQuick
+import "Palette.js" as Palette
 
 // A playing card that can turn over.
 //
@@ -69,14 +70,14 @@ Item {
         border.width: 1
         border.color: Qt.rgba(0, 0, 0, 0.45)
 
-        // The brass frame printed inside the edge.
+        // The gold frame printed inside the edge.
         Rectangle {
             anchors.fill: parent
             anchors.margins: root.width * 0.07
             radius: root.width * 0.04
             color: "transparent"
             border.width: 1
-            border.color: Qt.rgba(Palette.brass.r, Palette.brass.g, Palette.brass.b, 0.55)
+            border.color: Palette.alpha(Palette.gold, 0.55)
         }
 
         // The lattice inside the frame - the same diamond grid as the cloth, so

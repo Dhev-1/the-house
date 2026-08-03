@@ -1,4 +1,5 @@
 import QtQuick
+import "Palette.js" as Palette
 
 // The bet. One chip per character typed, stacked edge on.
 //
@@ -21,13 +22,13 @@ Item {
 
     property int chipWidth: 76
 
-    readonly property int chipHeight: Math.round(chipWidth * 0.20)
+    readonly property int chipHeight: Math.round(chipWidth * 0.26)
 
     // The vertical gap between one chip and the next. Full pitch until the
     // stack hits maxStack, then squeezed so a forty-character password does not
     // climb off the top of the screen - the chips ride closer together, the way
     // a stack does when you press it down, and the stack keeps its ceiling.
-    readonly property real pitch: count <= maxStack ? chipHeight * 0.62 : Math.max(chipHeight * 0.16, chipHeight * 0.62 * maxStack / count)
+    readonly property real pitch: count <= maxStack ? chipHeight * 0.68 : Math.max(chipHeight * 0.18, chipHeight * 0.68 * maxStack / count)
 
     // Which denomination the chip at `i` is. Climbing in threes: the stack
     // starts white and works up through the rack, so the colour of the top chip
@@ -50,7 +51,7 @@ Item {
             // Chips are dealt by hand and land where they land. A deterministic
             // wobble off the index rather than Math.random(), so a chip does not
             // jump every time the stack recomposes.
-            readonly property real wobble: ((chip.index * 37) % 7) - 3
+            readonly property real wobble: (((chip.index * 37) % 5) - 2) * 0.8
             readonly property var clay: root.denom(chip.index)
 
             // 1 while the chip is still in the air, 0 once it is on the stack.
@@ -115,19 +116,29 @@ Item {
                 // The edge spots, seen from the side: the inlay banding that
                 // runs round the rim, cut into segments. Three visible from any
                 // one angle out of the six on the chip.
+                //
+                // Each chip's banding is rolled round the rim by a different
+                // amount. Without that the three bands land at the same three
+                // x positions on every chip in the stack and read as continuous
+                // vertical stripes - the stack stops looking like discs on top
+                // of each other and starts looking like woven basketwork. No
+                // two chips in a real stack are clocked the same way, and this
+                // is the cheapest way to say so.
                 Repeater {
                     model: 3
 
                     Rectangle {
                         required property int index
 
+                        readonly property real roll: ((chip.index * 13) % 7) / 7 * 0.28
+
                         anchors.verticalCenter: parent.verticalCenter
-                        x: parent.width * (0.18 + index * 0.28)
-                        width: parent.width * 0.13
-                        height: parent.height * 0.72
+                        x: parent.width * (0.10 + index * 0.28 + roll)
+                        width: parent.width * 0.11
+                        height: parent.height * 0.55
                         radius: 1
                         color: chip.clay.spot
-                        opacity: 0.85
+                        opacity: 0.62
                     }
                 }
             }

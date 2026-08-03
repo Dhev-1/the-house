@@ -1,4 +1,5 @@
 import QtQuick
+import "Palette.js" as Palette
 
 // One clay chip, face on. Used for the power controls on the rail and for the
 // chip that sits in the betting circle; the bet stack draws its own edge-on

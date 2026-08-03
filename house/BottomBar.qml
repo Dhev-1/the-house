@@ -62,7 +62,13 @@ PanelWindow {
                     anchors.centerIn: parent
                     text: button.modelData.icon ?? ""
                     // The die lights gold under the pointer, whatever its state.
-                    color: press.containsMouse ? Config.colours.accent : button.on ? Config.trayOn : Config.trayOff
+                    //
+                    // A dealt-out die is ivory - a die is white, and the red the
+                    // service tray uses for "stopped" was saying something is
+                    // wrong about a game simply not being open. `text` rather
+                    // than a literal white so it inverts on the light table,
+                    // where white on cream would be no die at all.
+                    color: press.containsMouse ? Config.colours.accent : button.on ? Config.trayOn : Config.colours.text
                     font.family: Config.font
                     font.pointSize: 10
                     scale: press.containsMouse ? 1.3 : 1
