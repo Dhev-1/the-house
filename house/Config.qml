@@ -318,7 +318,50 @@ Singleton {
             subtext: "#7fa08c",
             accent: "#c9a227",
             idle: "#1d4030",
-            urgent: "#c0392f"
+            urgent: "#c0392f",
+
+            // Pinned rather than derived, and this table needs it more than the
+            // others do. deriveNotif blends in straight RGB, which is fine when
+            // the surface is near-neutral (noir, vegas) but falls apart on a
+            // saturated green: every mix toward the accent or the urgent lands
+            // in olive, because red and green cancel. Derived, a *critical*
+            // card here came out #2e2e1f - khaki, with pale green body text -
+            // so the one colour whose whole job is to shout stopped reading as
+            // red at all.
+            //
+            // So: the frames keep red clearly ahead of green (an olive is any
+            // warm tone where r and g are level), and critical drops onto wine
+            // instead of baize so the card reads hot against the table.
+            notif: {
+                low: {
+                    background: "#143224",
+                    frame: "#2e4636",
+                    title: "#b5b39a",
+                    body: "#7fa08c",
+                    accent: "#8a7a45"
+                },
+                normal: {
+                    background: "#17392a",
+                    frame: "#7a6524",
+                    title: "#eae3cd",
+                    body: "#b5b79c",
+                    accent: "#c9a227"
+                },
+                critical: {
+                    background: "#2d1518",
+                    frame: "#8a3330",
+                    title: "#f0b0a4",
+                    body: "#d6b8ae",
+                    accent: "#c0392f"
+                }
+            },
+            // Brass, flanked by a dark step and an ivory one. Derived, the low
+            // step was #756c22 - olive again.
+            progress: {
+                low: "#5f5220",
+                mid: "#c9a227",
+                high: "#e4d296"
+            }
         },
         {
             name: "vegas",
@@ -348,7 +391,53 @@ Singleton {
             subtext: "#8c7f6a",
             accent: "#9c7a1e",
             idle: "#e6dcc6",
-            urgent: "#b3372f"
+            urgent: "#b3372f",
+
+            // Pinned because deriveNotif is written for a dark table and this is
+            // the only light one. Two of its rules inverate on cream: the card is
+            // "surface lifted toward idle", which here makes it *darker* than the
+            // desktop rather than lifted off it, and the body is left at subtext,
+            // which against a pale card came out at 3.1:1 - below the 4.5 the
+            // text needs to be legible, on all three urgencies.
+            //
+            // So: the quiet cards go lighter than the table (a card laid on the
+            // cloth catches the light, it does not sink into it), bodies are
+            // darkened until they read, and critical is the one that goes the
+            // other way - a blush card, because on cream the way to say "hot" is
+            // to add colour, not to add light.
+            notif: {
+                low: {
+                    background: "#faf5ea",
+                    frame: "#d8cdb8",
+                    title: "#5a4c3c",
+                    body: "#6f6252",
+                    accent: "#8a7440"
+                },
+                normal: {
+                    background: "#fdfaf2",
+                    frame: "#b8933a",
+                    title: "#46392c",
+                    body: "#665847",
+                    accent: "#9c7a1e"
+                },
+                critical: {
+                    background: "#f9e6e0",
+                    frame: "#b3372f",
+                    title: "#8a2b22",
+                    body: "#6d4a42",
+                    accent: "#a33028"
+                }
+            },
+            // low/mid/high are gradient stops along the bar, not thresholds, so
+            // the ramp has to gain presence left to right. On a dark table that
+            // means getting brighter; here it means getting deeper. Derived, it
+            // already ran the right way but topped out at 4.66:1 against the
+            // card - this pins a ramp with somewhere to go.
+            progress: {
+                low: "#c9ad64",
+                mid: "#9c7a1e",
+                high: "#6b5214"
+            }
         }
     ]
 

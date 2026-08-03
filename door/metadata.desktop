@@ -1,0 +1,11 @@
+[SddmGreeterTheme]
+Name=The Door
+Description=The casino front door. Type to bet, enter to deal.
+Author=Wood
+License=MIT
+Type=sddm-theme
+Version=1.0
+MainScript=Main.qml
+ConfigFile=theme.conf
+Screenshot=screenshot.png
+QtVersion=6

@@ -58,6 +58,27 @@ mix() {
     }'
 }
 
+# lift AABBCC n -> every channel raised by n, clamped. Brightening a colour by
+# mixing it toward white desaturates it on the way; adding a flat step keeps the
+# hue where it was, which is what the games' brighter reds and golds want.
+lift() {
+    awk -v h="$1" -v n="$2" 'BEGIN {
+        for (i = 0; i < 3; i++) {
+            v = strtonum("0x" substr(h, 1 + i * 2, 2)) + n;
+            printf "%02x", (v > 255) ? 255 : (v < 0 ? 0 : v);
+        }
+    }'
+}
+
+# Is this a light table? Daylight Robbery is the only one today, but nothing
+# below hardcodes that - several derivations have to run the other way round on
+# a light surface, and getting it from the colour is more honest than getting it
+# from the name.
+light=$(awk -v h="$surface" 'BEGIN {
+    r = strtonum("0x" substr(h,1,2)); g = strtonum("0x" substr(h,3,2)); b = strtonum("0x" substr(h,5,2));
+    print (0.2126 * r + 0.7152 * g + 0.0722 * b > 140) ? 1 : 0;
+}')
+
 # --- Hyprland -----------------------------------------------------------------
 # The whole window style, not just the border colour: the rail (the line round
 # the focused window) and the spotlight (how hard everything else is dimmed, and
@@ -199,12 +220,19 @@ fi
 # CSS once at startup, so open windows keep the old table until relaunched
 # (thunar daemonises - `thunar -q` makes the next window pick it up).
 
+# "Brighter" means further from the background, not closer to white. On a dark
+# table those are the same thing, so this read as `mix text -> white` and nobody
+# noticed; on the light table it pushed the text *toward* the page and
+# button:checked ended up at 2.38:1, which is unreadable. Pick the pole the
+# surface is furthest from and head for that instead.
+[ "$light" = 1 ] && pole=000000 || pole=ffffff
+
 window=$(mix "$surface" "$idle" 0.20)
 raised=$(mix "$surface" "$idle" 0.40)
 sunken=$(mix "$surface" "000000" 0.15)
 hover=$(mix "$idle" "$text" 0.10)
 active=$(mix "$idle" "$accent" 0.35)
-bright=$(mix "$text" "ffffff" 0.30)
+bright=$(mix "$text" "$pole" 0.30)
 borderdim=$(mix "$surface" "$idle" 0.50)
 disabled=$(mix "$subtext" "$surface" 0.35)
 
@@ -273,6 +301,149 @@ icons="House-$(printf '%s' "$name" | awk '{ print toupper(substr($0,1,1)) substr
 if [ -d "$HOME/.local/share/icons/$icons" ] && command -v gsettings >/dev/null 2>&1; then
     gsettings set org.gnome.desktop.interface icon-theme "$icons" 2>/dev/null || true
 fi
+
+# --- the games ----------------------------------------------------------------
+# The five widgets in ../games are their own repo and their own quickshell
+# processes, so they cannot import the house's Config. They read this file
+# instead, and fall back to their own hardcoded block when it is absent - which
+# is what happens when the games repo is cloned on its own, with no house at all.
+#
+# One JSON with every colour the five of them name between them (blackjack,
+# poker and ride the bus share a set; bones adds tiles, roulette adds a wheel).
+# The derivation lives here rather than in five theme blocks so there is one
+# place to argue with.
+#
+# Two things do not come from the six roles and are pinned per table below:
+#
+#   green  is a verdict, not decoration - it is what says you won. Like a
+#          terminal's green it keeps its hue on every table and only moves
+#          enough to stay legible against that table's chrome.
+#   felt   is the baize. Green by tradition, but each room has its own cloth,
+#          and vegas is not a room that owns any green at all.
+#
+# On a light table almost every relationship inverts. Elevation goes darker
+# rather than lighter (following the GTK roles above, which already do this),
+# `gold` has to deepen rather than brighten or it vanishes into cream, and
+# `inactive` recedes by going lighter. The card faces stay near-white and read
+# against light chrome because PlayingCard outlines them with a 1px 35% black
+# border, which is theme-independent and works either way round.
+
+if [ "$light" = 1 ]; then
+    g_bg=$surface
+    g_surface=$(mix "$surface" "$idle" 0.55)
+    g_raised=$(mix "$idle" "$subtext" 0.25)
+    g_fg=$text
+    g_muted=$(mix "$subtext" "$text" 0.35)
+    # Inactive is meant to be faint, but not fainter here than everywhere else:
+    # 0.30 toward the page put it at 2.2:1 where the dark tables sit at 3.2:1,
+    # and a disabled control you cannot see at all is not disabled, it is gone.
+    g_inactive=$(mix "$subtext" "$surface" 0.06)
+    g_gold=$(mix "$accent" "$text" 0.35)
+    g_red=$urgent
+    g_cardface=$(mix "$surface" "ffffff" 0.75)
+    g_cardink=$text
+    g_cardback=$(mix "$accent" "$idle" 0.35)
+    g_numblack=$(mix "$text" "000000" 0.25)
+    g_wheelrim=$(mix "$accent" "$idle" 0.25)
+    g_wheelhub=$(mix "$idle" "$subtext" 0.35)
+    g_fret=$(mix "$accent" "$text" 0.20)
+else
+    g_bg=$surface
+    g_surface=$(mix "$surface" "$idle" 0.45)
+    g_raised=$idle
+    g_fg=$text
+    g_muted=$subtext
+    g_inactive=$(mix "$subtext" "$surface" 0.25)
+    # Warm white rather than plain white: a gold lifted straight toward #fff
+    # goes chalky, and this is the colour on the winning figures.
+    g_gold=$(mix "$accent" "fff0c0" 0.55)
+    g_red=$(lift "$urgent" 32)
+    g_cardface=$(mix "$text" "ffffff" 0.35)
+    g_cardink=$surface
+    g_cardback=$(mix "$idle" "$accent" 0.24)
+    g_numblack=$(mix "$surface" "$idle" 0.20)
+    g_wheelrim=$(mix "$idle" "$accent" 0.12)
+    g_wheelhub=$(mix "$surface" "$idle" 0.60)
+    g_fret=$(mix "$idle" "$accent" 0.38)
+fi
+
+# feltLine is the cloth's printing - "DEALER", "BLACKJACK PAYS 3 TO 2" - and
+# also every hairline drawn on the cloth: the bet circle, the felt panel's own
+# edge, the tile borders. It sat around 1.3:1 against the baize, which is what
+# real printing on real cloth looks like and is also, at 9px with 2.4 of letter
+# spacing, unreadable. Lifted to 2.4:1 - still ink soaked into cloth rather than
+# UI text, but legible, and the outlines stop being invisible along with it.
+#
+# tileBack is deliberately NOT this value any more. It is a fill - the back of a
+# domino - so carrying it up with the printing would repaint every tile in
+# bones. It keeps the old, quieter step off the cloth.
+case "$name" in
+    noir)
+        # Oxblood, not green: this room is black lacquer and deep crimson, and a
+        # green cloth in it was the one thing still wearing another table's
+        # colours. Pitched at the luminance the green had, so the cloth keeps
+        # exactly the separation it always had from the chrome around it (1.30)
+        # and from its own printing (1.43) - only the hue moves.
+        #
+        # Charcoal was the other candidate and lost: at this luminance it lands
+        # on #2a2825, which is `raised` to within a hair, and the cloth stops
+        # reading as a surface of its own.
+        g_green=7fb069; g_felt=441720; g_feltline=934957; g_tileback=642e39; g_numgreen=12684a ;;
+    felt)
+        # The one table that owns the baize, which is the problem: the cloth was
+        # a shade off the desktop green and the two blended into each other.
+        # Deeper and more saturated - velvet rather than baize - so the widget
+        # reads as sitting on the table instead of dissolving into it.
+        # The printing is pinned to the house ratio (~1.32:1) rather than scaled
+        # down with the cloth - taking the felt this dark drags it to 1.19:1 if
+        # you let it follow, and the table stops saying what game it is.
+        g_green=8fc47a; g_felt=04140c; g_feltline=255b40; g_tileback=123021; g_numgreen=157a56 ;;
+    vegas)
+        # No green in this room at all, so the cloth goes deep violet - the
+        # marquee's own dark - and the win colour is the neon the tray uses.
+        g_green=2de2e6; g_felt=141034; g_feltline=5045a9; g_tileback=2a1f5c; g_numgreen=1b8f7a ;;
+    daylight)
+        # A light cloth, and a green dark enough to read on it.
+        g_green=15703a; g_felt=dcd7c2; g_feltline=958a5b; g_tileback=c3bda4; g_numgreen=0f6b4a ;;
+esac
+
+mkdir -p "$config/house"
+cat > "$config/house/table.json" <<EOF
+{
+  "_comment": "AUTOGENERATED by the house's scripts/apply-theme.sh - do not edit. Rewritten on every table change; the games watch this file and retint live.",
+  "table":    "$name",
+  "light":    $([ "$light" = 1 ] && echo true || echo false),
+
+  "bg":       "#$g_bg",
+  "surface":  "#$g_surface",
+  "raised":   "#$g_raised",
+  "fg":       "#$g_fg",
+  "muted":    "#$g_muted",
+  "inactive": "#$g_inactive",
+  "blue":     "#$accent",
+  "red":      "#$g_red",
+  "green":    "#$g_green",
+  "gold":     "#$g_gold",
+
+  "felt":     "#$g_felt",
+  "feltLine": "#$g_feltline",
+
+  "cardFace": "#$g_cardface",
+  "cardInk":  "#$g_cardink",
+  "cardRed":  "#$urgent",
+  "cardBack": "#$g_cardback",
+
+  "tileBack": "#$g_tileback",
+  "tileFace": "#$g_felt",
+
+  "numRed":   "#$(mix "$urgent" "$g_bg" 0.15)",
+  "numBlack": "#$g_numblack",
+  "numGreen": "#$g_numgreen",
+  "wheelRim": "#$g_wheelrim",
+  "wheelHub": "#$g_wheelhub",
+  "fret":     "#$g_fret"
+}
+EOF
 
 # --- starship -----------------------------------------------------------------
 # Same story as kitty: segment palettes are pre-baked per table. starship

@@ -1,0 +1,8 @@
+# The theme directory is implicitly imported by every qml file in it, and Qt
+# reads this qmldir when it does - which is what makes the singleton below
+# resolvable as a bare `Palette.brass` from any component here, with no import
+# statement and no import path fiddling.
+#
+# Everything else in the directory resolves implicitly by filename and does not
+# need a line here. Only the singleton does.
+singleton Palette 1.0 Palette.qml
