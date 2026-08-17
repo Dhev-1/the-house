@@ -27,4 +27,4 @@ echo
 echo ":: done.  Manual follow-ups:"
 echo "   - quickshell (the house) lives at:  $PWD/house"
 echo "     the hypr config expects it at ~/cloon/newdot/house; if this repo"
-echo "     is elsewhere, update the qs -p path in home/hypr/.config/hypr/*.conf."
+echo "     is elsewhere, set houseDir in home/hypr/.config/hypr/vars.lua."

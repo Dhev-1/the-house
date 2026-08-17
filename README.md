@@ -58,10 +58,11 @@ yay -S --needed - < packages-aur.txt
 ## Post-install
 
 - **Repo location matters:** the hypr config launches and talks to the shell by
-  absolute path — `qs -p ~/cloon/newdot/house` (autostart in `hyprland.conf`,
+  absolute path — `qs -p ~/cloon/newdot/house` (autostart in `hyprland.lua`,
   plus the notification / theme / dock keybinds). Clone this repo to
-  `~/cloon/newdot`, or find-and-replace that path across
-  `home/hypr/.config/hypr/*.conf` to match where you put it.
+  `~/cloon/newdot`, or change `houseDir` in
+  `home/hypr/.config/hypr/vars.lua` — since the Lua migration that path is
+  written once and every other file pulls it from there.
 - Wallpapers per table live in `wallpapers/` — set one with
   `awww img wallpapers/noir.png` (or `felt` / `vegas` / `daylight`) — though the
   table picker (`Super+T`) sets it for you.
@@ -82,7 +83,7 @@ newdot/
 
 ## Keybinds
 
-`$mainMod` = SUPER. Full list in `home/hypr/.config/hypr/binds.conf`.
+`mainMod` = SUPER. Full list in `home/hypr/.config/hypr/binds.lua`.
 
 | Keys | Action |
 |---|---|
