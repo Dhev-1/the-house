@@ -28,3 +28,9 @@ echo ":: done.  Manual follow-ups:"
 echo "   - quickshell (the house) lives at:  $PWD/house"
 echo "     the hypr config expects it at ~/cloon/newdot/house; if this repo"
 echo "     is elsewhere, update the qs -p path in home/hypr/.config/hypr/*.conf."
+# door is not stowed: the greeter runs as the `sddm` user before anyone has
+# logged in, so its theme has to live under /usr/share, not $HOME. That needs
+# sudo and it changes the machine's login screen, which is too big a thing to
+# do as a side effect of symlinking dotfiles. Its own installer, on purpose.
+echo "   - the door (SDDM greeter) is not stowed - it installs system-wide:"
+echo "       cd door && ./install.sh"

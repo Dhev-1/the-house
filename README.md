@@ -36,6 +36,21 @@ notifications, kitty-adjacent chrome and Hyprland's window borders together.
 Workspaces in the bar are dealt as suits (`♠ ♥ ♦ ♣ ★`); the active one lights
 up in the table's accent.
 
+## The door
+
+The SDDM greeter — [`door`](door/README.md). Logging in is a hand of blackjack:
+every character you type drops a clay chip onto a stack standing in the betting
+circle (there is no row of asterisks anywhere in it), enter pushes the bet into
+the pot and deals. Right password, the cards turn over ace and king. Wrong, they
+turn over seventeen, the house hits you, you bust, and the table sweeps itself.
+
+![the door](door/screenshot.png)
+
+Gold on black, and deliberately *not* wired to the tables above — the greeter
+runs as the `sddm` user with no access to anyone's `~/.config`, and a login
+screen that followed a per-user preference would be announcing who last sat down
+before anyone has authenticated. It has its own palette and it does not change.
+
 ## Install
 
 ```bash
@@ -50,10 +65,18 @@ yay -S --needed - < packages-aur.txt
 
 # 3. symlink the configs
 ./install.sh
+
+# 4. optional - take over the login screen
+cd door && ./install.sh
 ```
 
 `install.sh` uses GNU Stow (`sudo pacman -S stow`) to symlink each package in
 `home/` into `$HOME`. Run `./install.sh hypr kitty` to stow only some.
+
+`door/install.sh` is separate and takes sudo: the greeter theme goes to
+`/usr/share/sddm/themes/door` and the active theme is set through a drop-in at
+`/etc/sddm.conf.d/10-theme.conf`. Delete that file to go back to whatever you
+were using. `./install.sh --copy` installs it without switching.
 
 ## Post-install
 
@@ -71,6 +94,7 @@ yay -S --needed - < packages-aur.txt
 ```
 newdot/
 ├── house/           # quickshell config (bar/dock/notifications/table picker)
+├── door/            # SDDM greeter (installs system-wide, own install.sh)
 ├── home/            # GNU Stow packages, mirror $HOME
 │   ├── hypr/  kitty/  rofi/  btop/  gtk/  kvantum/  starship/  icons/
 ├── wallpapers/      # generated casino wallpapers, one per table

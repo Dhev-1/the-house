@@ -42,14 +42,25 @@ Item {
         }
     }
 
+    // The model is the *count*, not the array. A Repeater bound straight to a JS
+    // array throws away every delegate and builds new ones whenever the array is
+    // reassigned - so the two cards already lying on the table would pitch in
+    // from the shoe a second time and turn over again the moment the hand is
+    // hit. Bound to the length, delegates 0 and 1 survive and only the third one
+    // is created; the rank and suit still update, because reassigning `cards`
+    // re-evaluates the bindings below.
     Repeater {
-        model: root.cards
+        model: root.cards.length
 
         Card {
             id: dealtCard
 
             required property int index
-            required property var modelData
+
+            readonly property var modelData: root.cards[index] || ({
+                    rank: "",
+                    suit: "♠"
+                })
 
             // 1 while this card is still in the dealer's hand, 0 once pitched.
             // Animated on creation, so a card that appears while the hand is
