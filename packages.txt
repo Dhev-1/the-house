@@ -41,6 +41,7 @@ iw
 jdk17-openjdk
 jre-openjdk
 kitty
+kvantum
 less
 lib32-nvidia-utils
 lib32-vulkan-icd-loader

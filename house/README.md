@@ -136,7 +136,10 @@ Four tables ship:
 | Cancel, revert to current | `Esc` | click outside the card |
 
 The choice is written to `theme.json` in Quickshell's state dir, so it survives a
-restart, and `scripts/apply-theme.sh` mirrors it onto Hyprland's window borders.
+restart, and `scripts/apply-theme.sh` mirrors it onto everything that is not the
+shell: Hyprland's borders and hyprlock, the wallpaper, kitty, rofi, btop,
+starship, GTK 3/4, Qt (qt6ct's palette and the Kvantum style), the folder icons
+and the games' `table.json`.
 Add a table by dropping another entry in the `themes` array in `Config.qml` —
 each entry fills six roles (`surface`, `text`, `subtext`, `accent`, `idle`,
 `urgent`); notification palettes, the progress gradient and the tray dots are
@@ -167,14 +170,22 @@ services/Dock.qml    docking logic
 services/Notifications.qml  the notification server (replaces dunst)
 services/Player.qml  the MPRIS player the music tab drives
 services/ThemePanel.qml     open-state for the table picker overlay
-scripts/apply-theme.sh      mirrors the active table onto Hyprland
+scripts/apply-theme.sh      mirrors the active table onto the rest of the desktop
+scripts/tables/             what six roles can't express: kitty's 16-colour deck,
+                            starship's segments, and Kvantum's chassis
 ```
 
 ## Notes
 
 - `shell.qml` sets `QT_QPA_PLATFORMTHEME=xdgdesktopportal` so native tray menus
   follow the portal's colour scheme. Without it Qt ignores it and paints them
-  light.
+  light. Everything else Qt goes to qt6ct instead (`hyprland.conf` sets that
+  globally); the shell's pragma only rebinds it for the shell's own process.
+- Qt is themed in two layers. qt6ct holds the palette, which every Qt app obeys
+  whatever draws it — that layer works with nothing else installed. Kvantum is
+  the style, and it draws the widgets properly rather than colouring Fusion's;
+  `apply-theme.sh` writes a theme for it and points qt6ct at it when the plugin
+  is present, and falls back to Fusion plus the palette when it is not.
 - `//@ pragma UseQApplication` is required for tray menus to open at all.
 - Electron apps (Discord) register their tray icon once, against whatever
   StatusNotifierWatcher exists when they launch. If you restart the shell and an

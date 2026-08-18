@@ -17,7 +17,7 @@ champagne gold, green felt and neon marquee. The house always wins.
 | **Launcher** | rofi |
 | **Notifications** | quickshell `house` (replaces dunst) |
 | **Wallpaper** | awww |
-| **GTK / Qt theming** | GTK 3/4 + Kvantum |
+| **GTK / Qt theming** | GTK 3/4, and qt6ct + Kvantum for Qt — both retinted per table |
 | **Font** | JetBrainsMono Nerd Font |
 
 ## The tables

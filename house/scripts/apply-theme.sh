@@ -1,6 +1,7 @@
 #!/bin/sh
 # apply-theme.sh — mirror the house bar's active table onto the rest of the
-# desktop: Hyprland borders, the wallpaper, kitty, rofi, btop and starship.
+# desktop: Hyprland borders, the wallpaper, kitty, rofi, btop, GTK, Qt and
+# starship.
 #
 # The theme picker (Config.setTheme in the house shell) calls this with the
 # table's name and its six role colours. It is the single place system-wide
@@ -11,8 +12,10 @@
 # Colours are "#rrggbb" hex strings; the leading # is optional.
 #
 # Per-table palettes that need more than the six roles (kitty's 16-colour deck,
-# starship's segments) live pre-baked in tables/ next to this script; things the
-# six roles can express (hypr, rofi) are generated right here.
+# starship's segments) live pre-baked in tables/ next to this script, along with
+# Kvantum's chassis - the one file in there that is the same on every table;
+# things the six roles can express (hypr, rofi, GTK, the Qt palette) are
+# generated right here.
 
 set -eu
 
@@ -291,6 +294,145 @@ $roles
 @define-color warning_fg_color #$surface;
 @define-color warning_color #$accent;
 EOF
+
+# --- Qt -----------------------------------------------------------------------
+# Qt has no single place to say this, so there are two layers and they do
+# different jobs:
+#
+#   qt6ct   is the platform theme (QT_QPA_PLATFORMTHEME, set in hyprland.conf).
+#           It owns the palette - a flat list of QPalette roles - and a palette
+#           is honoured whatever style ends up drawing the widgets. This is the
+#           layer that guarantees a Qt window is on the table at all.
+#   Kvantum is the style: the actual painting of scrollbars, tabs, menus, frames.
+#           Optional, and better when it is there. When its plugin is installed
+#           qt6ct is pointed at it and it colours itself from the theme written
+#           below; when it is not, Fusion draws the palette and nothing breaks.
+#
+# Both are generated from the six roles, reusing the GTK derivations above
+# rather than inventing a second set - a Qt dialog and a GTK dialog on the same
+# table should be the same grey, not two guesses at it.
+
+# Qt's Button is GTK's button, so it is $idle for the same reason gtk.css uses
+# it there, and the two toolkits' dialogs come out the same colour.
+#
+# The bevel ramp around it (Light/Midlight/Dark/Mid) is the one thing here that
+# does not flip with the table: it reads as light falling from above onto a
+# raised button, so Light stays lighter than the button on cream as well as on
+# lacquer, and pinning it to $pole would invert it on the light table and make
+# every button look pressed. lift() rather than mix(), for the reason lift()
+# exists - a flat step keeps the brown in the brown, where heading for white
+# turns the whole ramp into grey bevels on a warm button.
+qlight=$(lift "$idle" 26)
+qmidlight=$(lift "$idle" 12)
+qdark=$(lift "$idle" -22)
+qmid=$(lift "$idle" -11)
+qshadow=$(mix "$surface" 000000 0.50)     # under menus and popups; near-black on any table
+qvisited=$(mix "$accent" "$urgent" 0.50)  # a visited link, halfway from the accent toward the red
+qdimhl=$(mix "$accent" "$surface" 0.45)   # the selection in a window that does not have focus
+
+# --- Kvantum ---
+# One theme, House, retinted in place rather than four themes with one of them
+# chosen: Kvantum picks by name from kvantum.kvconfig, and rewriting a name is a
+# second thing to keep in step for no gain.
+kvdir="$config/Kvantum/House"
+if [ -f "$tables/kvantum-general.kvconfig.in" ]; then
+    mkdir -p "$kvdir"
+    {
+        sed -e '/^#/d' \
+            -e "s/@TABLE@/$name/" \
+            -e "s/@DARK@/$([ "$light" = 1 ] && echo false || echo true)/" \
+            "$tables/kvantum-general.kvconfig.in"
+        cat <<EOF
+[GeneralColors]
+window.color=#$window
+inactive.window.color=#$(mix "$window" "$surface" 0.50)
+base.color=#$surface
+inactive.base.color=#$surface
+alt.base.color=#$window
+button.color=#$idle
+light.color=#$qlight
+mid.light.color=#$qmidlight
+dark.color=#$qdark
+mid.color=#$qmid
+highlight.color=#$accent
+inactive.highlight.color=#$qdimhl
+text.color=#$text
+inactive.text.color=#$subtext
+window.text.color=#$text
+inactive.window.text.color=#$subtext
+button.text.color=#$text
+disabled.text.color=#$disabled
+tooltip.text.color=#$text
+highlight.text.color=#$surface
+inactive.highlight.text.color=#$text
+link.color=#$accent
+link.visited.color=#$qvisited
+progress.indicator.text.color=#$surface
+EOF
+    } > "$kvdir/House.kvconfig"
+    # Kvantum keeps a parsed copy beside the theme and decides to reread by
+    # timestamp. Dropping it is cheaper than trusting that comparison.
+    rm -f "$kvdir"/*.cache
+fi
+
+# --- qt6ct ---
+# A colour scheme is three lines of 21 colours in QPalette::ColorRole order,
+# #aarrggbb, position being the only thing that names them:
+#
+#   WindowText Button Light Midlight Dark Mid Text BrightText ButtonText Base
+#   Window Shadow Highlight HighlightedText Link LinkVisited AlternateBase
+#   NoRole ToolTipBase ToolTipText PlaceholderText
+#
+# The three groups differ in four of those, so they come off one function:
+# active is the focused window, inactive is a window that is not focused (same
+# colours, quieter selection), disabled is greyed controls.
+scheme() {   # scheme <foreground> <highlight> <highlight text>
+    printf '#ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #ff%s, #80%s' \
+        "$1" "$idle" "$qlight" "$qmidlight" "$qdark" "$qmid" "$1" "$bright" "$1" \
+        "$surface" "$window" "$qshadow" "$2" "$3" "$accent" "$qvisited" "$window" \
+        "$surface" "$raised" "$text" "$subtext"
+}
+
+mkdir -p "$config/qt6ct/colors"
+cat > "$config/qt6ct/colors/house.conf" <<EOF
+[ColorScheme]
+active_colors=$(scheme "$text" "$accent" "$surface")
+disabled_colors=$(scheme "$disabled" "$idle" "$disabled")
+inactive_colors=$(scheme "$text" "$qdimhl" "$text")
+EOF
+
+# The rest of qt6ct.conf is settings (fonts, single-click, icons in menus) and
+# is stowed, so only the three lines that are ours get patched - the same
+# one-line edit btop's theme name gets, for the same reason.
+#
+# Which style draws the widgets is a property of the machine rather than of the
+# table, but this is the thing that runs on every switch and can see whether the
+# plugin is installed, so it decides here. With Kvantum the palette is turned
+# off: Kvantum colours itself from the theme above, and two sources for the same
+# colours is how they drift apart.
+if [ -f "$config/qt6ct/qt6ct.conf" ]; then
+    if find /usr/lib/qt6/plugins/styles /usr/lib/qt/plugins/styles -maxdepth 1 \
+            -iname 'libkvantum*' 2>/dev/null | grep -q .; then
+        qtstyle=kvantum
+        qtpalette=false
+    else
+        qtstyle=Fusion
+        qtpalette=true
+    fi
+
+    # An absolute path because qt6ct hands the string to QFile as it stands - no
+    # ~ and no $HOME - which is why it is written here rather than shipped.
+    sed -i \
+        -e "s|^style=.*|style=$qtstyle|" \
+        -e "s|^custom_palette=.*|custom_palette=$qtpalette|" \
+        -e "s|^color_scheme_path=.*|color_scheme_path=$config/qt6ct/colors/house.conf|" \
+        "$config/qt6ct/qt6ct.conf"
+
+    # qt6ct's plugin watches qt6ct.conf, not the scheme file it points at, so a
+    # table change that only rewrites the palette would sit there unnoticed
+    # until the next launch. Touching it is what makes open Qt apps retint.
+    touch "$config/qt6ct/qt6ct.conf"
+fi
 
 # --- folder icons -------------------------------------------------------------
 # One House-<Table> icon theme per table (gold, brass, neon pink, old gold
