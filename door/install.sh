@@ -40,6 +40,7 @@ sudo rsync -a --delete \
     --exclude 'README.md' \
     --exclude 'make-chips.py' \
     --exclude 'assets/chip-src.png' \
+    --exclude 'TestStack.qml' \
     --exclude '.*' \
     "$here"/ "$dest"/
 
@@ -78,5 +79,6 @@ echo "   preview it without logging out:"
 echo "     sddm-greeter-qt6 --test-mode --theme $dest"
 echo
 echo "   note that in test mode logind refuses every power action, so the chips"
-echo "   on the rail are hidden, and sddm.login() always fails - you can reach"
-echo "   the bust but never the twenty-one."
+echo "   on the rail are hidden, and sddm.login() reaches no daemon at all - so"
+echo "   enter deals the cards and then nothing, neither the bust nor the"
+echo "   twenty-one. See the README for how to force a hand."

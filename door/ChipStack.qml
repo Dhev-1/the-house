@@ -8,13 +8,14 @@ import "Palette.js" as Palette
 // to be unambiguous at a glance and has to move, so a chip drops in with a
 // bounce and the bet is visibly bigger than it was.
 //
-// Ten to a stack, then a new stack beside it, four stacks at the most. That is
-// how chips are actually handled: you build to a round number, you cap it, you
-// start the next one. It also keeps the bet from ever climbing off the top of
-// the screen without having to squash the chips together to do it - the earlier
-// version tucked them closer and closer as the password grew, and a stack that
-// changes its own spacing while you type reads as the drawing breaking rather
-// than as the bet growing.
+// Five stacks, and deliberately not five of the same height - 10, 4, 9, 7, 5.
+// A rack of identical columns is a bar chart with nothing to say; real chips in
+// front of a real player are whatever height the last few hands left them, and
+// the uneven skyline is most of what makes this read as a table rather than as
+// a progress bar. It also means the bet's shape is recognisable at a glance, so
+// you can see roughly how far in you are without reading anything.
+//
+// The stacks sit on a circle rather than in a straight row - see `riseAt`.
 //
 // Sprites, not rectangles. The chip is a 29x14 pixel drawing in three-quarter
 // view (assets/chip-src.png): the top face on rows 0-6, the near rim on rows
@@ -31,9 +32,10 @@ Item {
     // How many chips are in. Bind straight to the password length.
     property int count: 0
 
-    // Ten high, four wide. Both are knobs in theme.conf.
-    property int chipsPerStack: 10
-    property int maxStacks: 4
+    // How tall each stack is allowed to get, left to right. The length of this
+    // is how many stacks there are; the sum is how long a password the felt can
+    // report. A knob in theme.conf.
+    property var stackHeights: [10, 4, 9, 7, 5]
 
     property int chipWidth: 76
 
@@ -54,9 +56,13 @@ Item {
     readonly property int spriteRim: 5
 
     // The air between one stack and the next, in source pixels. Small on
-    // purpose: four stacks standing this close read as one bet spread out,
-    // where four stacks a chip's width apart read as four separate bets.
+    // purpose: stacks standing this close read as one bet spread out, where
+    // stacks a chip's width apart read as separate bets.
     readonly property int spriteGap: 3
+
+    // The radius of the circle the stacks stand on, in source pixels, centred
+    // far below the felt. See `riseAt`.
+    readonly property int spriteRadius: 110
 
     // How many screen pixels to one source pixel. Snapped to a whole number and
     // never below 1: at 3.3x a 29-wide sprite lands on a fractional boundary and
@@ -67,123 +73,206 @@ Item {
 
     readonly property int chipHeight: spriteHeight * root.scale
 
-    // Fixed, both of them. The vertical gap is one rim, always - see the note
-    // about squashing above. The horizontal one is a whole chip plus the air.
+    // Fixed, both of them. One rim between chips, one chip plus the air between
+    // stacks. An earlier version squeezed the vertical gap once the bet got
+    // long, and a stack that changes its own spacing while you type reads as the
+    // drawing breaking rather than as the bet growing; spreading sideways into
+    // the next stack does the same job without touching the chips.
     readonly property int pitch: spriteRim * root.scale
     readonly property int stackPitch: (spriteWidth + spriteGap) * root.scale
 
-    // How many chips actually get drawn. Past four full stacks the bet stops
-    // changing: the password keeps taking characters, the felt just stops
-    // reporting them. Forty is far past the point where anyone is counting
-    // chips, and a bet that grew forever would either leave the screen or go
-    // back to squashing itself.
-    readonly property int shown: Math.min(count, chipsPerStack * maxStacks)
-
-    // How many stacks those fill. At least one, so an empty bet still has a
-    // width to be centred on rather than collapsing.
-    readonly property int stacks: Math.max(1, Math.ceil(shown / chipsPerStack))
-
-    // The left edge of the block of stacks.
-    //
-    // The item is always as wide as four stacks, and the stacks in use are
-    // centred inside it. That is what keeps the bet centred in the betting
-    // circle no matter how many stacks are out, without the item's own width
-    // changing underneath whatever is laying it out. The cost is that opening a
-    // new stack shifts the existing ones left by half a stack - which is a real
-    // moment worth seeing, so the chips slide rather than jump.
-    readonly property int originX: Math.round((width - (stacks * stackPitch - spriteGap * root.scale)) / 2)
-
-    // Which denomination the chip at `i` is, as an index into Palette.chips.
-    //
-    // Off the chip's place in the whole bet, not its place in its own stack, so
-    // the colour keeps climbing straight across the gap from one stack into the
-    // next and the four stacks read as one long bet broken into columns. Three
-    // chips to a colour: one apiece is a stripe, three is a band you can see.
-    function denom(i: int): int {
-        return Math.floor(i / 3) % Palette.chips.length;
+    // The longest password the felt can report, and how much of `count` it is
+    // actually showing. Past capacity the bet stops changing: the password keeps
+    // taking characters, the felt just stops counting them.
+    readonly property int capacity: {
+        var t = 0;
+        for (var s = 0; s < root.stackHeights.length; ++s)
+            t += root.stackHeights[s];
+        return t;
     }
 
-    // Which of the three bakes of that denomination to use.
-    //
-    // A sprite stack is one image repeated, so left alone every chip's edge
-    // spots land at the same x and the stack reads as stripes running down it
-    // rather than as discs lying on each other - the basketwork problem. The
-    // sprite is left-right symmetric, so mirroring alternate chips does nothing
-    // about it; make-chips.py bakes three copies with the rim clocked round by
-    // different amounts instead. Cycling them by the same index the colour uses
-    // means no chip is ever the same bake as the one it is sitting on.
-    function variant(i: int): string {
-        return ["a", "b", "c"][i % 3];
+    readonly property int shown: Math.min(count, capacity)
+
+    // How many stacks have anything in them. At least one, so an empty bet still
+    // has a width to be centred on rather than collapsing to nothing.
+    readonly property int stacksUsed: {
+        var t = 0;
+        for (var s = 0; s < root.stackHeights.length; ++s) {
+            t += root.stackHeights[s];
+            if (root.shown <= t)
+                return s + 1;
+        }
+        return root.stackHeights.length;
     }
 
-    implicitWidth: maxStacks * stackPitch - spriteGap * root.scale
-    implicitHeight: chipHeight + pitch * Math.max(0, chipsPerStack - 1)
+    // The left edge of the block of stacks in use.
+    //
+    // The item is always as wide as every stack it could have, and the ones in
+    // use are centred inside it. That is what keeps the bet centred in the
+    // betting circle no matter how many stacks are out, without the item's own
+    // width changing underneath whatever is laying it out. The cost is that
+    // opening a new stack shifts the existing ones left - which is a real moment
+    // worth seeing, so they slide rather than jump.
+    readonly property int originX: Math.round((width - (stacksUsed * stackPitch - spriteGap * root.scale)) / 2)
 
+    // How many chips are in the stacks to the left of `s`. The chip's place in
+    // the whole bet, which is what picks its colour.
+    function offsetOf(s: int): int {
+        var t = 0;
+        for (var i = 0; i < s; ++i)
+            t += root.stackHeights[i];
+        return t;
+    }
+
+    // How many chips are actually in stack `s` right now.
+    function chipsIn(s: int): int {
+        return Math.max(0, Math.min(root.stackHeights[s], root.shown - root.offsetOf(s)));
+    }
+
+    // How far stack `s` of `n` is lifted off the baseline, in screen pixels.
+    //
+    // The stacks stand on a circle rather than in a straight line: one big
+    // circle centred a long way below the felt, so the middle stack sits at the
+    // bottom of it and the outer ones ride up the sides. Concave, the way chips
+    // pushed out around the near edge of a betting circle sit - the felt is
+    // round, so a row of stacks laid across it should be too, and a dead
+    // straight row is the one arrangement that gives away that the table is
+    // flat.
+    //
+    // A fixed radius rather than a fixed lift for the outermost stack. Radius
+    // means one circle, and every stack sits where that circle actually puts it,
+    // so the arc gets deeper as the bet spreads instead of being re-fitted to
+    // whatever is currently out. Two stacks barely bend at all, which is right -
+    // re-fitting would throw the whole bet upward the moment a second stack
+    // opened, for no reason a player could see.
+    //
+    // 110 source pixels puts the outermost of five about twenty pixels up, and
+    // the pair inside them about four. It wants to be roughly this tight: at 176
+    // the arc is real but the stacks are all different heights anyway, so a lift
+    // that small disappears into the skyline and the row just looks slightly
+    // crooked. Turn it down for a deeper bowl, up for a flatter one; negate the
+    // result for a dome instead.
+    function riseAt(s: int, n: int): int {
+        var dx = (s - (n - 1) / 2) * (root.spriteWidth + root.spriteGap);
+        var r = root.spriteRadius;
+        if (Math.abs(dx) >= r)
+            return 0;
+        return Math.round((r - Math.sqrt(r * r - dx * dx)) * root.scale);
+    }
+
+    implicitWidth: stackHeights.length * stackPitch - spriteGap * root.scale
+
+    // Tall enough for the tallest stack standing at its full lift, so the item's
+    // height is a constant of the arrangement rather than something that grows
+    // while the bet is being typed.
+    implicitHeight: {
+        var m = 0;
+        for (var s = 0; s < root.stackHeights.length; ++s) {
+            var h = root.chipHeight + root.pitch * (root.stackHeights[s] - 1) + root.riseAt(s, root.stackHeights.length);
+            if (h > m)
+                m = h;
+        }
+        return m;
+    }
+
+    // One item per stack, holding that stack's chips.
+    //
+    // Nested rather than one flat run of chips because the two movements have to
+    // stay out of each other's way: a stack slides and lifts as the arrangement
+    // changes, and a chip drops as it is dealt. Sliding the stack and letting
+    // the chips sit still inside it means the drop animation owns the chip's y
+    // outright, with no Behaviour fighting it for the same property.
     Repeater {
-        model: root.shown
+        model: root.stackHeights.length
 
-        Image {
-            id: chip
+        Item {
+            id: column
 
             required property int index
 
-            // Which stack this chip is in, and how high up that stack.
-            readonly property int stack: Math.floor(chip.index / root.chipsPerStack)
-            readonly property int row: chip.index % root.chipsPerStack
+            readonly property int height_: root.chipHeight + root.pitch * Math.max(0, root.stackHeights[column.index] - 1)
 
-            // 1 while the chip is still in the air, 0 once it is on the stack.
-            property real drop: 1
-
-            source: "assets/chip-" + root.denom(chip.index) + root.variant(chip.index) + ".png"
-
-            // The sprite is drawn at a whole multiple of its own size and must
-            // not be interpolated on the way up - that is the difference between
-            // pixel art and a blurry photograph of pixel art.
-            smooth: false
+            visible: root.chipsIn(column.index) > 0
 
             width: root.spriteWidth * root.scale
-            height: root.chipHeight
+            height: column.height_
 
-            // Stacked from the bottom of the item upward, so the stacks grow
-            // toward the top of the screen and their bases stay put on the felt.
-            // Squarely on top of each other within a stack, with no lateral
-            // wobble: the chips are all one sprite on one pixel grid, and
-            // knocking every other one sideways does not read as a hand-dealt
-            // stack leaning the way a real one does, it reads as a column that
-            // has been rendered wrong. The three bakes carry the variation
-            // instead - see `variant`.
-            x: root.originX + chip.stack * root.stackPitch
-            y: Math.round(root.height - root.chipHeight - chip.row * root.pitch - chip.drop * root.chipHeight * 3)
-            opacity: 1 - chip.drop
-            // Later chips sit in front of earlier ones, so the near rim of each
-            // chip overlaps the one below it rather than being hidden by it.
-            z: chip.index
+            x: root.originX + column.index * root.stackPitch
+            y: root.height - column.height_ - root.riseAt(column.index, root.stacksUsed)
 
-            // Only ever fires when a new stack opens or closes and the block
-            // re-centres; a Behavior does not run on a property's first value,
-            // so a chip being dealt still arrives at its x directly and falls
-            // straight down.
             Behavior on x {
                 NumberAnimation {
                     duration: 200
                     easing.type: Easing.OutCubic
                 }
             }
+            Behavior on y {
+                NumberAnimation {
+                    duration: 200
+                    easing.type: Easing.OutCubic
+                }
+            }
 
-            Component.onCompleted: land.start()
+            Repeater {
+                model: root.chipsIn(column.index)
 
-            NumberAnimation {
-                id: land
+                Image {
+                    id: chip
 
-                target: chip
-                property: "drop"
-                from: 1
-                to: 0
-                // Short, and it bounces. A chip is clay on wood: it arrives, it
-                // rattles once, it stops. Anything slower than this and fast
-                // typing turns the stack into soup.
-                duration: 260
-                easing.type: Easing.OutBounce
+                    required property int index
+
+                    // Where this chip falls in the whole bet, not in its own
+                    // stack: the colour keeps climbing straight across the gap
+                    // from one stack into the next, so the stacks read as one
+                    // long bet broken into columns rather than as five separate
+                    // ones. Three chips to a colour - one apiece is a stripe,
+                    // three is a band you can see.
+                    readonly property int place: root.offsetOf(column.index) + chip.index
+
+                    // 1 while the chip is still in the air, 0 once it is down.
+                    property real drop: 1
+
+                    source: "assets/chip-" + (Math.floor(chip.place / 3) % Palette.chips.length) + ["a", "b", "c"][chip.place % 3] + ".png"
+
+                    // The sprite is drawn at a whole multiple of its own size
+                    // and must not be interpolated on the way up - that is the
+                    // difference between pixel art and a blurry photograph of
+                    // pixel art.
+                    smooth: false
+
+                    width: root.spriteWidth * root.scale
+                    height: root.chipHeight
+
+                    // Stacked from the bottom of the column upward, squarely on
+                    // top of each other, with no lateral wobble: the chips are
+                    // all one sprite on one pixel grid, and knocking every other
+                    // one sideways does not read as a hand-dealt stack leaning
+                    // the way a real one does, it reads as a column that has
+                    // been rendered wrong. The three bakes carry the variation
+                    // instead - see the source above.
+                    x: 0
+                    y: Math.round(column.height_ - root.chipHeight - chip.index * root.pitch - chip.drop * root.chipHeight * 3)
+                    opacity: 1 - chip.drop
+                    // Later chips sit in front of earlier ones, so the near rim
+                    // of each overlaps the one below rather than being hidden.
+                    z: chip.index
+
+                    Component.onCompleted: land.start()
+
+                    NumberAnimation {
+                        id: land
+
+                        target: chip
+                        property: "drop"
+                        from: 1
+                        to: 0
+                        // Short, and it bounces. A chip is clay on wood: it
+                        // arrives, it rattles once, it stops. Anything slower
+                        // and fast typing turns the stack into soup.
+                        duration: 260
+                        easing.type: Easing.OutBounce
+                    }
+                }
             }
         }
     }

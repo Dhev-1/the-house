@@ -5,10 +5,12 @@ password is a bet, and pressing enter deals.
 
 Type, and every character drops a clay chip onto a stack standing in the
 betting circle — there is no row of asterisks anywhere in this theme, the stack
-is the whole of the feedback. Ten chips to a stack, then a new stack starts
-beside it, up to four; past forty characters the bet stops changing. The clay
-changes every three chips — red, black, blue, purple, and round again — so how
-far along the password is reads off the felt without counting chips.
+is the whole of the feedback. The chips fill five stacks of uneven height — ten,
+four, nine, seven, five — set out along a shallow circular arc, the way chips
+sit around the near edge of a betting circle; past thirty-five characters the
+bet stops changing. The clay changes every three chips — red, black, blue,
+purple, and round again — so how far along the password is reads off the felt
+without counting chips.
 
 Press enter and the bet is pushed into the pot and
 two cards come out of the shoe. Right password, they turn over ace and king:
@@ -55,14 +57,37 @@ Two things to know about test mode:
 
 - **logind refuses every power action**, so `sddm.canPowerOff` and friends are
   all false and the power chips on the rail do not render. They are not broken.
-- **`sddm.login()` always fails**, so you can reach the bust but never the
-  twenty-one. To see the winning hand, force it: temporarily replace the
-  `sddm.login(...)` call in `deal()` with
-  `root.dealt = true; root.verdict = "win"; root.reveal()`.
+- **`sddm.login()` goes nowhere at all.** There is no daemon on the other end —
+  the greeter logs `QLocalSocket::connectToServer: Invalid name` at startup and
+  `QIODevice::write (QLocalSocket): device not open` when you press enter — so
+  neither `loginSucceeded` nor `loginFailed` is ever emitted. `verdict` stays
+  empty, `reveal()` returns early every time, and the theme sits in the `deal`
+  phase for good: bet pushed into the pot, two cards face down, no turn-over, no
+  bust, no sweep. Escape cannot rescue it either, because the key handler is
+  `enabled: root.phase === "bet"`. Kill the greeter and start it again.
 
-QML errors do **not** appear on stdout — SDDM captures them and paints them into
-its own fallback theme instead. If you get the stock blue login box with red
-text on it, that is your error message.
+  So **neither hand is reachable in test mode**, winning or losing. To see one,
+  force it: temporarily replace the `sddm.login(...)` call in `deal()` with
+  `root.dealt = true; root.verdict = "win"; root.reveal()` — or `"lose"` for the
+  bust.
+
+QML errors go to Qt's logging, which off a terminal it does not recognise gets
+routed away from stderr and silently dropped. Run it as
+
+```sh
+QT_FORCE_STDERR_LOGGING=1 sddm-greeter-qt6 --test-mode --theme .
+```
+
+or you will get an empty log for a theme that is throwing on every frame. A
+binding that throws leaves its property `undefined` rather than defaulted, and
+`undefined` in a size or a count renders as nothing at all — no warning, no
+missing-file message, just a piece of the table that is not there. Without that
+variable the only symptom is the hole.
+
+One trap worth knowing, since it costs an afternoon: **SDDM splits any value
+containing a comma into a list** before the theme sees it. `stackHeights` comes
+back as a list of strings with no `.split` on it, not as `"10,4,9,7,5"`, which
+is why `Main.qml` stringifies before parsing.
 
 ## Keys
 

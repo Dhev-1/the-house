@@ -47,8 +47,32 @@ Rectangle {
     readonly property string face: config.fontFamily || "JetBrainsMono Nerd Font"
     readonly property bool clock24h: (config.clock24h || "true") === "true"
     readonly property bool showdown: (config.showdown || "true") === "true"
-    readonly property int chipsPerStack: parseInt(config.chipsPerStack || "10")
-    readonly property int maxStacks: parseInt(config.maxStacks || "4")
+    // "10,4,9,7,5" -> [10, 4, 9, 7, 5]. Anything that does not parse to a
+    // positive number is dropped, and an empty result falls back to the default
+    // shape, so a typo in theme.conf costs the arrangement rather than the
+    // password field.
+    //
+    // Forced through a string first, and that is not belt and braces. Every
+    // other key here arrives as a string, but SDDM splits any value with a comma
+    // in it into a list before the theme ever sees it - so this one key comes
+    // back as a list of "10", "4", ... with no .split on it, the binding throws
+    // TypeError, and the property is left undefined rather than defaulted.
+    // ChipStack then cannot read .length of it and the bet renders as nothing at
+    // all: no chips, no missing-file warning, and the error only visible if you
+    // happen to have Qt's logging pointed somewhere you can read. Stringifying
+    // first collapses both shapes onto one path, because the list stringifies
+    // back to exactly the "10,4,9,7,5" that was written in the file.
+    readonly property var stackHeights: {
+        var spec = config.stackHeights;
+        var raw = (spec === undefined || spec === null ? "" : "" + spec).split(",");
+        var out = [];
+        for (var i = 0; i < raw.length; ++i) {
+            var n = parseInt(raw[i]);
+            if (n > 0)
+                out.push(n);
+        }
+        return out.length > 0 ? out : [10, 4, 9, 7, 5];
+    }
     readonly property string houseName: config.houseName || (sddm.hostName || "the house")
 
     // --- state ----------------------------------------------------------------
@@ -389,12 +413,22 @@ Rectangle {
                         width: Math.round(122 * root.u)
                         fontFamily: root.face
 
-                        // The rank is the first letter of the account name and
-                        // the suit follows the seat, so every player gets a card
-                        // that is recognisably theirs without a photo.
+                        // A court card. Every other card on this table is one you
+                        // were dealt; this one is the person sitting in front of
+                        // it, and the court cards are the only ones in a deck
+                        // with a person on them.
+                        court: true
+
+                        // The suit follows the seat, so every account gets a card
+                        // that is recognisably its own without a photo. The rank
+                        // is the account's first letter and a court card does not
+                        // print it - it is set here so the card is still a whole
+                        // card if `court` is ever turned off, and because the
+                        // name is already spelled out in gold under the fan.
                         rank: (seatCard.realName || seatCard.name).charAt(0).toUpperCase()
                         suit: ["♠", "♥", "♦", "♣"][seatCard.index % 4]
-                        picture: seatCard.chosen ? seatCard.icon : ""
+                        // No picture: a court card carries a monogram, not a
+                        // photograph. See the note in Card.qml.
                         faceUp: seatCard.chosen
 
                         // The chosen card is pulled out of the fan and stood
@@ -590,8 +624,7 @@ Rectangle {
                 id: chips
 
                 count: bet.text.length
-                chipsPerStack: root.chipsPerStack
-                maxStacks: root.maxStacks
+                stackHeights: root.stackHeights
                 chipWidth: Math.round(96 * root.u)
             }
         }

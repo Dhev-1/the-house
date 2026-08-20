@@ -105,6 +105,21 @@ var chips = [
     }     // purple, ivory spots
 ];
 
+// --- court stock --------------------------------------------------------------
+// The seat cards are printed in the room's own three colours rather than on
+// ivory: black stock, gold rule, white figures, with black doing most of the
+// work. A seat card is a piece of this room and not a card out of the shoe, and
+// the shoe's cards are the pale ones - so the two never get confused for each
+// other even when the showdown lands on top of the fan.
+//
+// Flat white for the figures rather than the ivory the rest of the type uses.
+// Ivory is warm against black lacquer at the size the nameplate is set, but at
+// a hairline it stops reading as warm and starts reading as a slightly dirty
+// white, and the one thing on a black card that must look deliberate is the
+// white.
+var courtStock = "#171310";
+var courtFigure = "#ffffff";
+
 // The power chips on the rail wear house colours rather than a denomination -
 // they are not part of the bet, and a gold 500 that shuts the machine down is a
 // button somebody clicks while looking at the stack they are building.
