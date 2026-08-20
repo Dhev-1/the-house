@@ -184,6 +184,8 @@ Item {
         // The corner index, top left. Rank over suit, the way a real card is
         // printed, so it still reads when the cards are fanned and overlapping.
         Column {
+            id: topIndex
+
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.leftMargin: root.width * 0.09
@@ -286,7 +288,23 @@ Item {
 
             anchors.centerIn: parent
             visible: root.court
-            width: root.width * 0.66
+
+            // Narrow enough to pass between the two corner indices rather than
+            // through them, which is what a fixed fraction of the width did: the
+            // panel's top-left corner landed inside the suit in the top-left
+            // corner and the gold line ran straight across the glyph.
+            //
+            // Measured off the index rather than guessed at, because the suits
+            // are symbol glyphs and how wide one actually is depends on which
+            // font fontconfig hands back - a number that looks clear against
+            // JetBrains Mono is not clear against whatever a machine without it
+            // falls back to. The floor is there so a pathologically wide glyph
+            // gives a cramped panel rather than a negative one.
+            //
+            // Only the width has to give. Clearing them vertically instead would
+            // mean a panel little more than half the card tall, and the tall
+            // narrow cartouche is what makes this read as a court card at all.
+            width: Math.max(root.width * 0.30, root.width - 2 * (root.width * 0.09 + topIndex.width + root.width * 0.035))
             height: root.height * 0.70
 
             // The panel itself: the stock darkened, so it reads as a recess cut
