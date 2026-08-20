@@ -47,7 +47,8 @@ Rectangle {
     readonly property string face: config.fontFamily || "JetBrainsMono Nerd Font"
     readonly property bool clock24h: (config.clock24h || "true") === "true"
     readonly property bool showdown: (config.showdown || "true") === "true"
-    readonly property int maxStack: parseInt(config.maxStack || "14")
+    readonly property int chipsPerStack: parseInt(config.chipsPerStack || "10")
+    readonly property int maxStacks: parseInt(config.maxStacks || "4")
     readonly property string houseName: config.houseName || (sddm.hostName || "the house")
 
     // --- state ----------------------------------------------------------------
@@ -589,7 +590,8 @@ Rectangle {
                 id: chips
 
                 count: bet.text.length
-                maxStack: root.maxStack
+                chipsPerStack: root.chipsPerStack
+                maxStacks: root.maxStacks
                 chipWidth: Math.round(96 * root.u)
             }
         }

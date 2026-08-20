@@ -55,23 +55,26 @@ var muted = "#8d8375"; // warm grey, never a neutral one
 var hot = "#cf3b32"; // caps lock, bust, swept
 
 // --- the chips ----------------------------------------------------------------
-// House colours only - ivory, red, black, gold - so every chip belongs to the
-// same room. The green and purple of a real rack are the right colours in a
-// real casino and the wrong ones here; they would be the only two things on
-// screen that came from somewhere else.
+// Red, black, blue, purple - four denominations, one per stack of the bet.
 //
-// The bet climbs through these as it grows, so the colour of the top chip says
-// roughly how long the password is without anyone counting chips.
+// Deliberately none of the room's own colours. An earlier set ran ivory, red,
+// black, gold, which was the room in miniature and was the problem: the gold
+// chip sat on the felt the same colour as the plaques and the hairlines around
+// it, and the ivory chip was the colour of the type. The chips are supposed to
+// be the one thing on this screen that is not black lacquer and gold, so they
+// are now colours the room does not otherwise contain, and the bet separates
+// from its background instead of blending into it. Black stays, because a rack
+// without it does not look like a rack - and it earns its place by being darker
+// than the cloth rather than lighter, which no other chip here is.
+//
+// The bet climbs through these as it grows, three chips to a colour, so the
+// clay at the top says roughly how long the password is without anyone counting
+// chips. Three and not one: a single chip of each colour is a stripe, where
+// three is a band you can actually see.
 //
 // Each: the clay body, the contrasting inlay let into the edge spots, and an
 // ink that reads on the body.
 var chips = [
-    {
-        body: "#ece4d0",
-        spot: "#14100f",
-        ink: "#14100f",
-        value: "1"
-    },      // ivory, black spots
     {
         body: "#b3282a",
         spot: "#ece4d0",
@@ -80,16 +83,26 @@ var chips = [
     },      // red, ivory spots
     {
         body: "#131110",
-        spot: "#d9a92e",
-        ink: "#e8d5a0",
-        value: "100"
-    },    // black, gold spots
+        spot: "#ffffff",
+        ink: "#ffffff",
+        value: "25"
+    },     // black, white spots. Flat white rather than the ivory the other
+           // three wear: this is the only chip darker than the cloth it lies
+           // on, so its spots are doing the whole job of separating it from the
+           // felt, and ivory is not a big enough step away from near-black to
+           // do that at the size a rim spot actually gets drawn.
     {
-        body: "#d9a92e",
-        spot: "#14100f",
-        ink: "#2a2010",
+        body: "#22508a",
+        spot: "#ece4d0",
+        ink: "#dce6f2",
+        value: "100"
+    },    // blue, ivory spots
+    {
+        body: "#6a3287",
+        spot: "#ece4d0",
+        ink: "#ecdcf4",
         value: "500"
-    }     // gold, black spots
+    }     // purple, ivory spots
 ];
 
 // The power chips on the rail wear house colours rather than a denomination -

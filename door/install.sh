@@ -31,9 +31,15 @@ fi
 # reinstall; the greeter would happily keep loading it.
 echo ":: installing to $dest"
 sudo mkdir -p "$dest"
+# make-chips.py and its input are build-time things: the greeter only ever loads
+# the twelve baked chip-<n><a|b|c>.png files, so shipping the script and the
+# master drawing to a root-owned system directory adds nothing the login screen
+# can use. They stay in the repo, where you re-run them.
 sudo rsync -a --delete \
     --exclude 'install.sh' \
     --exclude 'README.md' \
+    --exclude 'make-chips.py' \
+    --exclude 'assets/chip-src.png' \
     --exclude '.*' \
     "$here"/ "$dest"/
 

@@ -5,7 +5,12 @@ password is a bet, and pressing enter deals.
 
 Type, and every character drops a clay chip onto a stack standing in the
 betting circle — there is no row of asterisks anywhere in this theme, the stack
-is the whole of the feedback. Press enter and the bet is pushed into the pot and
+is the whole of the feedback. Ten chips to a stack, then a new stack starts
+beside it, up to four; past forty characters the bet stops changing. The clay
+changes every three chips — red, black, blue, purple, and round again — so how
+far along the password is reads off the felt without counting chips.
+
+Press enter and the bet is pushed into the pot and
 two cards come out of the shoe. Right password, they turn over ace and king:
 twenty-one. Wrong, and they turn over seventeen, the house hits you with a
 third card, you bust, and the table sweeps itself so you can bet again.
@@ -87,6 +92,20 @@ sit on the other end of it.
 | `SessionPlaque.qml` | session picker |
 | `PowerChips.qml` | suspend, hibernate, restart, cash out |
 | `theme.conf` | the handful of knobs worth turning without editing qml |
+| `make-chips.py` | bakes the bet's sprites. Build-time only, not installed |
+
+The chips in the bet are a pixel drawing, not rectangles, and a drawing has no
+colours to bind to. So the four denominations in `Palette.js` are baked into
+`assets/chip-<denomination><variant>.png` ahead of time, and `ChipStack.qml`
+just picks a file by name. The master art is `assets/chip-src.png`, one 29×14
+chip in three-quarter view.
+
+    python3 door/make-chips.py    # needs Pillow
+
+Re-run it after changing `Palette.chips` or redrawing the source, and commit the
+twelve files it writes — `install.sh` copies those and leaves the script and the
+master behind. The three variants per denomination exist so a stack does not
+turn into vertical stripes; the script's docstring explains that at length.
 
 `Palette.js` is a `.pragma library` rather than the QML singleton it obviously
 wants to be. A `singleton` line in a `qmldir` is only honoured when the
