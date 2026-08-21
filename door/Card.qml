@@ -96,54 +96,153 @@ Item {
     }
 
     // --- the back -------------------------------------------------------------
+    // What you are actually looking at for most of a showdown. The cards are
+    // pitched face down and only turn at the very end, so the back is on screen
+    // for the whole deal and the face for about a second of it - which is the
+    // wrong way round from how much drawing each used to get.
+    //
+    // A real back is one printed pattern run edge to edge, and it has to survive
+    // two things this one does. It is seen in a fanned overlap, where all you get
+    // of the cards underneath is a strip down one side, so the pattern has to
+    // read from any sliver of it rather than from the middle. And it is seen
+    // upside down by half the table, so it is built to turn: the weave is
+    // symmetric about both axes and the medallion sits dead centre, and a card
+    // rotated 180 degrees is the same card.
     Rectangle {
         anchors.fill: parent
         visible: root.flip < 90
         radius: root.width * 0.08
         color: Palette.cardBack
+        // A dim gold edge rather than the black one this used to have. Black on
+        // black cloth gave a face-down card no outline at all - a hole in the
+        // table rather than a card lying on it - and a hand of them ran together
+        // into one shape. Same problem the court card's gold edge solves, same
+        // fix.
         border.width: 1
-        border.color: Qt.rgba(0, 0, 0, 0.45)
+        border.color: Palette.alpha(Palette.gold, 0.30)
 
-        // The gold frame printed inside the edge.
+        // The double rule. Two lines rather than one, at the same inset as the
+        // two round the court panel, so a card that turns over keeps its frame
+        // and changes only what is inside it.
         Rectangle {
             anchors.fill: parent
-            anchors.margins: root.width * 0.07
-            radius: root.width * 0.04
+            anchors.margins: root.width * 0.055
+            radius: root.width * 0.05
             color: "transparent"
             border.width: 1
             border.color: Palette.alpha(Palette.gold, 0.55)
         }
 
-        // The lattice inside the frame - the same diamond grid as the cloth, so
-        // the deck and the table are printed by the same house.
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: root.width * 0.085
+            radius: root.width * 0.035
+            color: "transparent"
+            border.width: 1
+            border.color: Palette.alpha(Palette.gold, 0.26)
+        }
+
+        // The weave: two families of hairlines at right angles, crossing into a
+        // fine diamond mesh. The same diamond as the lattice on the cloth and
+        // the lozenge below, so the deck and the table are printed by the same
+        // house - but woven rather than scattered.
+        //
+        // What was here before was twenty-four separate diamonds on a 4x6 grid,
+        // each about a tenth of the card across. At the size a card actually
+        // gets drawn that is not a pattern, it is two dozen specks, and in a
+        // fanned hand a sliver of it showed one speck and a lot of black.
+        // Crossed lines have no such problem: any strip of them is the pattern.
         Item {
-            id: backGrid
+            id: weave
 
             anchors.fill: parent
-            anchors.margins: root.width * 0.13
+            anchors.margins: root.width * 0.105
             clip: true
 
-            readonly property int cols: 4
-            readonly property int rows: 6
+            // Spacing measured along the horizontal, so the mesh the eye sees is
+            // this over root two - about a sixteenth of the card, fine enough to
+            // read as texture instead of as lines you could count.
+            readonly property real step: root.width * 0.085
 
+            // Long enough that a line pinned at the centre still runs past both
+            // corners once it is turned, and enough of them to sweep the whole
+            // diagonal extent.
+            readonly property real span: (weave.width + weave.height) * 1.2
+
+            // Floored at zero because anchors.fill plus a margin on a parent
+            // that has not been sized yet gives a negative width and height, and
+            // for the frame before the card gets its real size that makes the
+            // count negative - which the Repeater complains about by name.
+            readonly property int lines: Math.max(0, Math.ceil((weave.width + weave.height) / weave.step))
+
+            // Each family is one Repeater of horizontal hairlines, turned as a
+            // whole. Offsetting a turned line's centre along x alone still walks
+            // it across the card perpendicular to itself, so there is no
+            // trigonometry here beyond the rotation.
             Repeater {
-                model: backGrid.cols * backGrid.rows
+                model: weave.lines
 
                 Rectangle {
                     required property int index
 
-                    readonly property int col: index % backGrid.cols
-                    readonly property int row: Math.floor(index / backGrid.cols)
-
-                    width: backGrid.width / backGrid.cols * 0.5
-                    height: width
-                    x: (col + 0.5) * backGrid.width / backGrid.cols - width / 2 + (row % 2 ? backGrid.width / backGrid.cols / 2 : 0)
-                    y: (row + 0.5) * backGrid.height / backGrid.rows - height / 2
+                    width: weave.span
+                    height: 1
+                    x: (index - weave.lines / 2) * weave.step + weave.width / 2 - width / 2
+                    y: weave.height / 2
                     rotation: 45
-                    color: "transparent"
-                    border.width: 1
-                    border.color: Palette.cardBackLine
+                    color: Palette.cardBackLine
+                    opacity: 0.5
                 }
+            }
+
+            Repeater {
+                model: weave.lines
+
+                Rectangle {
+                    required property int index
+
+                    width: weave.span
+                    height: 1
+                    x: (index - weave.lines / 2) * weave.step + weave.width / 2 - width / 2
+                    y: weave.height / 2
+                    rotation: -45
+                    color: Palette.cardBackLine
+                    opacity: 0.5
+                }
+            }
+        }
+
+        // The medallion: a lozenge cut out of the weave with the house's spade
+        // in it. The weave is even all over and has no centre, and a back with no
+        // centre reads as wallpaper - this is what makes it a card.
+        //
+        // Filled with the stock rather than left transparent, so it masks the
+        // hairlines running underneath instead of sitting on top of them.
+        Item {
+            anchors.centerIn: parent
+            width: root.width * 0.36
+            height: width
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: parent.width * 0.74
+                height: width
+                rotation: 45
+                color: Palette.cardBack
+                border.width: 1
+                border.color: Palette.alpha(Palette.gold, 0.7)
+            }
+
+            // Always the spade, never this card's own suit. A back that told you
+            // anything about the face in front of it would be a marked deck, and
+            // the spade is the house's own mark - the same one on the button that
+            // opens the table picker inside.
+            Text {
+                anchors.centerIn: parent
+                text: "♠"
+                color: Palette.alpha(Palette.gold, 0.85)
+                font.family: root.fontFamily
+                font.pixelSize: root.width * 0.15
             }
         }
     }
