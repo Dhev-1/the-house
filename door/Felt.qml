@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import "Palette.js" as Palette
 
-// The room: cloth, lamp, lattice, vignette, rail. Everything with no behaviour.
+// The room: cloth, lamp, lattice, vignette. Everything with no behaviour.
 //
 // Drawn rather than shipped as a PNG so it is resolution-independent - the
 // greeter runs before anything has told it what monitor it is on, and a baked
@@ -18,13 +18,14 @@ Item {
     id: root
 
     // Where the lamp hangs, as a fraction of the screen. Slightly above centre:
-    // the light pools on the cards and the bet, and the rail at the bottom is
+    // the light pools on the cards and the bet, and the foot of the screen is
     // the far edge of the pool rather than in it.
     readonly property real lampX: 0.5
     readonly property real lampY: 0.42
 
-    // The rail's height. Main.qml reads this to park the session plaque and the
-    // power chips on it.
+    // The strip kept clear at the foot of the screen, which Main.qml reads to
+    // park the session plaque and the power chips in it. Nothing is drawn there;
+    // the cloth runs all the way down.
     readonly property int railHeight: Math.max(84, root.height * 0.11)
 
     // --- the cloth ------------------------------------------------------------
@@ -179,72 +180,6 @@ Item {
             PathLine {
                 x: 0
                 y: 0
-            }
-        }
-    }
-
-    // --- the rail -------------------------------------------------------------
-    // The padded lacquer edge. Rounded on all four corners with the bottom two
-    // pushed off-screen, which is cheaper and steadier than clipping a shape.
-    Rectangle {
-        id: rail
-
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: -40
-        anchors.leftMargin: -40
-        anchors.rightMargin: -40
-        height: root.railHeight + 40
-        radius: 44
-
-        // The roll of the padding: lit along the top where the lamp catches it,
-        // falling to shadow at the bottom where nothing does.
-        gradient: Gradient {
-            GradientStop {
-                position: 0.0
-                color: Palette.railLit
-            }
-            GradientStop {
-                position: 0.35
-                color: Palette.rail
-            }
-            GradientStop {
-                position: 1.0
-                color: Palette.railShadow
-            }
-        }
-    }
-
-    // The gold beading where the rail meets the cloth. One hairline, and the
-    // single brightest edge on the screen - it is the only thing telling you the
-    // rail is raised and not just a darker patch of table.
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: rail.top
-        anchors.bottomMargin: -1
-        height: 1
-        color: Palette.gold
-        opacity: 0.7
-    }
-
-    // And the cloth's own shadow falling onto the rail, so the two are not
-    // simply stacked.
-    Rectangle {
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: rail.top
-        height: 22
-
-        gradient: Gradient {
-            GradientStop {
-                position: 0.0
-                color: "transparent"
-            }
-            GradientStop {
-                position: 1.0
-                color: Qt.rgba(0, 0, 0, 0.45)
             }
         }
     }

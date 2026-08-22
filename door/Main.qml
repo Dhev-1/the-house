@@ -179,6 +179,10 @@ Rectangle {
         else
             root.dealt = true; // nothing to wait for; reveal() lands on the answer
 
+        // Start counting. Everything from here until PAM answers is a phase the
+        // table cannot leave on its own - see stallClock.
+        stallClock.restart();
+
         sddm.login(root.seatName, bet.text, root.sessionIndex);
     }
 
@@ -198,6 +202,18 @@ Rectangle {
     // cleared. Also the escape key, so a half-typed password can be abandoned
     // without holding backspace.
     function sweep(): void {
+        // Every clock, not only the ones that have already fired. This used to
+        // be reachable from one place - the end of a hand, by which point the
+        // deal and the hit were long done - and it is now reachable from the
+        // middle of one, because escape works in every phase and the stall
+        // watchdog can call it with the cards still in the air. A timer left
+        // running would land on the swept table a beat later and turn a card
+        // over on a hand nobody is playing.
+        dealClock.stop();
+        hitClock.stop();
+        sweepClock.stop();
+        stallClock.stop();
+
         bet.text = "";
         root.verdict = "";
         root.dealt = false;
@@ -243,15 +259,52 @@ Rectangle {
         onTriggered: root.sweep()
     }
 
+    Timer {
+        id: stallClock
+
+        // The dealer has to say something. Every other clock on this table
+        // measures a beat in an animation; this one measures the house not
+        // answering at all.
+        //
+        // sddm.login() hands the bet to PAM, and the only things that bring the
+        // table back to `bet` are onLoginSucceeded and onLoginFailed. A PAM
+        // stack that answers neither - a module blocking on a directory server
+        // that is not there, a wedged sddm-helper - leaves the greeter sitting
+        // in `deal` forever with nothing on screen moving. There is no second
+        // login screen to fall back on and no session to alt-tab to: it is a VT
+        // switch or the power button, and on a machine whose whole front door
+        // this is, that is the one failure worth spending a timer on.
+        //
+        // Thirty seconds is past any honest PAM stack - a remote directory that
+        // is going to answer has answered - and short of the point where
+        // somebody decides the machine is broken and holds the button.
+        interval: 30000
+        onTriggered: {
+            // Said plainly. This is the one message on this screen that is not
+            // in character, because the person reading it needs to know the
+            // machine is not broken and their password was never judged.
+            root.pitBoss = "no answer from the house - the bet has been returned. try again.";
+            root.sweep();
+        }
+    }
+
     Connections {
         target: sddm
 
+        // The house answered, so the watchdog has nothing left to catch. Stopped
+        // here rather than in reveal(), which is the wrong place twice over: it
+        // runs on whichever of the two calls is the second one, so an answer
+        // that beats the deal animation would leave the clock running for
+        // another half second; and it returns early on the first call, before
+        // it would ever reach the stop.
         function onLoginSucceeded(): void {
+            stallClock.stop();
             root.verdict = "win";
             root.reveal();
         }
 
         function onLoginFailed(): void {
+            stallClock.stop();
             root.verdict = "lose";
             root.reveal();
         }
@@ -662,6 +715,13 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         text: root.pitBoss
+        // Whatever PAM hands over is a message, not markup. The default here is
+        // AutoText, which sniffs the string and quietly switches to the HTML
+        // engine if it looks like tags - and that engine resolves <img src>,
+        // which is a thing no string arriving at a login screen should be able
+        // to ask for. The messages are root's own, so this is closing a door
+        // nobody is at rather than one standing open.
+        textFormat: Text.PlainText
         color: root.phase === "denied" ? Palette.hot : Palette.muted
         font.family: root.face
         font.pixelSize: Math.round(13 * root.u)
@@ -757,13 +817,33 @@ Rectangle {
         selectByMouse: false
         activeFocusOnPress: false
         focus: true
-        enabled: root.phase === "bet"
+
+        // readOnly, not `enabled: root.phase === "bet"`, and the difference is
+        // the whole of the way out of a hand.
+        //
+        // A disabled item is not sent key events at all - that is what disabled
+        // means - so with `enabled` off this field stopped listening the instant
+        // the cards went out, and the Keys.onEscapePressed below was dead in
+        // precisely the phases somebody would be reaching for it. Escape only
+        // worked when there was nothing to escape from. readOnly refuses the
+        // edit and keeps the focus and the keys, so escape reaches sweep() from
+        // any phase, and a hand that is going nowhere can be abandoned by hand
+        // rather than waited out.
+        readOnly: root.phase !== "bet"
 
         onAccepted: root.deal()
 
         Keys.onEscapePressed: root.sweep()
 
         Keys.onPressed: event => {
+            // The seat and the session only move while the table is open for
+            // bets. They were unreachable during a hand as a side effect of the
+            // field being disabled; now that it keeps its keys, that has to be
+            // said out loud, or f2 would shuffle the session under a login that
+            // is already in flight.
+            if (root.phase !== "bet")
+                return;
+
             if (event.key === Qt.Key_F2) {
                 root.sessionIndex = (root.sessionIndex + 1) % Math.max(1, sessionModel.rowCount());
                 event.accepted = true;

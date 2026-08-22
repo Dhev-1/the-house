@@ -42,25 +42,95 @@ Item {
         }
     }
 
-    // The model is the *count*, not the array. A Repeater bound straight to a JS
-    // array throws away every delegate and builds new ones whenever the array is
-    // reassigned - so the two cards already lying on the table would pitch in
-    // from the shoe a second time and turn over again the moment the hand is
-    // hit. Bound to the length, delegates 0 and 1 survive and only the third one
-    // is created; the rank and suit still update, because reassigning `cards`
-    // re-evaluates the bindings below.
+    // One row per card on the felt, and the rows are the whole point: a card's
+    // delegate has to survive the hand growing under it.
+    //
+    // Binding the Repeater to `cards.length` looks like it does that and does
+    // not. A number is not a model with rows in it - it is a whole new model
+    // every time it changes - so a Repeater handed 3 where it had 2 tears down
+    // both delegates it already had and builds three from scratch. Each one
+    // then runs its own pitch on creation, and the two cards already lying face
+    // up on the table come out of the shoe a second time and turn over again.
+    // That is the whole of the bug this replaced: one wrong password, two deals,
+    // seventeen dealt and then twenty-two dealt after it.
+    //
+    // A list model appends. Rows 0 and 1 stay the rows they were, their
+    // delegates are left alone, and the only card that moves is the one that
+    // just arrived.
+    //
+    // The rows themselves are empty. What is in the hand is still read out of
+    // the `cards` array below - this is a count that can grow by one without
+    // resetting, not a second copy of the hand that could disagree with the
+    // first.
+    ListModel {
+        id: places
+    }
+
+    // Grow on a hit, and never shrink here. When the table is swept the array
+    // drops back to two while the third card is still sliding off, and taking
+    // its row away at that moment would snatch it off the felt mid-muck instead
+    // of letting it leave with the rest of the hand. A spare row costs nothing
+    // in the meantime: with `dealing` false every card in it is transparent and
+    // off the table anyway.
+    function place(): void {
+        while (places.count < root.cards.length)
+            places.append({});
+    }
+
+    // Clearing the spares is the deal's job, because the start of a deal is the
+    // one moment the felt is known to be empty.
+    function reshuffle(): void {
+        while (places.count > root.cards.length)
+            places.remove(places.count - 1);
+        root.place();
+    }
+
+    onCardsChanged: root.place()
+    onDealingChanged: {
+        if (root.dealing)
+            root.reshuffle();
+    }
+
+    Component.onCompleted: root.reshuffle()
+
     Repeater {
-        model: root.cards.length
+        model: places
 
         Card {
             id: dealtCard
 
             required property int index
 
-            readonly property var modelData: root.cards[index] || ({
+            // How long this card waits before it moves, so the hand comes out
+            // one card at a time rather than all at once. Floored, because a row
+            // that is being taken away reports an index of -1 on its way out and
+            // every pause below is measured off it - without the floor that is a
+            // "duration of < 0" warning per animation per removal.
+            readonly property int stagger: Math.max(0, dealtCard.index) * 70
+
+            // What this place is showing. Assigned by the Binding below rather
+            // than bound directly, so that a place which has outlived its card
+            // goes on showing it: the row for the bust card is still on screen
+            // for the length of the muck after the hand has gone back to two,
+            // and a plain binding would blank the eight of spades while it was
+            // still on its way off the table.
+            property var spec: ({
                     rank: "",
                     suit: "♠"
                 })
+
+            Binding {
+                target: dealtCard
+                property: "spec"
+                value: root.cards[dealtCard.index]
+                // The lower bound is not paranoia: a row being taken away
+                // reports -1 first, and cards[-1] is undefined, which would
+                // strip the rank and suit off a card that is still on screen.
+                when: dealtCard.index >= 0 && dealtCard.index < root.cards.length
+                // Leaves the last card in place instead of putting the blank
+                // back when the hand shrinks.
+                restoreMode: Binding.RestoreNone
+            }
 
             // 1 while this card is still in the dealer's hand, 0 once pitched.
             // Animated on creation, so a card that appears while the hand is
@@ -68,10 +138,26 @@ Item {
             // third card of a bust would simply materialise.
             property real entry: 1
 
+            // A card is pitched twice over its life now that the delegates
+            // outlive a hand: once when it is created, which is the only way the
+            // bust card can arrive, and again at the start of every deal after
+            // the one it was created for. Without the second, every hand but the
+            // first would slide out from the edge of the table rather than come
+            // out of the dealer's hand, because `entry` is left at 0 by the hand
+            // before it.
+            readonly property bool onTable: root.dealing
+
+            onOnTableChanged: {
+                if (!dealtCard.onTable)
+                    return;
+                dealtCard.entry = 1;
+                pitch.restart();
+            }
+
             width: root.cardWidth
             fontFamily: root.fontFamily
-            rank: modelData.rank
-            suit: modelData.suit
+            rank: dealtCard.spec.rank
+            suit: dealtCard.spec.suit
 
             // Face up only once this card has actually arrived. The bust card
             // is dealt onto a hand that is already face up, so without the
@@ -100,7 +186,7 @@ Item {
                 id: pitch
 
                 PauseAnimation {
-                    duration: dealtCard.index * 70
+                    duration: dealtCard.stagger
                 }
                 NumberAnimation {
                     target: dealtCard
@@ -115,7 +201,7 @@ Item {
             Behavior on x {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: root.dealing ? dealtCard.index * 70 : 0
+                        duration: root.dealing ? dealtCard.stagger : 0
                     }
                     NumberAnimation {
                         duration: 320
@@ -127,7 +213,7 @@ Item {
             Behavior on y {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: root.dealing ? dealtCard.index * 70 : 0
+                        duration: root.dealing ? dealtCard.stagger : 0
                     }
                     NumberAnimation {
                         duration: 320
@@ -139,7 +225,7 @@ Item {
             Behavior on opacity {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: root.dealing ? dealtCard.index * 70 : 0
+                        duration: root.dealing ? dealtCard.stagger : 0
                     }
                     NumberAnimation {
                         duration: 200
@@ -150,7 +236,7 @@ Item {
             Behavior on rotation {
                 SequentialAnimation {
                     PauseAnimation {
-                        duration: root.dealing ? dealtCard.index * 70 : 0
+                        duration: root.dealing ? dealtCard.stagger : 0
                     }
                     NumberAnimation {
                         duration: 320
