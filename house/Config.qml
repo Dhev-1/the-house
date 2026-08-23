@@ -146,6 +146,55 @@ Singleton {
     readonly property int themePanelRadius: 16
     readonly property int themePanelPadding: 16
 
+    // The launcher: the apps, dealt. Opened by the `launcher` keybind (Super+D
+    // through shell.qml's IPC), it is a bet line and a hand - type and the
+    // matching apps are pitched out one card at a time, the arrows walk the
+    // hand, enter deals the highlighted one in. Launcher.qml, off the Apps
+    // service.
+    //
+    // Five seats because that is a poker hand, and because a launcher that can
+    // show you fifty results is a launcher you scroll instead of read. Anything
+    // past the fifth card is reported as a count still in the shoe - the answer
+    // to which is another character, not a longer list.
+    readonly property int launcherSeats: 5
+    readonly property int launcherCardWidth: 120
+    readonly property int launcherCardHeight: 170
+    readonly property int launcherCardGap: 16
+    readonly property int launcherIconSize: 44
+
+    // Whether the cards wear the apps' own icons. Off, every card shows its
+    // suit pip instead and the hand reads as a deck rather than as a menu -
+    // which is the more honest look for a table, at the cost of having to read
+    // the name rather than recognising the shape.
+    //
+    // The pip is also the fallback while this is on: an app whose .desktop has
+    // no Icon= (Xwayland, zenity), or names one the current icon theme does not
+    // carry, falls back to it rather than drawing Qt's magenta checkerboard.
+    readonly property bool launcherIcons: true
+
+    // The fan: degrees of tilt per seat off-centre, and how far a card travels
+    // from the dealer's hand on its way to the table.
+    readonly property real launcherFan: 4
+    readonly property int launcherPitch: 260
+
+    // The pitch itself: how long one card takes to cross the table, how far
+    // behind the card before it, and how much of that flight it spends fading
+    // up. A dealer's hands are quick, and the whole animation runs again on
+    // every keystroke - long enough to admire is long enough to be in the way.
+    //
+    // launcherDealFade is how much of that flight a card spends fading up: 1
+    // fades the whole way in, 0 is fully there the moment it leaves the shoe
+    // and only travels. Part way, so the movement is what reads rather than
+    // the fade - at this pitch a card that fades the whole way looks wiped on
+    // rather than dealt.
+    readonly property int launcherDealDuration: 190
+    readonly property int launcherDealStagger: 38
+    readonly property real launcherDealFade: 0.45
+
+    // The bet line above the hand.
+    readonly property int launcherBetHeight: 48
+    readonly property int launcherBetRadius: 12
+
     // The service tray: a handle under the top edge, near the top-right corner,
     // that drops a little column of icon buttons down beneath it. Each button
     // starts, stops and reflects a systemd --user unit - today just the
@@ -193,7 +242,15 @@ Singleton {
     // shellPath(), not Qt.resolvedUrl(): singletons are compiled into
     // quickshell's qrc, so a relative url from in here resolves against
     // qrc:/qs-blackhole and never touches the disk.
-    readonly property string pitRepo: Quickshell.shellPath("../games")
+    //
+    // Two candidates, in order, because shellPath is only the clone when the
+    // house is *run* from it - stowed into ~/.config/quickshell as a symlink,
+    // or launched in place. Copied there instead, it resolves to
+    // ~/.config/quickshell/games, which does not exist, and since Pit only
+    // draws games it can find, the whole pit silently disappears rather than
+    // erroring. The clone's usual home is the fallback; Pit takes the first
+    // root that actually has games under it.
+    readonly property var pitRepos: [Quickshell.shellPath("../games"), `${Quickshell.env("HOME")}/cloon/newdot/games`]
     readonly property var pitGames: [
         {
             dir: "bjak",
@@ -228,16 +285,6 @@ Singleton {
     ]
 
     readonly property string font: "JetBrainsMono Nerd Font"
-
-    // Table sounds: a card flick when a table is committed. One switch to mute.
-    readonly property bool sounds: true
-
-    function playSound(name: string): void {
-        if (!sounds)
-            return;
-        const wav = Qt.resolvedUrl("sounds/" + name).toString().replace("file://", "");
-        Quickshell.execDetached(["paplay", wav]);
-    }
 
     // --- Theming -------------------------------------------------------------
     //

@@ -6,9 +6,9 @@ The house always wins — and it also draws your notifications, replacing dunst.
 
 Pure QML — no C++ plugin, no build step. Clone it, point `qs` at it, done.
 
-There is deliberately no launcher, dashboard, power menu or OSD, and no
-notification centre — notifications are popups and nothing else. Once one leaves
-the screen it is gone.
+There is deliberately no dashboard, no OSD and no notification centre —
+notifications are popups and nothing else. Once one leaves the screen it is
+gone.
 
 ## Requirements
 
@@ -145,6 +145,53 @@ each entry fills six roles (`surface`, `text`, `subtext`, `accent`, `idle`,
 `urgent`); notification palettes, the progress gradient and the tray dots are
 derived from those unless the theme pins its own (Noir and Vegas do).
 
+## The deal (launcher)
+
+`Super+D` deals a hand of apps: a bet line, and five cards pitched out of the
+shoe one at a time, left to right. Type and the hand re-deals; the highlighted
+card squares up out of the fan and lifts.
+
+With nothing typed the hand is the house regulars — the five apps you have
+launched most from here — so it opens on what you actually run rather than on
+whatever sorts first.
+
+| Action | Keybind | Also |
+| --- | --- | --- |
+| Open / close | `Super+D` | click outside to fold |
+| Place a bet | type | — |
+| Walk the hand | `← →` / `Tab` | hover a card |
+| Turn to the next / previous hand | `↓ ↑` / `PgDn PgUp` | walk off either end with `← →` |
+| First / last hand | `Home` / `End` | — |
+| Deal the highlighted app in | `Enter` | click a card |
+| Fold | `Esc` | — |
+
+The hand is a page into the matches, not the first five of them. Walk off the
+right-hand end and the table is swept and the next five are pitched in from the
+right; off the end of the shoe it comes back round to the top, so holding an
+arrow down walks every match and wraps. The bet line reads `hand 2/7` while
+there is more than one, and says nothing when the hand is the whole answer.
+
+`← →` walk the hand rather than the caret — the bet is two or three characters
+and the cards are what the arrows are obviously for. Backspace still edits.
+
+Matching is a coarse ladder (exact name, prefix, word start, substring, then
+generic name, binary, keywords, comment), ties broken by how often you have
+played that app. Deliberately not fuzzy: with five seats on the table, loose
+matching mostly costs you the card you meant to be looking at.
+
+Play counts live in `plays.json` in Quickshell's state dir, next to `theme.json`.
+Delete it to forget the regulars. `launcherSeats` and the card geometry are in
+`Config.qml`.
+
+Set `launcherIcons: false` in `Config.qml` and the cards drop the apps' icons
+and wear their suit pips instead — the hand reads as a deck rather than as a
+menu. With it on, the pip is still what an app gets when its `.desktop` has no
+`Icon=` (Xwayland, zenity) or names one the icon theme does not carry.
+
+rofi is still installed and still themed per table (`home/rofi`) — its `run`,
+`filebrowser` and `window` modes are things the hand does not do. The old bind
+sits commented under the new one in `binds.conf`.
+
 ## Configuring
 
 Everything is in `Config.qml` — sizes, the table palettes, how many workspaces
@@ -164,12 +211,15 @@ Sidebar.qml          the left-edge dock tab
 Music.qml            the right-edge music tab (only while the player runs)
 Popups.qml           the notification stack (top right)
 ThemePicker.qml      the table picker overlay (Super+T or the bar's ♠ button)
+Launcher.qml         the launcher: a hand of apps, dealt (Super+D)
 Exclusions.qml       reserves the other three edges
 components/          Workspaces, Tray, StatusIcons, Clock, ThemeButton, Toast
 services/Dock.qml    docking logic
 services/Notifications.qml  the notification server (replaces dunst)
 services/Player.qml  the MPRIS player the music tab drives
 services/ThemePanel.qml     open-state for the table picker overlay
+services/LauncherPanel.qml  open-state for the launcher overlay
+services/Apps.qml           the shoe: desktop entries, matching, play counts
 scripts/apply-theme.sh      mirrors the active table onto the rest of the desktop
 scripts/tables/             what six roles can't express: kitty's 16-colour deck,
                             starship's segments, and Kvantum's chassis

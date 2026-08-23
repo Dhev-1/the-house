@@ -171,7 +171,17 @@ EOF
 # One generated wallpaper per table, shipped in the repo. awww is the daemon the
 # hypr config autostarts; fall back to swww for setups that use that instead.
 
-wall="$repo/wallpapers/$name.png"
+#
+# $repo is only the clone when this script is being run from inside it - which
+# is the case when house/ is stowed into ~/.config/quickshell as a symlink, and
+# not when it has been copied there. Copied, $repo lands on ~/.config/quickshell,
+# which has no wallpapers/, and the whole block below silently does nothing while
+# every other section still works (they write to $config, not $repo). So fall
+# back to the clone's usual home before giving up.
+walls="$repo/wallpapers"
+[ -d "$walls" ] || walls="$HOME/cloon/newdot/wallpapers"
+
+wall="$walls/$name.png"
 if [ -f "$wall" ]; then
     if command -v awww >/dev/null 2>&1; then
         awww img "$wall" >/dev/null 2>&1 || true

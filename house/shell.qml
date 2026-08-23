@@ -78,6 +78,26 @@ ShellRoot {
         }
     }
 
+    // The launcher overlay, for a keybind:
+    //   qs -p ~/cloon/newdot/house ipc call launcher toggle
+    IpcHandler {
+        target: "launcher"
+
+        function toggle(): void {
+            LauncherPanel.toggle();
+        }
+
+        // Not named show/hide: "show" collides with the `qs ipc show`
+        // subcommand, the same trap the sidebar handler documents.
+        function open(): void {
+            LauncherPanel.open = true;
+        }
+
+        function close(): void {
+            LauncherPanel.close();
+        }
+    }
+
     // The theme picker overlay, for a keybind:
     //   qs -p ~/cloon/newdot/house ipc call theme toggle
     IpcHandler {
@@ -117,6 +137,10 @@ ShellRoot {
             }
 
             ThemePicker {
+                monitor: scope.modelData
+            }
+
+            Launcher {
                 monitor: scope.modelData
             }
 

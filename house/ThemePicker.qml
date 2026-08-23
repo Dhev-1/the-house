@@ -116,7 +116,6 @@ PanelWindow {
 
     function confirm(): void {
         root.committing = true;
-        Config.playSound("card-flick.wav");
         Config.setTheme(Config.themes[root.index].name);
         ThemePanel.close();
     }

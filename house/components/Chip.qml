@@ -35,7 +35,7 @@ Image {
 
     // shellPath, not Qt.resolvedUrl: a relative url from inside a component
     // that quickshell has compiled into its qrc resolves against qrc:/ and
-    // never reaches the disk - the same trap Config.pitRepo documents. This
+    // never reaches the disk - the same trap Config.pitRepos documents. This
     // takes the path from where the shell was launched instead, so it works
     // wherever the repo is cloned.
     source: "file://" + Quickshell.shellPath("assets/chip-" + Config.activeName + ".png")
