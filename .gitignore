@@ -8,6 +8,9 @@ home/kvantum/.config/Kvantum/**/*.cache
 home/**/eww-*.log
 home/**/.daemon*
 
+# scratch notes
+cleanup.md
+
 # editor / OS cruft
 *.swp
 *~
