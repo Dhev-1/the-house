@@ -51,23 +51,19 @@ PanelWindow {
                 implicitHeight: Config.bottomBarWidth - 4
                 radius: 6
 
-                // Transparent until hovered, delineated by the border - the
-                // same restraint as the buttons in the trays.
-                // No chip behind the die at all - running state is the die's
-                // own colour, hover is it going gold. Nothing else draws.
+                // No chip behind the die at all - running state is the die's own
+                // colour, hover is it going gold. Nothing else draws.
                 color: "transparent"
                 border.width: 0
 
                 Text {
                     anchors.centerIn: parent
                     text: button.modelData.icon ?? ""
-                    // The die lights gold under the pointer, whatever its state.
-                    //
-                    // A dealt-out die is ivory - a die is white, and the red the
-                    // service tray uses for "stopped" was saying something is
-                    // wrong about a game simply not being open. `text` rather
-                    // than a literal white so it inverts on the light table,
-                    // where white on cream would be no die at all.
+                    // Gold under the pointer, whatever its state; ivory otherwise,
+                    // because the service tray's red for "stopped" read as
+                    // something being wrong about a game simply not being open.
+                    // `text` rather than a literal white, so it inverts on the
+                    // light table where white on cream would be no die at all.
                     color: press.containsMouse ? Config.colours.accent : button.on ? Config.trayOn : Config.colours.text
                     font.family: Config.font
                     font.pointSize: 10

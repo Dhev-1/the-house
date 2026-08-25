@@ -84,9 +84,7 @@ echo ":: done.  Manual follow-ups:"
 echo "   - restart the bar to pick up the copy:  pkill qs; qs -p ~/.config/quickshell/house &"
 echo "   - wallpapers are still read from this repo (hyprland.conf: awww img ...);"
 echo "     copy them somewhere outside it if you want that dependency gone too."
-# door is not copied: the greeter runs as the `sddm` user before anyone has
-# logged in, so its theme has to live under /usr/share, not $HOME. That needs
-# sudo and it changes the machine's login screen, which is too big a thing to
-# do as a side effect of installing dotfiles. Its own installer, on purpose.
+# door is not copied: the greeter's theme lives under /usr/share, not $HOME, so
+# it needs sudo and its own deliberate command. See door/install.sh.
 echo "   - the door (SDDM greeter) is separate - it installs system-wide:"
 echo "       cd door && ./install.sh"

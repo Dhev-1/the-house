@@ -14,8 +14,8 @@ import qs.services
 // A bet line and five seats. Type, and the apps that answer are pitched out of
 // the shoe one at a time, left to right; the arrows walk the hand and the card
 // under the selection squares up and lifts out of the fan; enter deals it in.
-// With nothing typed the hand is the house regulars - the five apps Apps has
-// counted most, so it opens on what you actually run.
+// With nothing typed the hand is the house regulars, so it opens on what you
+// actually run.
 //
 // The same full-screen layer surface as ThemePicker, for the same reasons: it
 // dims the desktop behind the hand, catches the click-outside, and takes
@@ -40,11 +40,10 @@ PanelWindow {
     readonly property string query: bet.text
     readonly property var shoe: Apps.deal(root.query)
 
-    // Which five of the shoe are on the table. The hand is a page into the
-    // matches rather than the first five of them: walk off the end of it and
-    // the table is swept and the next five are dealt, and off the end of the
-    // shoe it comes back round to the top. So every match is reachable on the
-    // arrows, without the hand ever being longer than a hand.
+    // A page into the matches, not the first five of them: walk off the end and
+    // the table is swept for the next five, and off the end of the shoe it comes
+    // back round. Every match is reachable on the arrows, and the hand is never
+    // longer than a hand.
     property int page: 0
 
     readonly property int pages: Math.max(1, Math.ceil(root.shoe.length / Config.launcherSeats))
@@ -137,12 +136,10 @@ PanelWindow {
         root.index = delta > 0 ? 0 : Math.max(0, root.pageLength(root.page) - 1);
     }
 
-    // Step along the hand, turning to the next or previous one at its edges.
-    //
-    // A single page still wraps, and that is a different move: there is no
-    // second hand to deal, so the selection just comes back round to the other
-    // end of the one on the table rather than sweeping five cards to replace
-    // them with the same five.
+    // Step along the hand, turning to the next or previous one at its edges. A
+    // single page wraps instead: with no second hand to deal, the selection comes
+    // back round rather than sweeping five cards to replace them with the same
+    // five.
     function move(delta: int): void {
         if (root.hand.length === 0)
             return;
@@ -171,7 +168,6 @@ PanelWindow {
         LauncherPanel.close();
     }
 
-    // The dim backdrop. Clicking it folds.
     Rectangle {
         anchors.fill: parent
         color: "#000000"
@@ -226,10 +222,9 @@ PanelWindow {
                     font.pointSize: 13
                 }
 
-                // The bet. Keys land here first - it holds focus while the
-                // overlay is up - so the handler below takes the ones that
-                // drive the hand and lets everything else fall through to the
-                // editor as typing.
+                // The bet. It holds focus while the overlay is up, so the
+                // handler below takes the keys that drive the hand and lets the
+                // rest fall through as typing.
                 TextInput {
                     id: bet
 
@@ -243,10 +238,9 @@ PanelWindow {
                     selectByMouse: true
                     focus: true
 
-                    // Left and right walk the hand rather than the caret. That
-                    // is a real trade - there is no moving back through what
-                    // you typed - and it is the right one for a bet that is
-                    // two or three characters long and sits above five cards
+                    // Left and right walk the hand rather than the caret. A real
+                    // trade - no moving back through what you typed - and the
+                    // right one for a two-character bet sitting above five cards
                     // the arrows are obviously for. Backspace still edits.
                     Keys.onPressed: event => {
                         switch (event.key) {
@@ -363,11 +357,9 @@ PanelWindow {
             }
 
             // The seats. A fixed Repeater over the seat count, not over the
-            // hand: the delegates are the places at the table, and they outlive
-            // any particular hand dealt into them. Bound to the results instead,
-            // every keystroke would tear five cards down and build five more,
-            // and each new one would run its own pitch - the whole table coming
-            // out of the shoe again for one more character typed.
+            // hand: the delegates are places at the table and outlive any hand
+            // dealt into them. Bound to the results, every keystroke would tear
+            // five cards down, build five more, and re-pitch the lot.
             Repeater {
                 model: Config.launcherSeats
 
@@ -376,22 +368,16 @@ PanelWindow {
 
                     required property int index
 
-                    // The app in this seat, or nothing if the hand is short.
                     readonly property var entry: root.hand[card.index] ?? null
                     readonly property bool selected: card.index === root.index && card.entry
                     readonly property string suit: root.suits[card.index % root.suits.length]
                     readonly property bool redSuit: card.suit === "♥" || card.suit === "♦"
                     readonly property color suitColour: card.redSuit ? Config.colours.urgent : Config.colours.accent
 
-                    // Icon by desktop-entry name, checked: an unresolvable
-                    // source makes IconImage paint Qt's magenta checkerboard,
-                    // so an app the theme has no icon for falls back to the
-                    // suit pip below instead of drawing that.
-                    //
-                    // Empty is also how Config.launcherIcons turns the icons
-                    // off outright - the pip is already the no-icon path, so
-                    // the switch just takes every card down it rather than
-                    // being a second way to draw a card face.
+                    // Checked, because an unresolvable source makes IconImage
+                    // paint Qt's magenta checkerboard. Empty falls through to the
+                    // suit pip below, which is also how Config.launcherIcons
+                    // turns the icons off - one no-icon path, not two.
                     readonly property string iconSource: Config.launcherIcons && card.entry?.icon ? Quickshell.iconPath(card.entry.icon, true) : ""
 
                     // 1 while the card is still in the dealer's hand, 0 once it
@@ -418,10 +404,9 @@ PanelWindow {
                     border.width: card.selected ? 2 : 1
                     border.color: card.selected ? Config.colours.accent : Qt.rgba(1, 1, 1, 0.14)
 
-                    // The seat's own place at the table, plus however far this
-                    // card still is from it - on the side it is coming in from.
-                    // The two are independent: the hand can be spreading under a
-                    // card that is still arriving.
+                    // The seat's place at the table, plus however far the card
+                    // still is from it. Independent: the hand can be spreading
+                    // under a card that is still arriving.
                     x: card.index * (Config.launcherCardWidth + Config.launcherCardGap) + card.pitch * Config.launcherPitch * root.dealFrom
                     opacity: card.entry ? 1 - card.pitch * Config.launcherDealFade : 0
 
@@ -491,10 +476,9 @@ PanelWindow {
                         opacity: 0.35
                     }
 
-                    // Corner indices: rank over suit, mirrored bottom-right.
-                    // The rank is the seat, so the fourth card is always the
-                    // four - the hand reads as a hand rather than as a list
-                    // that happens to be drawn on cards.
+                    // Corner indices: rank over suit, mirrored bottom-right. The
+                    // rank is the seat, so the fourth card is always the four -
+                    // a hand, not a list drawn on cards.
                     Text {
                         anchors.top: parent.top
                         anchors.left: parent.left

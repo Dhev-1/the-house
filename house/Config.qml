@@ -55,9 +55,9 @@ Singleton {
     //
     // Popups only. There is no history, so a dismissed notification is gone.
 
-    readonly property int notifWidth: 300      // width
-    readonly property int notifOffsetX: 20     // offset, x. From the bar, not the
-    readonly property int notifOffsetY: 40     // offset, y. screen edge - see Popups.
+    readonly property int notifWidth: 300
+    readonly property int notifOffsetX: 20     // from the bar, not the screen
+    readonly property int notifOffsetY: 40     // edge - see Popups.
     readonly property int notifPadding: 10     // padding, horizontal_padding
     readonly property int notifIconSize: 44    // min_icon_size (bumped from dunst's 32)
 
@@ -146,11 +146,7 @@ Singleton {
     readonly property int themePanelRadius: 16
     readonly property int themePanelPadding: 16
 
-    // The launcher: the apps, dealt. Opened by the `launcher` keybind (Super+D
-    // through shell.qml's IPC), it is a bet line and a hand - type and the
-    // matching apps are pitched out one card at a time, the arrows walk the
-    // hand, enter deals the highlighted one in. Launcher.qml, off the Apps
-    // service.
+    // The launcher's hand - Launcher.qml, off the Apps service.
     //
     // Five seats because that is a poker hand, and because a launcher that can
     // show you fifty results is a launcher you scroll instead of read. Anything
@@ -177,15 +173,14 @@ Singleton {
     readonly property real launcherFan: 4
     readonly property int launcherPitch: 260
 
-    // The pitch itself: how long one card takes to cross the table, how far
-    // behind the card before it, and how much of that flight it spends fading
-    // up. A dealer's hands are quick, and the whole animation runs again on
-    // every keystroke - long enough to admire is long enough to be in the way.
+    // The pitch itself: how long one card takes to cross the table, and how far
+    // behind the card before it. A dealer's hands are quick, and the whole
+    // animation runs again on every keystroke - long enough to admire is long
+    // enough to be in the way.
     //
-    // launcherDealFade is how much of that flight a card spends fading up: 1
-    // fades the whole way in, 0 is fully there the moment it leaves the shoe
-    // and only travels. Part way, so the movement is what reads rather than
-    // the fade - at this pitch a card that fades the whole way looks wiped on
+    // DealFade is how much of that flight the card spends fading up: 1 the whole
+    // way, 0 fully there the moment it leaves the shoe. Part way, so the movement
+    // is what reads - at this pitch a card that fades all the way looks wiped on
     // rather than dealt.
     readonly property int launcherDealDuration: 190
     readonly property int launcherDealStagger: 38
@@ -243,13 +238,12 @@ Singleton {
     // quickshell's qrc, so a relative url from in here resolves against
     // qrc:/qs-blackhole and never touches the disk.
     //
-    // Two candidates, in order, because shellPath is only the clone when the
-    // house is *run* from it - stowed into ~/.config/quickshell as a symlink,
-    // or launched in place. Copied there instead, it resolves to
-    // ~/.config/quickshell/games, which does not exist, and since Pit only
-    // draws games it can find, the whole pit silently disappears rather than
-    // erroring. The clone's usual home is the fallback; Pit takes the first
-    // root that actually has games under it.
+    // Two candidates because shellPath is only the clone when the house is *run*
+    // from it (stowed as a symlink, or launched in place). Copied into
+    // ~/.config/quickshell instead, it points at a games dir that does not
+    // exist - and since Pit only draws what it finds, the pit would silently
+    // vanish rather than error. The clone's usual home is the fallback; Pit
+    // takes the first root that actually has games under it.
     readonly property var pitRepos: [Quickshell.shellPath("../games"), `${Quickshell.env("HOME")}/cloon/newdot/games`]
     readonly property var pitGames: [
         {
@@ -367,18 +361,11 @@ Singleton {
             idle: "#1d4030",
             urgent: "#c0392f",
 
-            // Pinned rather than derived, and this table needs it more than the
-            // others do. deriveNotif blends in straight RGB, which is fine when
-            // the surface is near-neutral (noir, vegas) but falls apart on a
-            // saturated green: every mix toward the accent or the urgent lands
-            // in olive, because red and green cancel. Derived, a *critical*
-            // card here came out #2e2e1f - khaki, with pale green body text -
-            // so the one colour whose whole job is to shout stopped reading as
-            // red at all.
-            //
-            // So: the frames keep red clearly ahead of green (an olive is any
-            // warm tone where r and g are level), and critical drops onto wine
-            // instead of baize so the card reads hot against the table.
+            // Pinned because deriveNotif blends in straight RGB, and on a
+            // saturated green every mix toward accent or urgent lands in olive -
+            // derived, a *critical* card came out khaki (#2e2e1f). So: frames
+            // keep red clearly ahead of green, and critical drops onto wine
+            // instead of baize so it reads hot against the table.
             notif: {
                 low: {
                     background: "#143224",
@@ -440,18 +427,12 @@ Singleton {
             idle: "#e6dcc6",
             urgent: "#b3372f",
 
-            // Pinned because deriveNotif is written for a dark table and this is
-            // the only light one. Two of its rules inverate on cream: the card is
-            // "surface lifted toward idle", which here makes it *darker* than the
-            // desktop rather than lifted off it, and the body is left at subtext,
-            // which against a pale card came out at 3.1:1 - below the 4.5 the
-            // text needs to be legible, on all three urgencies.
-            //
-            // So: the quiet cards go lighter than the table (a card laid on the
-            // cloth catches the light, it does not sink into it), bodies are
-            // darkened until they read, and critical is the one that goes the
-            // other way - a blush card, because on cream the way to say "hot" is
-            // to add colour, not to add light.
+            // Pinned because deriveNotif is written for a dark table and this
+            // is the only light one: "surface lifted toward idle" comes out
+            // *darker* than cream, and subtext bodies land at 3.1:1, under the
+            // 4.5 they need. So: quiet cards go lighter than the table, bodies
+            // are darkened until they read, and critical goes the other way onto
+            // a blush - on cream you say "hot" with colour, not with light.
             notif: {
                 low: {
                     background: "#faf5ea",
@@ -488,24 +469,18 @@ Singleton {
         }
     ]
 
-    // The active theme's name, and the palette every widget binds to. themeName
-    // is the persisted choice - the single source of truth, changed through
-    // setTheme() so the write to disk follows.
-    //
-    // previewName is a transient override the picker paints with while you flick
-    // through themes: colours resolves it first, so the whole shell re-tints live
-    // without touching the file - arrow-keying the picker doesn't hammer the disk.
-    // An unknown active name (a hand-edited file, a theme since removed) falls back
-    // to the first entry.
+    // themeName is the persisted choice, changed only through setTheme() so the
+    // write to disk follows. previewName is the picker's transient override, which
+    // colours resolves first - flicking through themes re-tints the whole shell
+    // without touching the file. An unknown name (hand-edited, or a theme since
+    // removed) falls back to the first entry.
     readonly property string themeName: prefs.theme
     property string previewName: ""
     readonly property string activeName: previewName !== "" ? previewName : themeName
     readonly property var colours: themes.find(t => t.name === activeName) ?? themes[0]
 
-    // The notification and tray colours for the active theme: the theme's own
-    // pinned block if it has one (Noir does; Vegas pins progress/tray), otherwise derived from its
-    // six roles so the cards and dots follow whatever theme is on. The QtObjects
-    // further down bind through these.
+    // The theme's own pinned block if it has one, otherwise derived from its six
+    // roles so the cards and dots follow whatever theme is on.
     readonly property var activeNotif: colours.notif ?? deriveNotif(colours)
     readonly property var activeProgress: colours.progress ?? deriveProgress(colours)
 

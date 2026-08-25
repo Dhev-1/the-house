@@ -56,7 +56,7 @@ PanelWindow {
             anchors.centerIn: parent
             spacing: 8
 
-            // No windows docked yet: just the arrow, as before.
+            // No windows docked yet: just the arrow.
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 visible: Dock.windows.length === 0

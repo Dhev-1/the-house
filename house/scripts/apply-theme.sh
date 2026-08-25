@@ -171,13 +171,10 @@ EOF
 # One generated wallpaper per table, shipped in the repo. awww is the daemon the
 # hypr config autostarts; fall back to swww for setups that use that instead.
 
-#
-# $repo is only the clone when this script is being run from inside it - which
-# is the case when house/ is stowed into ~/.config/quickshell as a symlink, and
-# not when it has been copied there. Copied, $repo lands on ~/.config/quickshell,
-# which has no wallpapers/, and the whole block below silently does nothing while
-# every other section still works (they write to $config, not $repo). So fall
-# back to the clone's usual home before giving up.
+# $repo is only the clone when this script runs from inside it - true when house/
+# is stowed as a symlink, not when it has been copied. Copied, $repo lands on
+# ~/.config/quickshell, which has no wallpapers/, and this block alone would
+# silently do nothing. So fall back to the clone's usual home before giving up.
 walls="$repo/wallpapers"
 [ -d "$walls" ] || walls="$HOME/cloon/newdot/wallpapers"
 
@@ -461,9 +458,8 @@ fi
 # is what happens when the games repo is cloned on its own, with no house at all.
 #
 # One JSON with every colour the five of them name between them (blackjack,
-# poker and ride the bus share a set; bones adds tiles, roulette adds a wheel).
-# The derivation lives here rather than in five theme blocks so there is one
-# place to argue with.
+# poker and ride the bus share a set; bones adds tiles, roulette adds a wheel),
+# derived here rather than in five theme blocks.
 #
 # Two things do not come from the six roles and are pinned per table below:
 #
@@ -520,11 +516,9 @@ else
 fi
 
 # feltLine is the cloth's printing - "DEALER", "BLACKJACK PAYS 3 TO 2" - and
-# also every hairline drawn on the cloth: the bet circle, the felt panel's own
-# edge, the tile borders. It sat around 1.3:1 against the baize, which is what
-# real printing on real cloth looks like and is also, at 9px with 2.4 of letter
-# spacing, unreadable. Lifted to 2.4:1 - still ink soaked into cloth rather than
-# UI text, but legible, and the outlines stop being invisible along with it.
+# every hairline drawn on the cloth: the bet circle, the felt panel's edge, the
+# tile borders. At 1.3:1 against the baize it looked like real printing on real
+# cloth and was, at 9px with 2.4 of letter spacing, unreadable. Lifted to 2.4:1.
 #
 # tileBack is deliberately NOT this value any more. It is a fill - the back of a
 # domino - so carrying it up with the printing would repaint every tile in

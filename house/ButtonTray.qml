@@ -12,8 +12,7 @@ import qs
 //
 // Deliberately dumb. It is handed a list of buttons - each just an icon and
 // whether it reads as active - and it emits activated(index) when one is pressed.
-// It has no idea what the buttons do; that is wired up by whoever fills it, so
-// the widget itself carries none of the service specifics and stays reusable.
+// What they do is wired up by whoever fills it.
 PanelWindow {
     id: root
 
@@ -21,7 +20,6 @@ PanelWindow {
     // this from whatever state the buttons reflect.
     property var buttons: []
 
-    // Which button was pressed, by its index in `buttons`.
     signal activated(int index)
 
     property bool expanded: false

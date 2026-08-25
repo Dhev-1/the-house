@@ -30,29 +30,22 @@ MouseArea {
 
     // The body, with any image tags taken back out.
     //
-    // The body is a string handed over by whatever process sent the
-    // notification - which is any process that can reach the session bus - so
-    // the format it is drawn in is the whole of what that process is allowed to
-    // do with this card. RichText was the obvious reading of the old dunstrc's
-    // `markup = full`, and it is the wrong one: it hands the string to Qt's
-    // full HTML engine, which resolves <img src="...">. That is enough for a
-    // notification to make the shell fetch a remote url - a quiet ping saying
-    // the machine is awake, from this address - or to pull an arbitrary local
-    // image onto the screen, or to set its own type at any size and pass itself
+    // The body comes from any process that can reach the session bus, so the
+    // format it is drawn in is the whole of what that process may do with this
+    // card. RichText is the obvious reading of the old dunstrc's `markup = full`
+    // and the wrong one: Qt's HTML engine resolves <img src="...">, which is
+    // enough for a notification to make the shell fetch a remote url, pull an
+    // arbitrary local image onto the screen, or set its own type and pass itself
     // off as another app's card.
     //
-    // StyledText is the same idea with a documented tag list instead of a
-    // parser: bold, italic, underline, links, line breaks - everything the
-    // notification spec's markup actually names, which is all dunst rendered
-    // either. It does still honour <img>, the one tag in that list that reaches
-    // off the machine, so that one is stripped here. The closing `>` is
-    // optional in the pattern because Qt reads an unterminated tag to the end
-    // of the string rather than giving up on it, and a stripper that insists on
-    // the `>` would leave exactly that case behind.
+    // StyledText is the same idea with a documented tag list instead of a parser
+    // - everything the spec's markup names, which is all dunst rendered either.
+    // It still honours <img>, so that one is stripped here; the closing `>` is
+    // optional in the pattern because Qt reads an unterminated tag to the end of
+    // the string rather than giving up on it.
     //
-    // The swap has a second effect worth knowing about: Qt ignores `elide` on
-    // rich text but honours it on styled text, so a body past notifBodyLines is
-    // now actually ellipsized instead of being cut off mid-word.
+    // Second effect worth knowing: Qt ignores `elide` on rich text but honours it
+    // on styled text, so a long body is now ellipsized rather than cut mid-word.
     readonly property string body: (root.modelData.body ?? "").replace(/<\s*img\b[^>]*>?/gi, "")
 
     // "default" is what activating the notification body does, so it answers to
@@ -260,12 +253,11 @@ MouseArea {
                         font.bold: true
                         elide: Text.ElideMiddle
 
-                        // Spelled out, because the default is AutoText and
-                        // AutoText is not "plain": it runs the string past
-                        // Qt.mightBeRichText() and quietly switches to the HTML
-                        // engine if it looks like markup. The spec has no markup
-                        // in a summary and nothing here wants one, so say so
-                        // rather than letting the sender decide by what it typed.
+                        // Spelled out, because AutoText is not "plain": it runs
+                        // the string past Qt.mightBeRichText() and switches to the
+                        // HTML engine if it looks like markup. The spec has no
+                        // markup in a summary, so say so rather than letting the
+                        // sender decide by what it typed.
                         textFormat: Text.PlainText
                     }
 

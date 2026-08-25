@@ -3,10 +3,8 @@ pragma Singleton
 import QtQuick
 import Quickshell
 
-// Open-state for the theme picker popout, the same split as ClockPanel: the
-// trigger (ThemeButton) lives in the bar - one layer surface - and the card
-// (ThemePicker) is another, so the click and the panel can't be the same window.
-// They talk through here.
+// Open-state for the theme picker popout: ThemeButton in the bar, ThemePicker
+// as its own surface. The same split as ClockPanel, for the same reason.
 Singleton {
     id: root
 

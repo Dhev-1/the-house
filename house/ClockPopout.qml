@@ -215,7 +215,7 @@ PanelWindow {
                     Layout.fillWidth: true
 
                     Arrow {
-                        text: "‹" // ‹
+                        text: "‹"
                         onActivated: root.monthOffset--
                     }
 
@@ -230,7 +230,7 @@ PanelWindow {
                     }
 
                     Arrow {
-                        text: "›" // ›
+                        text: "›"
                         onActivated: root.monthOffset++
                     }
                 }
@@ -261,7 +261,6 @@ PanelWindow {
                     }
                 }
 
-                // The days.
                 Grid {
                     Layout.alignment: Qt.AlignHCenter
                     columns: 7
@@ -307,7 +306,6 @@ PanelWindow {
     // Cell size for the 7-wide grid, from the card's inner width.
     readonly property real cellSize: (Config.clockPanelWidth - Config.clockPanelPadding * 2) / 7
 
-    // A paging arrow.
     component Arrow: MouseArea {
         id: arrow
 

@@ -3,7 +3,6 @@
 My Linux ricing setup, casino edition — Arch + Hyprland. Black lacquer,
 champagne gold, green felt and neon marquee. The house always wins.
 
-<!-- Drop a hero screenshot here once you have one -->
 ![desktop](assets/screenshots/desktop.png)
 
 ## The rice
@@ -12,10 +11,9 @@ champagne gold, green felt and neon marquee. The house always wins.
 |---|---|
 | **Distro** | Arch Linux |
 | **WM** | [Hyprland](https://hyprland.org) |
-| **Shell (bar/dock/notifications)** | quickshell — [`house`](house/README.md) |
+| **Shell (bar/dock/notifications)** | quickshell — [`house`](house/README.md), replacing dunst |
 | **Terminal** | kitty |
-| **Launcher** | rofi |
-| **Notifications** | quickshell `house` (replaces dunst) |
+| **Launcher** | quickshell `house` — a hand of apps, `Super+D` (rofi kept for its other modes) |
 | **Wallpaper** | awww |
 | **GTK / Qt theming** | GTK 3/4, and qt6ct + Kvantum for Qt — both retinted per table |
 | **Font** | JetBrainsMono Nerd Font |
@@ -97,6 +95,7 @@ newdot/
 ├── door/            # SDDM greeter (installs system-wide, own install.sh)
 ├── home/            # GNU Stow packages, mirror $HOME
 │   ├── hypr/  kitty/  rofi/  btop/  gtk/  kvantum/  starship/  icons/
+├── games/           # the widgets: blackjack, roulette, video poker, bones, ride the bus
 ├── wallpapers/      # generated casino wallpapers, one per table
 ├── assets/screenshots/
 ├── packages.txt        # native (pacman -Qqen)
@@ -111,9 +110,9 @@ newdot/
 | Keys | Action |
 |---|---|
 | `SUPER` + `SPACE` | terminal (kitty) |
+| `SUPER` + `D` | launcher (a hand of apps) |
 | `SUPER` + `T` | table picker (themes) |
 | `SUPER` + `E` | file manager (thunar) |
-| `SUPER` + `O` | firefox |
 | `SUPER` + `B` | brave |
 | `SUPER` + `J` / `K` | cycle windows |
 | `SUPER` + `G` | toggle group |

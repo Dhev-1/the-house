@@ -2,12 +2,11 @@ import QtQuick
 
 // The showdown: a blackjack hand, pitched out of the shoe one card at a time.
 //
-// Two cards, not five, and that is a timing decision rather than a taste one.
-// SDDM starts the session the instant PAM says yes and tears the greeter down
-// as soon as it is ready, so everything after a correct password is a race we
-// do not control - on a fast machine there is under a second before this is
-// gone. Two cards deal and turn inside that budget; five do not, and a poker
-// hand cut off halfway through its reveal reads as a glitch rather than a win.
+// Two cards, not five, for timing rather than taste. SDDM starts the session
+// the instant PAM says yes and tears the greeter down as soon as it is ready -
+// on a fast machine there is under a second. Two cards deal and turn inside that
+// budget; five do not, and a hand cut off halfway through its reveal reads as a
+// glitch rather than a win.
 //
 // A hand can also grow: a bust takes a third card after the first two are
 // already face up, so the delegate has to handle a card that arrives when the
@@ -42,26 +41,20 @@ Item {
         }
     }
 
-    // One row per card on the felt, and the rows are the whole point: a card's
-    // delegate has to survive the hand growing under it.
+    // One row per card on the felt, so a card's delegate survives the hand
+    // growing under it.
     //
-    // Binding the Repeater to `cards.length` looks like it does that and does
-    // not. A number is not a model with rows in it - it is a whole new model
-    // every time it changes - so a Repeater handed 3 where it had 2 tears down
-    // both delegates it already had and builds three from scratch. Each one
-    // then runs its own pitch on creation, and the two cards already lying face
-    // up on the table come out of the shoe a second time and turn over again.
-    // That is the whole of the bug this replaced: one wrong password, two deals,
-    // seventeen dealt and then twenty-two dealt after it.
+    // Binding the Repeater to `cards.length` does not: a number is a whole new
+    // model every time it changes, so a Repeater handed 3 where it had 2 tears
+    // down both existing delegates and rebuilds three, each running its own
+    // pitch on creation - the two cards already lying face up come out of the
+    // shoe a second time and turn over again.
     //
-    // A list model appends. Rows 0 and 1 stay the rows they were, their
-    // delegates are left alone, and the only card that moves is the one that
-    // just arrived.
+    // A list model appends instead, leaving rows 0 and 1 alone.
     //
-    // The rows themselves are empty. What is in the hand is still read out of
-    // the `cards` array below - this is a count that can grow by one without
-    // resetting, not a second copy of the hand that could disagree with the
-    // first.
+    // The rows are empty; the hand is still read out of the `cards` array below.
+    // This is a count that can grow by one without resetting, not a second copy
+    // that could disagree with the first.
     ListModel {
         id: places
     }
@@ -138,13 +131,11 @@ Item {
             // third card of a bust would simply materialise.
             property real entry: 1
 
-            // A card is pitched twice over its life now that the delegates
-            // outlive a hand: once when it is created, which is the only way the
-            // bust card can arrive, and again at the start of every deal after
-            // the one it was created for. Without the second, every hand but the
-            // first would slide out from the edge of the table rather than come
-            // out of the dealer's hand, because `entry` is left at 0 by the hand
-            // before it.
+            // Delegates outlive a hand, so a card is pitched twice: on creation,
+            // which is the only way the bust card can arrive, and at the start
+            // of every later deal. Without the second, `entry` is left at 0 by
+            // the previous hand and every hand but the first slides out from the
+            // edge of the table rather than the dealer's hand.
             readonly property bool onTable: root.dealing
 
             onOnTableChanged: {
@@ -159,12 +150,10 @@ Item {
             rank: dealtCard.spec.rank
             suit: dealtCard.spec.suit
 
-            // Face up only once this card has actually arrived. The bust card
-            // is dealt onto a hand that is already face up, so without the
-            // entry check it turns over while it is still crossing the table -
-            // and since it travels from the dealer's left, it spends that
-            // flight in front of the cards it is meant to land beside, reading
-            // as though the hand came out in the wrong order.
+            // Face up only once this card has arrived. The bust card is dealt
+            // onto a hand that is already face up, so without the entry check it
+            // turns over while still crossing the table - in front of the cards
+            // it is meant to land beside, reading as the wrong order.
             faceUp: root.faceUp && dealtCard.entry === 0
             // Turned over left to right rather than all at once.
             flipDelay: index * 90

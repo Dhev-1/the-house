@@ -19,7 +19,6 @@ Singleton {
     // them; dispatch wants it back on).
     property var addresses: []
 
-    // Whether docked windows are currently on screen.
     property bool shown: false
 
     // Docked windows that still exist, in dock order.

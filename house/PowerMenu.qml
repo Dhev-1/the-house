@@ -46,7 +46,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.namespace: "house-power"
 
-    // Clicks land only on the chip, plus the card while it's up.
     mask: Region {
         x: trigger.x
         y: trigger.y

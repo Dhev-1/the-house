@@ -118,11 +118,8 @@ PanelWindow {
             // Out of the bar and onto the strip, on an arc centred on the bar edge
             // itself. The material lies outside the arc, so the corner is filled
             // rather than cut: the strip doesn't sit against the bar, it runs out
-            // of it, the way a drip leaves a surface.
-            //
-            // Flattens to nothing as the card opens - an arc of zero radius is a
-            // straight line - so at full reveal the top edge simply carries on
-            // across the card and the two are one rectangle.
+            // of it, the way a drip leaves a surface. At full reveal the radius is
+            // zero and the edge just carries on across the card.
             PathArc {
                 x: root.tabLeft
                 y: root.flare

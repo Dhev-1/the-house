@@ -13,11 +13,9 @@ import qs.services
 // that IPC call to ThemePanel).
 //
 // Each card wears the table it stands for - its surface, its accent, its suit -
-// fanned like a hand the dealer just spread. Move the selection with the
-// arrows / hjkl / number keys, or hover a card, and the whole shell previews
-// that table live - Config.preview re-tints everything without writing to
-// disk. Enter or a click keeps it (Config.setTheme persists); escape or a
-// click outside reverts to the table you started on.
+// fanned like a hand the dealer just spread. Arrows / hjkl / number keys or a
+// hover preview that table across the whole shell without writing to disk;
+// enter or a click keeps it; escape or a click outside reverts.
 //
 // A full-screen layer surface: it dims the desktop behind the hand and, while
 // open, takes exclusive keyboard focus so the keys land here without a click.
@@ -124,7 +122,6 @@ PanelWindow {
         ThemePanel.close(); // onOpenChanged reverts the preview
     }
 
-    // The dim backdrop. Clicking it (anywhere but a card) cancels.
     Rectangle {
         anchors.fill: parent
         color: "#000000"
@@ -237,7 +234,6 @@ PanelWindow {
                             height: root.cardHeight
                             radius: 10
 
-                            // The card wears the table it stands for.
                             color: card.modelData.surface
                             border.width: card.selected ? 2 : 1
                             border.color: card.selected ? card.modelData.accent : Qt.rgba(1, 1, 1, 0.14)
@@ -308,7 +304,6 @@ PanelWindow {
                                 anchors.centerIn: parent
                                 spacing: 6
 
-                                // The big centre pip.
                                 Text {
                                     Layout.alignment: Qt.AlignHCenter
                                     text: card.suit

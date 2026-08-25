@@ -45,8 +45,7 @@ ShellRoot {
         }
     }
 
-    // Dunst's ctrl+space / ctrl+shift+space, kept working:
-    //   qs -p ~/cloon/newdot/house ipc call notifications close
+    // Dunst's ctrl+space / ctrl+shift+space, kept working.
     IpcHandler {
         target: "notifications"
 
@@ -60,8 +59,7 @@ ShellRoot {
         }
     }
 
-    // The power menu popout, for a keybind:
-    //   qs -p ~/cloon/newdot/house ipc call power toggle
+    // The power menu popout.
     IpcHandler {
         target: "power"
 
@@ -78,8 +76,7 @@ ShellRoot {
         }
     }
 
-    // The launcher overlay, for a keybind:
-    //   qs -p ~/cloon/newdot/house ipc call launcher toggle
+    // The launcher overlay.
     IpcHandler {
         target: "launcher"
 
@@ -98,8 +95,7 @@ ShellRoot {
         }
     }
 
-    // The theme picker overlay, for a keybind:
-    //   qs -p ~/cloon/newdot/house ipc call theme toggle
+    // The theme picker overlay.
     IpcHandler {
         target: "theme"
 

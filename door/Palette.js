@@ -15,13 +15,11 @@
 // to - which is exactly where it should go, because the bet is the password.
 //
 // A .js library rather than a QML singleton, which is the obvious way to write
-// this and does not work here. A `singleton` line in a qmldir is only honoured
-// when the directory is imported as a module; an SDDM theme is a bare directory
-// of files that Qt imports implicitly, so the qmldir is never consulted and
-// every `Palette.x` silently resolves to undefined - which raises no error, it
-// just leaves every Rectangle at its default white and every Text at its
-// default black. A .pragma library is read the same way from anywhere and has
-// no such trapdoor.
+// this and does not work here: a `singleton` line in a qmldir is only honoured
+// when the directory is imported as a module, and an SDDM theme is a bare
+// directory Qt imports implicitly. The qmldir is never consulted, so every
+// `Palette.x` resolves to undefined with no error at all - just white Rectangles
+// and black Text. A .pragma library reads the same from anywhere.
 
 // --- the room -----------------------------------------------------------------
 // tableDeep is the cloth away from the lamp; tableLit is what the cone lands on
@@ -58,19 +56,15 @@ var hot = "#cf3b32"; // caps lock, bust, swept
 // Red, black, blue, purple - four denominations, one per stack of the bet.
 //
 // Deliberately none of the room's own colours. An earlier set ran ivory, red,
-// black, gold, which was the room in miniature and was the problem: the gold
-// chip sat on the felt the same colour as the plaques and the hairlines around
-// it, and the ivory chip was the colour of the type. The chips are supposed to
-// be the one thing on this screen that is not black lacquer and gold, so they
-// are now colours the room does not otherwise contain, and the bet separates
-// from its background instead of blending into it. Black stays, because a rack
-// without it does not look like a rack - and it earns its place by being darker
-// than the cloth rather than lighter, which no other chip here is.
+// black, gold - the room in miniature, and the problem: the gold chip was the
+// colour of the plaques it sat among, and the ivory chip the colour of the type.
+// The chips are the one thing here that is not lacquer and gold. Black stays,
+// because a rack without it does not look like a rack, and it earns its place by
+// being darker than the cloth rather than lighter.
 //
-// The bet climbs through these as it grows, three chips to a colour, so the
-// clay at the top says roughly how long the password is without anyone counting
-// chips. Three and not one: a single chip of each colour is a stripe, where
-// three is a band you can actually see.
+// The bet climbs through these as it grows, three chips to a colour, so the clay
+// at the top says roughly how long the password is. Three and not one: a single
+// chip of each colour is a stripe, where three is a band you can see.
 //
 // Each: the clay body, the contrasting inlay let into the edge spots, and an
 // ink that reads on the body.
@@ -86,11 +80,10 @@ var chips = [
         spot: "#ffffff",
         ink: "#ffffff",
         value: "25"
-    },     // black, white spots. Flat white rather than the ivory the other
-           // three wear: this is the only chip darker than the cloth it lies
-           // on, so its spots are doing the whole job of separating it from the
-           // felt, and ivory is not a big enough step away from near-black to
-           // do that at the size a rim spot actually gets drawn.
+    },     // black, white spots. Flat white rather than ivory: this is the only
+           // chip darker than the cloth, so its spots do the whole job of
+           // separating it from the felt, and ivory is not a big enough step
+           // off near-black at the size a rim spot gets drawn.
     {
         body: "#22508a",
         spot: "#ece4d0",
@@ -107,16 +100,12 @@ var chips = [
 
 // --- court stock --------------------------------------------------------------
 // The seat cards are printed in the room's own three colours rather than on
-// ivory: black stock, gold rule, white figures, with black doing most of the
-// work. A seat card is a piece of this room and not a card out of the shoe, and
-// the shoe's cards are the pale ones - so the two never get confused for each
-// other even when the showdown lands on top of the fan.
+// ivory: black stock, gold rule, white figures. A seat card is a piece of this
+// room and not a card out of the shoe - the shoe's are the pale ones - so the
+// two never get confused even when the showdown lands on top of the fan.
 //
-// Flat white for the figures rather than the ivory the rest of the type uses.
-// Ivory is warm against black lacquer at the size the nameplate is set, but at
-// a hairline it stops reading as warm and starts reading as a slightly dirty
-// white, and the one thing on a black card that must look deliberate is the
-// white.
+// Flat white for the figures: ivory reads as warm at nameplate size, but at a
+// hairline it just reads as a slightly dirty white.
 var courtStock = "#171310";
 var courtFigure = "#ffffff";
 

@@ -65,10 +65,10 @@ Top to bottom: workspaces, spacer, tray, status icons, clock.
 ## Notifications
 
 The shell owns `org.freedesktop.Notifications`, so **no other notification daemon
-can be running**. That name is exclusive: whoever claims it first wins, and the
-loser silently never sees a notification. Dunst also ships a D-Bus activation
-file, so it can be started on demand by anything that sends a notification —
-uninstalling it is the only way to be sure it stays gone.
+can be running** — the name is exclusive, first claimant wins, and the loser
+silently never sees a notification. Dunst also ships a D-Bus activation file, so
+it can be started on demand by anything that sends a notification — uninstalling
+it is the only way to be sure it stays gone.
 
 Toasts stack down from the top right, inside the border and clear of the bar,
 styled per table — candle-lit gold cards on Noir.
@@ -104,9 +104,9 @@ back with `hyprctl dispatch workspace name:sidebar`.
 
 ## The music tab (right edge)
 
-The dock tab's mirror image, on the other side: a tab on the right edge tucked
-against the bar. Click it and the player controls slide out to the left — album
-art, track, artist, position, and previous / play-pause / next.
+The dock tab's mirror image: a tab on the right edge, tucked against the bar.
+Click it and the player controls slide out to the left — album art, track,
+artist, position, and previous / play-pause / next.
 
 It only exists while Spotify is running. Point `musicPlayer` in `Config.qml` at
 something else to control something else — it is matched against the MPRIS bus
@@ -175,13 +175,22 @@ there is more than one, and says nothing when the hand is the whole answer.
 and the cards are what the arrows are obviously for. Backspace still edits.
 
 Matching is a coarse ladder (exact name, prefix, word start, substring, then
-generic name, binary, keywords, comment), ties broken by how often you have
-played that app. Deliberately not fuzzy: with five seats on the table, loose
-matching mostly costs you the card you meant to be looking at.
+generic name, binary, keywords, comment), ties broken by how much you have
+played that app lately. Deliberately not fuzzy: with five seats on the table,
+loose matching mostly costs you the card you meant to be looking at.
 
-Play counts live in `plays.json` in Quickshell's state dir, next to `theme.json`.
-Delete it to forget the regulars. `launcherSeats` and the card geometry are in
-`Config.qml`.
+"Lately" is the point: the tally is not a lifetime count but a weight with a
+one-week half-life, so a play is worth 1 the day it happens, half that a week
+on and a sixteenth a month on. A straight count never forgets — the editor you
+lived in for a month last spring would sit on the table ahead of the one you
+have opened every day this week — and the empty bet is supposed to deal what
+you are using, not what you have ever used.
+
+The tally lives in `plays.json` in Quickshell's state dir, next to `theme.json`,
+as an `id -> { n, t }` of the weight `n` as it stood at time `t`; decay composes,
+so that pair is exact rather than a running approximation. Delete the file to
+forget the regulars, and `halfLife` in `services/Apps.qml` is how long the house
+memory is. `launcherSeats` and the card geometry are in `Config.qml`.
 
 Set `launcherIcons: false` in `Config.qml` and the cards drop the apps' icons
 and wear their suit pips instead — the hand reads as a deck rather than as a
@@ -210,8 +219,8 @@ Bar.qml              the right-edge bar
 Sidebar.qml          the left-edge dock tab
 Music.qml            the right-edge music tab (only while the player runs)
 Popups.qml           the notification stack (top right)
-ThemePicker.qml      the table picker overlay (Super+T or the bar's ♠ button)
-Launcher.qml         the launcher: a hand of apps, dealt (Super+D)
+ThemePicker.qml      the table picker overlay
+Launcher.qml         the launcher: a hand of apps, dealt
 Exclusions.qml       reserves the other three edges
 components/          Workspaces, Tray, StatusIcons, Clock, ThemeButton, Toast
 services/Dock.qml    docking logic
@@ -219,7 +228,7 @@ services/Notifications.qml  the notification server (replaces dunst)
 services/Player.qml  the MPRIS player the music tab drives
 services/ThemePanel.qml     open-state for the table picker overlay
 services/LauncherPanel.qml  open-state for the launcher overlay
-services/Apps.qml           the shoe: desktop entries, matching, play counts
+services/Apps.qml           the shoe: desktop entries, matching, the decaying tally
 scripts/apply-theme.sh      mirrors the active table onto the rest of the desktop
 scripts/tables/             what six roles can't express: kitty's 16-colour deck,
                             starship's segments, and Kvantum's chassis

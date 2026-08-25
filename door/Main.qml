@@ -52,16 +52,12 @@ Rectangle {
     // shape, so a typo in theme.conf costs the arrangement rather than the
     // password field.
     //
-    // Forced through a string first, and that is not belt and braces. Every
-    // other key here arrives as a string, but SDDM splits any value with a comma
-    // in it into a list before the theme ever sees it - so this one key comes
-    // back as a list of "10", "4", ... with no .split on it, the binding throws
-    // TypeError, and the property is left undefined rather than defaulted.
-    // ChipStack then cannot read .length of it and the bet renders as nothing at
-    // all: no chips, no missing-file warning, and the error only visible if you
-    // happen to have Qt's logging pointed somewhere you can read. Stringifying
-    // first collapses both shapes onto one path, because the list stringifies
-    // back to exactly the "10,4,9,7,5" that was written in the file.
+    // Forced through a string first because SDDM splits any comma-bearing value
+    // into a list before the theme sees it. Without that, .split is missing, the
+    // binding throws TypeError, the property is left undefined, and ChipStack
+    // renders nothing at all with no visible error. The list stringifies back to
+    // exactly the "10,4,9,7,5" that was written in the file, so both shapes take
+    // one path.
     readonly property var stackHeights: {
         var spec = config.stackHeights;
         var raw = (spec === undefined || spec === null ? "" : "" + spec).split(",");
@@ -108,14 +104,12 @@ Rectangle {
     property string pitBoss: ""
 
     // --- the hands ------------------------------------------------------------
-    // Fixed hands, not random. The whole point is that the outcome is legible
-    // in half a second to anyone who has ever seen a deck: ace and a king is
-    // twenty-one and there is no better hand in the game, and a seventeen that
-    // gets hit is the most familiar way in the world to lose.
+    // Fixed hands, not random, so the outcome is legible in half a second to
+    // anyone who has seen a deck: ace and a king is twenty-one, and a seventeen
+    // that gets hit is the most familiar way in the world to lose.
     //
-    // Both hands open on two cards, so the deal is identical either way until
-    // they turn over - nothing about the cards on their way out tells you what
-    // is coming.
+    // Both open on two cards, so the deal is identical either way until they
+    // turn over - nothing on the way out tells you what is coming.
     readonly property var winHand: [
         {
             rank: "A",
@@ -137,8 +131,7 @@ Rectangle {
         }
     ]
     // The card that busts it. Eight, so seventeen goes to twenty-two: over by
-    // the smallest margin the hand allows, which stings more than being over by
-    // six and is the closest a login screen gets to a joke about a typo.
+    // the smallest margin the hand allows.
     readonly property var bustCard: ({
             rank: "8",
             suit: "♠"
@@ -202,13 +195,10 @@ Rectangle {
     // cleared. Also the escape key, so a half-typed password can be abandoned
     // without holding backspace.
     function sweep(): void {
-        // Every clock, not only the ones that have already fired. This used to
-        // be reachable from one place - the end of a hand, by which point the
-        // deal and the hit were long done - and it is now reachable from the
-        // middle of one, because escape works in every phase and the stall
-        // watchdog can call it with the cards still in the air. A timer left
-        // running would land on the swept table a beat later and turn a card
-        // over on a hand nobody is playing.
+        // Every clock, not only the ones that have already fired: escape works
+        // in every phase and the stall watchdog can call sweep() with the cards
+        // still in the air. A timer left running would land on the swept table a
+        // beat later and turn a card over on a hand nobody is playing.
         dealClock.stop();
         hitClock.stop();
         sweepClock.stop();
@@ -262,22 +252,17 @@ Rectangle {
     Timer {
         id: stallClock
 
-        // The dealer has to say something. Every other clock on this table
-        // measures a beat in an animation; this one measures the house not
-        // answering at all.
+        // Every other clock here measures a beat in an animation; this one
+        // measures the house not answering at all.
         //
-        // sddm.login() hands the bet to PAM, and the only things that bring the
-        // table back to `bet` are onLoginSucceeded and onLoginFailed. A PAM
-        // stack that answers neither - a module blocking on a directory server
-        // that is not there, a wedged sddm-helper - leaves the greeter sitting
-        // in `deal` forever with nothing on screen moving. There is no second
-        // login screen to fall back on and no session to alt-tab to: it is a VT
-        // switch or the power button, and on a machine whose whole front door
-        // this is, that is the one failure worth spending a timer on.
+        // Only onLoginSucceeded and onLoginFailed bring the table back to `bet`.
+        // A PAM stack that answers neither - a module blocking on a directory
+        // server that is not there, a wedged sddm-helper - leaves the greeter in
+        // `deal` forever with nothing on screen moving, and the only ways out
+        // are a VT switch or the power button.
         //
-        // Thirty seconds is past any honest PAM stack - a remote directory that
-        // is going to answer has answered - and short of the point where
-        // somebody decides the machine is broken and holds the button.
+        // Thirty seconds is past any honest PAM stack and short of the point
+        // where somebody decides the machine is broken.
         interval: 30000
         onTriggered: {
             // Said plainly. This is the one message on this screen that is not
@@ -292,11 +277,9 @@ Rectangle {
         target: sddm
 
         // The house answered, so the watchdog has nothing left to catch. Stopped
-        // here rather than in reveal(), which is the wrong place twice over: it
-        // runs on whichever of the two calls is the second one, so an answer
-        // that beats the deal animation would leave the clock running for
-        // another half second; and it returns early on the first call, before
-        // it would ever reach the stop.
+        // here rather than in reveal(), which returns early on its first call
+        // and would leave the clock running whenever the answer beats the deal
+        // animation.
         function onLoginSucceeded(): void {
             stallClock.stop();
             root.verdict = "win";
@@ -466,18 +449,14 @@ Rectangle {
                         width: Math.round(122 * root.u)
                         fontFamily: root.face
 
-                        // A court card. Every other card on this table is one you
-                        // were dealt; this one is the person sitting in front of
-                        // it, and the court cards are the only ones in a deck
-                        // with a person on them.
+                        // See Card.qml's `court` for why a seat is a court card.
                         court: true
 
                         // The suit follows the seat, so every account gets a card
                         // that is recognisably its own without a photo. The rank
-                        // is the account's first letter and a court card does not
-                        // print it - it is set here so the card is still a whole
-                        // card if `court` is ever turned off, and because the
-                        // name is already spelled out in gold under the fan.
+                        // is the account's first letter, which a court card does
+                        // not print - it is set so the card is still whole if
+                        // `court` is ever turned off.
                         rank: (seatCard.realName || seatCard.name).charAt(0).toUpperCase()
                         suit: ["♠", "♥", "♦", "♣"][seatCard.index % 4]
                         // No picture: a court card carries a monogram, not a
@@ -715,12 +694,10 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         text: root.pitBoss
-        // Whatever PAM hands over is a message, not markup. The default here is
-        // AutoText, which sniffs the string and quietly switches to the HTML
-        // engine if it looks like tags - and that engine resolves <img src>,
-        // which is a thing no string arriving at a login screen should be able
-        // to ask for. The messages are root's own, so this is closing a door
-        // nobody is at rather than one standing open.
+        // Whatever PAM hands over is a message, not markup. The default AutoText
+        // sniffs the string and switches to the HTML engine if it looks like
+        // tags, and that engine resolves <img src> - not something a string
+        // arriving at a login screen should be able to ask for.
         textFormat: Text.PlainText
         color: root.phase === "denied" ? Palette.hot : Palette.muted
         font.family: root.face
@@ -818,17 +795,11 @@ Rectangle {
         activeFocusOnPress: false
         focus: true
 
-        // readOnly, not `enabled: root.phase === "bet"`, and the difference is
-        // the whole of the way out of a hand.
-        //
-        // A disabled item is not sent key events at all - that is what disabled
-        // means - so with `enabled` off this field stopped listening the instant
-        // the cards went out, and the Keys.onEscapePressed below was dead in
-        // precisely the phases somebody would be reaching for it. Escape only
-        // worked when there was nothing to escape from. readOnly refuses the
-        // edit and keeps the focus and the keys, so escape reaches sweep() from
-        // any phase, and a hand that is going nowhere can be abandoned by hand
-        // rather than waited out.
+        // readOnly, not `enabled: root.phase === "bet"`. A disabled item is sent
+        // no key events at all, so Keys.onEscapePressed below would be dead in
+        // precisely the phases somebody reaches for it. readOnly refuses the
+        // edit but keeps the focus and the keys, so escape reaches sweep() from
+        // any phase.
         readOnly: root.phase !== "bet"
 
         onAccepted: root.deal()
@@ -837,10 +808,9 @@ Rectangle {
 
         Keys.onPressed: event => {
             // The seat and the session only move while the table is open for
-            // bets. They were unreachable during a hand as a side effect of the
-            // field being disabled; now that it keeps its keys, that has to be
-            // said out loud, or f2 would shuffle the session under a login that
-            // is already in flight.
+            // bets. Now that the field keeps its keys through a hand (see
+            // readOnly above), that has to be said out loud, or f2 would shuffle
+            // the session under a login already in flight.
             if (root.phase !== "bet")
                 return;
 

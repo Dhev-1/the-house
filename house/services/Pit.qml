@@ -62,32 +62,27 @@ Singleton {
         }
     }
 
-    // One table at a time. The games all deal into the same bottom-right
-    // corner, so two of them up at once is two cards stacked on the same spot
-    // - and the pit only ever meant one of them to be live anyway.
+    // One table at a time: the games all deal into the same bottom-right corner.
     //
-    // Over every game that can be *found* rather than every game `running`
-    // says is up: that list is a 3s tick behind, so a game dealt in a moment
-    // ago may not be in it yet, and it is exactly the one that needs shutting.
-    // A `hide` at a game that isn't there costs a client that exits 255 into
-    // /dev/null. Backgrounded, so opening a game doesn't wait on four of them
-    // in series - the ones that are up go down in their own time.
+    // Over every game that can be *found* rather than every game `running` says
+    // is up - that list is a 3s tick behind, and a game dealt in a moment ago is
+    // exactly the one that needs shutting. A `hide` at a game that isn't there
+    // costs a client exiting 255 into /dev/null. Backgrounded, so opening a game
+    // doesn't wait on four of them in series.
     function closeOthers(dir: string): string {
         return root.games.filter(g => g.dir !== dir).map(g => `qs -p '${root.repo}/${g.dir}/${g.file}' ipc call '${g.target}' hide 2>/dev/null &`).join(" ");
     }
 
     function toggle(game: var): void {
         const wrapper = `${root.repo}/${game.dir}/${game.file}`;
-        // `hide` quits every game when standalone (`toggle` only lowers some
-        // of their cards, leaving the engine resident); exit 255 with no
-        // process to answer means it wasn't running, so deal it in instead.
+        // `hide` quits every game when standalone (`toggle` only lowers some of
+        // their cards, leaving the engine resident); exit 255 with no process to
+        // answer means it wasn't running, so deal it in instead.
         //
-        // Which is also what tells a close from an open, and it is worth being
-        // the thing that decides: `running` would be a guess at this point, and
-        // guessing wrong here clears the pit on a click that only meant to shut
-        // one game. Nobody answering is the one unambiguous signal that this
-        // click is an open - so the rest of the pit is cleared there, on that
-        // branch, and nowhere else.
+        // Nobody answering is also the one unambiguous signal that this click is
+        // an open - `running` is a stale guess, and guessing wrong clears the pit
+        // on a click that only meant to shut one game. So the rest of the pit is
+        // cleared on that branch and nowhere else.
         Quickshell.execDetached(["sh", "-c", `qs -p '${wrapper}' ipc call '${game.target}' hide 2>/dev/null || { ${root.closeOthers(game.dir)} qs -p '${wrapper}'; }`]);
         // Poke the poll so the button lights without waiting a full tick.
         relight.restart();

@@ -105,14 +105,12 @@ Item {
         return root.stackHeights.length;
     }
 
-    // The left edge of the block of stacks in use.
-    //
-    // The item is always as wide as every stack it could have, and the ones in
-    // use are centred inside it. That is what keeps the bet centred in the
-    // betting circle no matter how many stacks are out, without the item's own
-    // width changing underneath whatever is laying it out. The cost is that
-    // opening a new stack shifts the existing ones left - which is a real moment
-    // worth seeing, so they slide rather than jump.
+    // The left edge of the block of stacks in use. The item is always as wide as
+    // every stack it could have and the ones in use are centred inside it, which
+    // keeps the bet centred in the betting circle without the item's own width
+    // moving underneath whatever is laying it out. The cost is that opening a new
+    // stack shifts the existing ones left - a real moment worth seeing, so they
+    // slide rather than jump.
     readonly property int originX: Math.round((width - (stacksUsed * stackPitch - spriteGap * root.scale)) / 2)
 
     // How many chips are in the stacks to the left of `s`. The chip's place in
@@ -131,27 +129,21 @@ Item {
 
     // How far stack `s` of `n` is lifted off the baseline, in screen pixels.
     //
-    // The stacks stand on a circle rather than in a straight line: one big
-    // circle centred a long way below the felt, so the middle stack sits at the
-    // bottom of it and the outer ones ride up the sides. Concave, the way chips
-    // pushed out around the near edge of a betting circle sit - the felt is
-    // round, so a row of stacks laid across it should be too, and a dead
-    // straight row is the one arrangement that gives away that the table is
-    // flat.
+    // The stacks stand on one big circle centred a long way below the felt, so
+    // the middle stack sits at its bottom and the outer ones ride up the sides.
+    // Concave, the way chips pushed out around the near edge of a betting circle
+    // sit: a dead straight row is the one arrangement that gives away that the
+    // table is flat.
     //
-    // A fixed radius rather than a fixed lift for the outermost stack. Radius
-    // means one circle, and every stack sits where that circle actually puts it,
-    // so the arc gets deeper as the bet spreads instead of being re-fitted to
-    // whatever is currently out. Two stacks barely bend at all, which is right -
+    // A fixed radius rather than a fixed lift for the outermost stack, so the arc
+    // deepens as the bet spreads instead of being re-fitted to whatever is out -
     // re-fitting would throw the whole bet upward the moment a second stack
     // opened, for no reason a player could see.
     //
-    // 110 source pixels puts the outermost of five about twenty pixels up, and
-    // the pair inside them about four. It wants to be roughly this tight: at 176
-    // the arc is real but the stacks are all different heights anyway, so a lift
-    // that small disappears into the skyline and the row just looks slightly
-    // crooked. Turn it down for a deeper bowl, up for a flatter one; negate the
-    // result for a dome instead.
+    // 110 source pixels puts the outermost of five about twenty pixels up. It
+    // wants to be roughly this tight: at 176 the lift disappears into a skyline
+    // of uneven stacks and the row just looks crooked. Down for a deeper bowl, up
+    // for a flatter one; negate the result for a dome.
     function riseAt(s: int, n: int): int {
         var dx = (s - (n - 1) / 2) * (root.spriteWidth + root.spriteGap);
         var r = root.spriteRadius;
@@ -222,11 +214,9 @@ Item {
                     required property int index
 
                     // Where this chip falls in the whole bet, not in its own
-                    // stack: the colour keeps climbing straight across the gap
-                    // from one stack into the next, so the stacks read as one
-                    // long bet broken into columns rather than as five separate
-                    // ones. Three chips to a colour - one apiece is a stripe,
-                    // three is a band you can see.
+                    // stack: the colour keeps climbing across the gap from one
+                    // stack into the next, so they read as one long bet broken
+                    // into columns rather than as five separate ones.
                     readonly property int place: root.offsetOf(column.index) + chip.index
 
                     // 1 while the chip is still in the air, 0 once it is down.
@@ -243,13 +233,11 @@ Item {
                     width: root.spriteWidth * root.scale
                     height: root.chipHeight
 
-                    // Stacked from the bottom of the column upward, squarely on
-                    // top of each other, with no lateral wobble: the chips are
-                    // all one sprite on one pixel grid, and knocking every other
-                    // one sideways does not read as a hand-dealt stack leaning
-                    // the way a real one does, it reads as a column that has
-                    // been rendered wrong. The three bakes carry the variation
-                    // instead - see the source above.
+                    // Squarely on top of each other, with no lateral wobble: one
+                    // sprite on one pixel grid, so knocking every other chip
+                    // sideways reads as a column rendered wrong rather than as a
+                    // hand-dealt stack leaning. The three bakes carry the
+                    // variation instead - see the source above.
                     x: 0
                     y: Math.round(column.height_ - root.chipHeight - chip.index * root.pitch - chip.drop * root.chipHeight * 3)
                     opacity: 1 - chip.drop

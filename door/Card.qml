@@ -1,16 +1,14 @@
 import QtQuick
 import "Palette.js" as Palette
 
-// A playing card that can turn over.
-//
-// Used for three different jobs, which is why it takes a rank and a suit rather
-// than an image: the user you are logging in as, the session you are logging
-// into, and the showdown hand dealt when you press enter.
+// A playing card that can turn over. Takes a rank and a suit rather than an
+// image because it does three jobs: the user, the session, and the showdown
+// hand dealt on enter.
 //
 // The flip is a rotation about the card's own vertical axis with the two faces
-// swapped at the halfway point. There is no perspective projection here - Qt
-// would need a full matrix for that - so the card squashes rather than turning
-// in space. At this size and speed the difference does not read.
+// swapped at the halfway point. No perspective projection - Qt would need a
+// full matrix - so the card squashes rather than turning in space. At this size
+// and speed the difference does not read.
 Item {
     id: root
 
@@ -26,31 +24,20 @@ Item {
     property url picture: ""
 
     // Print this one as a court card: the framed panel, mirrored top to bottom,
-    // that a real jack, queen or king carries instead of a rank's worth of pips.
+    // that a jack, queen or king carries instead of a rank's worth of pips.
     //
-    // The seat cards use it and nothing else does. Every other card on this
-    // table is one you were dealt, and a dealt card is worth what its rank says;
-    // a seat card is not in the hand at all, it is the person sitting in front of
-    // it, and the court cards are the only ones in a deck that have a person on
-    // them. Same stock, same ink, same deck as the showdown - it is not a
-    // different kind of object, it is the card in that deck which happens to be
-    // a portrait.
-    //
-    // The mirroring is the real tell, and it is not decoration: a court card is
-    // drawn twice, head to head, so that it reads the same to the player holding
-    // it and the player across the table. That is the one thing about a face
-    // card everybody recognises without being able to name it.
+    // Only the seat cards use it. A dealt card is worth what its rank says; a
+    // seat card stands for the person in front of it, and the court cards are
+    // the only ones in a deck with a person on them. Same stock, same ink, same
+    // deck as the showdown. The head-to-head mirroring is the tell: a court card
+    // reads the same from either side of the table.
     property bool court: false
 
-    // Hearts and diamonds are red. The one rule the whole deck runs on.
     readonly property color inkColour: (suit === "♥" || suit === "♦") ? Palette.cardRed : Palette.cardInk
 
-    // What this card is printed on, and what it is printed in.
-    //
-    // A number card is ivory with black or red ink, like every card ever dealt.
-    // A court card is black with gold rule and white figures - the room's own
-    // colours, so it reads as part of the table rather than as something dealt
-    // onto it.
+    // A number card is ivory with black or red ink; a court card is black with
+    // gold rule and white figures, the room's own colours, so it reads as part
+    // of the table rather than as something dealt onto it.
     //
     // Kept as strings rather than as `color`, because Palette.alpha() works on
     // the hex text and silently has nothing to say to a QColor.
@@ -96,28 +83,21 @@ Item {
     }
 
     // --- the back -------------------------------------------------------------
-    // What you are actually looking at for most of a showdown. The cards are
-    // pitched face down and only turn at the very end, so the back is on screen
-    // for the whole deal and the face for about a second of it - which is the
-    // wrong way round from how much drawing each used to get.
+    // On screen for the whole deal, since the cards only turn at the very end.
     //
-    // A real back is one printed pattern run edge to edge, and it has to survive
-    // two things this one does. It is seen in a fanned overlap, where all you get
-    // of the cards underneath is a strip down one side, so the pattern has to
-    // read from any sliver of it rather than from the middle. And it is seen
-    // upside down by half the table, so it is built to turn: the weave is
-    // symmetric about both axes and the medallion sits dead centre, and a card
-    // rotated 180 degrees is the same card.
+    // Two constraints. It is seen in a fanned overlap, where all you get of the
+    // cards underneath is a strip down one side, so the pattern has to read from
+    // any sliver of it rather than from the middle. And it is seen upside down
+    // by half the table, so the weave is symmetric about both axes and the
+    // medallion sits dead centre: rotated 180 degrees it is the same card.
     Rectangle {
         anchors.fill: parent
         visible: root.flip < 90
         radius: root.width * 0.08
         color: Palette.cardBack
-        // A dim gold edge rather than the black one this used to have. Black on
-        // black cloth gave a face-down card no outline at all - a hole in the
-        // table rather than a card lying on it - and a hand of them ran together
-        // into one shape. Same problem the court card's gold edge solves, same
-        // fix.
+        // Gold, not black: black on black cloth gives a face-down card no
+        // outline at all, and a hand of them runs together into one shape. Same
+        // problem the court card's gold edge solves.
         border.width: 1
         border.color: Palette.alpha(Palette.gold, 0.30)
 
@@ -143,15 +123,13 @@ Item {
         }
 
         // The weave: two families of hairlines at right angles, crossing into a
-        // fine diamond mesh. The same diamond as the lattice on the cloth and
-        // the lozenge below, so the deck and the table are printed by the same
-        // house - but woven rather than scattered.
+        // fine diamond mesh - the same diamond as the lattice on the cloth and
+        // the lozenge below, woven rather than scattered.
         //
-        // What was here before was twenty-four separate diamonds on a 4x6 grid,
-        // each about a tenth of the card across. At the size a card actually
-        // gets drawn that is not a pattern, it is two dozen specks, and in a
-        // fanned hand a sliver of it showed one speck and a lot of black.
-        // Crossed lines have no such problem: any strip of them is the pattern.
+        // Discrete diamonds on a grid were tried first and fail the sliver test:
+        // at the size a card is actually drawn they are specks, and a fanned
+        // hand shows one speck and a lot of black. Any strip of crossed lines is
+        // the whole pattern.
         Item {
             id: weave
 
@@ -260,13 +238,10 @@ Item {
         radius: root.width * 0.08
         color: root.stock
         border.width: 1
-        // Gold all the way round on a court card. A number card is edged in a
-        // shadow because ivory stock on dark cloth needs separating from it; a
-        // black card on dark cloth needs the opposite, an edge with some light
-        // in it, or the card has no outline at all and reads as a hole in the
-        // table. It also closes the set: the gold on the edge, the two gold
-        // lines round the panel, and the gold rule at the waist are the same
-        // frame at three depths.
+        // Ivory stock on dark cloth needs a shadow to separate it; a black court
+        // card needs the opposite, an edge with light in it, or it reads as a
+        // hole in the table. The gold edge, the two gold lines round the panel
+        // and the gold rule at the waist are the same frame at three depths.
         border.color: root.court ? Palette.gold : Qt.rgba(0, 0, 0, 0.35)
 
         transform: Rotation {
@@ -318,7 +293,8 @@ Item {
             }
         }
 
-        // And the same again, upside down in the opposite corner.
+        // And the same again, upside down in the opposite corner. Sizing and the
+        // court-card rule are as above.
         Column {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
@@ -328,13 +304,6 @@ Item {
             rotation: 180
 
             Text {
-                // Not on a court card. The rank on a dealt card is what it is
-                // worth and has to be legible from under the card next to it,
-                // which is the whole reason the index is printed twice in
-                // opposite corners. A seat card is worth nothing and is never in
-                // a fanned hand you are reading values off - the letter there
-                // was only ever your initial, and the name is set in gold
-                // underneath the card in type four times the size.
                 visible: !root.court
                 text: root.rank
                 color: root.indexInk
@@ -348,8 +317,6 @@ Item {
                 text: root.suit
                 color: root.indexInk
                 font.family: root.fontFamily
-                // A shade larger once it is alone in the corner, so the corner
-                // still has something in it rather than a stray mark.
                 font.pixelSize: root.width * (root.court ? 0.24 : 0.20)
             }
         }
@@ -446,22 +413,15 @@ Item {
                     height: plate.height / 2
                     clip: true
 
-                    // The panel is left empty on purpose, and this is where the
-                    // portrait would go.
+                    // The panel is left empty on purpose - this is where a
+                    // portrait would go. An avatar is wrong: almost no machine
+                    // has an icon for its users, so the common case is a
+                    // fallback pretending to be a design, and where there is one
+                    // it is a snapshot dropped into an engraved card. A big
+                    // monogram is wrong too - the corner indices already carry
+                    // that letter twice.
                     //
-                    // An avatar was the obvious thing and it is the wrong thing:
-                    // almost no machine has an icon for its users, so the common
-                    // case is a fallback pretending to be a design, and on the
-                    // machine that does have one it is a snapshot dropped into an
-                    // engraved card - the only element on this table that came
-                    // from outside the room. A big monogram was the next obvious
-                    // thing and it is only slightly less wrong, because the
-                    // corner indices already carry that letter twice and a third
-                    // copy of it at four times the size is the card shouting.
-                    //
-                    // So: the frame, the rule, the suit, and nothing in the
-                    // middle. The room is two colours and mostly empty; the card
-                    // that stands for the room should be too.
+                    // So: the frame, the rule, the suit, nothing in the middle.
                     Text {
                         anchors.left: parent.left
                         anchors.top: parent.top
