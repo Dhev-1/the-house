@@ -2,6 +2,12 @@
 // Tray menus are native QMenus. Without a platform theme Qt ignores the
 // portal's colour scheme and paints them light, so point it at the portal.
 //@ pragma Env QT_QPA_PLATFORMTHEME=xdgdesktopportal
+// Animations are stepped by whatever drives frames. The threaded render loop
+// steps them off the actual vblank, so they run at the panel's rate; the basic
+// loop Qt falls back to on some drivers steps them off a 16ms timer, which
+// caps every animation in the shell at 60fps on a 120Hz screen. Ask for the
+// good one rather than hoping the fallback logic picks it.
+//@ pragma Env QSG_RENDER_LOOP=threaded
 //@ pragma DefaultEnv QS_NO_RELOAD_POPUP=1
 
 import Quickshell

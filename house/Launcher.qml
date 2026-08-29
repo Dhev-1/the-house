@@ -65,6 +65,103 @@ PanelWindow {
     readonly property var ranks: ["A", "2", "3", "4", "5"]
     readonly property var suits: ["♠", "♥", "♦", "♣"]
 
+    // ---- The tray ---------------------------------------------------------
+    //
+    // Your own five, tucked into the bottom-left edge. Held rather than dealt:
+    // the table answers the bet, the tray does not change at all. It is the
+    // corner you learn, so alt+1..5 plays one from anywhere without the caret
+    // ever leaving the bet.
+
+    readonly property real trayCardWidth: Math.round(Config.launcherCardWidth * Config.launcherTrayScale)
+    readonly property real trayCardHeight: Math.round(Config.launcherCardHeight * Config.launcherTrayScale)
+
+    // Everything inside a tray card, off the same scale as the card itself -
+    // so the face grows with the card instead of a full-size card wearing
+    // thumbnail furniture. At scale 1 these are the table's own numbers.
+    readonly property real trayIconSize: Math.round(Config.launcherIconSize * Config.launcherTrayScale)
+    readonly property int trayRadius: Math.round(10 * Config.launcherTrayScale)
+    readonly property int trayInset: Math.round(4 * Config.launcherTrayScale)
+    readonly property int trayPad: Math.round(8 * Config.launcherTrayScale)
+    readonly property int trayIconTop: root.trayPad + Math.round(14 * Config.launcherTrayScale)
+
+    // Floored, because past a certain point smaller type is not smaller, it is
+    // unreadable - a shrunken tray should lose its text, not keep an illegible
+    // version of it.
+    readonly property int trayFont: Math.max(7, Math.round(9 * Config.launcherTrayScale))
+    readonly property int trayPipFont: Math.max(12, Math.round(26 * Config.launcherTrayScale))
+
+    // How far the tray has to rise to stand clear of the edge, given how much of
+    // it is already showing.
+    readonly property real trayFullLift: root.trayCardHeight - Config.launcherTrayPeek + Config.launcherTrayLift
+
+    // Alt held: the whole tray comes up, full cards and names, and drops back the
+    // moment you let go. This is what makes a tucked tray honest - the glance you
+    // gave up by hiding the names is a quarter-second away on the same key you
+    // were already pressing to play one.
+    property bool peek: false
+
+    // Where the pointer is, in window coordinates, so the tray can notice it
+    // coming down to the edge. -1 while it is nowhere near.
+    property real pointerY: -1
+    readonly property bool nearEdge: root.pointerY >= 0 && root.pointerY > root.height - Config.launcherTrayProximity
+
+    // The card in flight, if one is. `dragSource` is where it was picked up
+    // from: -1 the table, 0..4 the tray slot, -2 nothing in hand.
+    property var dragEntry: null
+    property int dragSource: -2
+    property real dragX: 0
+    property real dragY: 0
+    readonly property bool dragging: root.dragEntry !== null
+
+    // How far the tray as a whole stands off the edge. One card hovered lifts
+    // that card further on its own, below.
+    readonly property real trayLift: root.peek ? root.trayFullLift : ((root.nearEdge || root.dragging) ? Config.launcherTrayNudge : 0)
+
+    // Play a slot outright, from whatever the bet happens to be. An empty slot
+    // does nothing rather than closing the launcher on a miss.
+    function fire(slot: int): void {
+        const entry = Apps.heldEntries[slot];
+        if (!entry)
+            return;
+        Apps.play(entry);
+        LauncherPanel.close();
+    }
+
+    // The keyboard's half of the drag: put the selected card in a slot. Deals
+    // the hand again on its own, since a held app leaves the empty-bet shoe.
+    function assign(slot: int): void {
+        const entry = root.hand[root.index];
+        if (!entry)
+            return;
+        Apps.hold(entry, slot);
+    }
+
+    function startDrag(entry: var, source: int, x: real, y: real): void {
+        // Coordinates before the entry, so the card in flight is drawn under the
+        // pointer on the first frame rather than at the origin for one of them.
+        root.dragX = x;
+        root.dragY = y;
+        root.dragSource = source;
+        root.dragEntry = entry;
+    }
+
+    // Let go. Over a slot, the card goes in it; anywhere else, a card dragged out
+    // of the tray is dropped for good and one dragged off the table just goes
+    // back - the table is not somewhere you can lose an app from.
+    function drop(): void {
+        const slot = tray.slotAt(root.dragX, root.dragY);
+        if (slot >= 0)
+            Apps.hold(root.dragEntry, slot);
+        else if (root.dragSource >= 0)
+            Apps.release(root.dragSource);
+        root.cancelDrag();
+    }
+
+    function cancelDrag(): void {
+        root.dragEntry = null;
+        root.dragSource = -2;
+    }
+
     screen: monitor
 
     // The whole screen: the scrim dims everything and catches the click-out.
@@ -103,6 +200,11 @@ PanelWindow {
         root.page = 0;
         root.index = 0;
         root.dealFrom = -1;
+        // A tray left standing up, or a card left in mid-air, because the
+        // launcher closed on an alt or a drag that never got its release.
+        root.peek = false;
+        root.pointerY = -1;
+        root.cancelDrag();
         bet.forceActiveFocus();
     }
 
@@ -173,9 +275,17 @@ PanelWindow {
         color: "#000000"
         opacity: root.reveal * 0.55
 
+        // Also where the tray watches for the pointer coming down to the edge.
+        // Hovering the tray itself never reaches here - the tray is above the
+        // scrim and takes its own hover - which is right: by then it is already
+        // up on its own account.
         MouseArea {
             anchors.fill: parent
+            hoverEnabled: true
+
             onClicked: LauncherPanel.close()
+            onPositionChanged: mouse => root.pointerY = mouse.y
+            onExited: root.pointerY = -1
         }
     }
 
@@ -279,9 +389,48 @@ PanelWindow {
                             root.page = root.pages - 1;
                             root.index = Math.max(0, root.pageLength(root.page) - 1);
                             break;
+                        // Alt on its own stands the tray up for as long as it is
+                        // down. It arrives as a key press of its own, before the
+                        // number that usually follows it.
+                        case Qt.Key_Alt:
+                            root.peek = true;
+                            break;
+                        // The tray's numbers. Bare, they are digits you are
+                        // typing into the bet and nothing else - the modifier is
+                        // what makes them slots, which is why the tray could
+                        // never have been on the bare keys.
+                        case Qt.Key_1:
+                        case Qt.Key_2:
+                        case Qt.Key_3:
+                        case Qt.Key_4:
+                        case Qt.Key_5:
+                            {
+                                const slot = event.key - Qt.Key_1;
+                                // Ctrl puts the selected card in the slot, alt
+                                // plays what is already there. Ctrl wins when
+                                // both are down, because ctrl+alt+N is how you
+                                // assign while peeking at the tray.
+                                if (event.modifiers & Qt.ControlModifier)
+                                    root.assign(slot);
+                                else if (event.modifiers & Qt.AltModifier)
+                                    root.fire(slot);
+                                else
+                                    return; // typing
+                            }
+                            break;
                         default:
                             return; // typing
                         }
+                        event.accepted = true;
+                    }
+
+                    // The other half of the peek. Without this the tray stays up
+                    // after the alt that raised it, which turns a glance into a
+                    // mode you have to get back out of.
+                    Keys.onReleased: event => {
+                        if (event.key !== Qt.Key_Alt)
+                            return;
+                        root.peek = false;
                         event.accepted = true;
                     }
 
@@ -322,10 +471,18 @@ PanelWindow {
 
             readonly property int seats: Math.max(1, root.hand.length)
 
-            implicitWidth: table.seats * Config.launcherCardWidth + (table.seats - 1) * Config.launcherCardGap
+            // The table is always a full hand wide and the cards are inset into
+            // it, rather than the table itself shrinking to fit them. Same
+            // picture either way - but an animated implicitWidth is a layout
+            // property, so spreading the hand used to re-polish the whole
+            // column every frame it moved. This is an offset the seats add to
+            // their own x, and the layout never hears about it.
+            property real spread: (Config.launcherSeats - table.seats) * (Config.launcherCardWidth + Config.launcherCardGap) / 2
+
+            implicitWidth: Config.launcherSeats * Config.launcherCardWidth + (Config.launcherSeats - 1) * Config.launcherCardGap
             implicitHeight: Config.launcherCardHeight + 56
 
-            Behavior on implicitWidth {
+            Behavior on spread {
                 NumberAnimation {
                     duration: 220
                     easing.type: Easing.OutCubic
@@ -378,11 +535,26 @@ PanelWindow {
                     // paint Qt's magenta checkerboard. Empty falls through to the
                     // suit pip below, which is also how Config.launcherIcons
                     // turns the icons off - one no-icon path, not two.
-                    readonly property string iconSource: Config.launcherIcons && card.entry?.icon ? Quickshell.iconPath(card.entry.icon, true) : ""
+                    readonly property string iconSource: Config.launcherIcons && card.entry?.icon ? Apps.icon(card.entry.icon) : ""
 
                     // 1 while the card is still in the dealer's hand, 0 once it
                     // has landed. Everything about the pitch rides on this.
                     property real pitch: 1
+
+                    // The two things that change on a beat rather than on a
+                    // frame: where in the fan this seat sits, and whether there
+                    // is a card in it at all. They are split out here because
+                    // they are the only parts that want easing.
+                    //
+                    // Everything the pitch drives is composed on top of them
+                    // without a Behavior of its own. A Behavior on a property
+                    // that another animation is already writing every frame
+                    // restarts itself every frame - it never reaches its target,
+                    // it just chases it, and five cards chasing two properties
+                    // each is both visibly laggy and a pile of animation
+                    // machinery rebuilt 120 times a second.
+                    property real fan: card.selected ? 0 : (card.index - (table.seats - 1) / 2) * Config.launcherFan
+                    property real presence: card.entry ? 1 : 0
 
                     // A seat re-pitches whenever the app in it changes, which is
                     // what makes a keystroke read as a fresh deal rather than as
@@ -407,24 +579,24 @@ PanelWindow {
                     // The seat's place at the table, plus however far the card
                     // still is from it. Independent: the hand can be spreading
                     // under a card that is still arriving.
-                    x: card.index * (Config.launcherCardWidth + Config.launcherCardGap) + card.pitch * Config.launcherPitch * root.dealFrom
-                    opacity: card.entry ? 1 - card.pitch * Config.launcherDealFade : 0
+                    x: table.spread + card.index * (Config.launcherCardWidth + Config.launcherCardGap) + card.pitch * Config.launcherPitch * root.dealFrom
+                    opacity: card.presence * (1 - card.pitch * Config.launcherDealFade)
 
                     // The fan: pivot on the bottom edge, a few degrees per seat
                     // off-centre. The selected card stands upright and lifts out
                     // of the hand; an arriving one is still at the angle it was
                     // pitched at, leaning the way it is travelling.
                     transformOrigin: Item.Bottom
-                    rotation: card.selected ? 0 : (card.index - (table.seats - 1) / 2) * Config.launcherFan + card.pitch * 14 * root.dealFrom
+                    rotation: card.fan + card.pitch * 14 * root.dealFrom
                     y: card.selected ? 4 : 30
 
-                    Behavior on opacity {
+                    Behavior on presence {
                         NumberAnimation {
                             duration: 140
                         }
                     }
 
-                    Behavior on rotation {
+                    Behavior on fan {
                         NumberAnimation {
                             duration: 160
                             easing.type: Easing.OutCubic
@@ -553,14 +725,48 @@ PanelWindow {
                         }
                     }
 
+                    // Hover picks the card up, click deals it in - and a press
+                    // that travels far enough before it lets go is a card taken
+                    // off the table to be put in the tray instead. The threshold
+                    // is what keeps those two apart: a click is a click even if
+                    // the mouse shifts a pixel under it.
                     MouseArea {
+                        id: hit
+
+                        property point origin
+
                         anchors.fill: parent
                         enabled: card.entry
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        // Hover picks the card up, click deals it in.
+
                         onEntered: root.index = card.index
-                        onClicked: root.confirm()
+                        onPressed: mouse => hit.origin = Qt.point(mouse.x, mouse.y)
+
+                        onPositionChanged: mouse => {
+                            if (!hit.pressed)
+                                return;
+
+                            const p = hit.mapToItem(null, mouse.x, mouse.y);
+                            if (root.dragging) {
+                                root.dragX = p.x;
+                                root.dragY = p.y;
+                                return;
+                            }
+
+                            if (Math.abs(mouse.x - hit.origin.x) + Math.abs(mouse.y - hit.origin.y) < 10)
+                                return;
+                            root.startDrag(card.entry, -1, p.x, p.y);
+                        }
+
+                        onReleased: {
+                            if (root.dragging)
+                                root.drop();
+                            else
+                                root.confirm();
+                        }
+
+                        onCanceled: root.cancelDrag()
                     }
                 }
             }
@@ -568,10 +774,320 @@ PanelWindow {
 
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: "←→ pick · ↑↓ hands · ⏎ deal · esc fold"
+            text: "←→ pick · ↑↓ hands · ⏎ deal · alt peek · esc fold"
             color: Config.colours.subtext
             font.family: Config.font
             font.pointSize: 8
+        }
+    }
+
+    // ---- The tray ---------------------------------------------------------
+    //
+    // Five slots tucked into the bottom-left edge, outside the centred column
+    // entirely - it is furniture, not part of the hand's layout, and the hand
+    // must not move when the tray does.
+    //
+    // Bottom-left because it is your side of the table, and because the hint
+    // line already has the bottom middle.
+    Item {
+        id: tray
+
+        x: Config.launcherTrayMargin
+        y: root.height - Config.launcherTrayPeek - root.trayLift
+
+        width: Config.launcherSeats * root.trayCardWidth + (Config.launcherSeats - 1) * Config.launcherTrayGap
+        height: root.trayCardHeight
+
+        opacity: root.reveal
+
+        Behavior on y {
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
+        }
+
+        // Which slot a point in window coordinates is over, or -1. Deliberately
+        // generous: the gaps between the cards count as the card to their left
+        // and there is slack above and below, because this is a drop target for
+        // a card in flight, not a button.
+        function slotAt(wx: real, wy: real): int {
+            const p = tray.mapFromItem(null, wx, wy);
+            if (p.y < -30 || p.y > tray.height + 30)
+                return -1;
+            if (p.x < 0 || p.x > tray.width)
+                return -1;
+
+            const slot = Math.floor(p.x / (root.trayCardWidth + Config.launcherTrayGap));
+            return slot >= 0 && slot < Config.launcherSeats ? slot : -1;
+        }
+
+        Repeater {
+            model: Config.launcherSeats
+
+            Rectangle {
+                id: slot
+
+                required property int index
+
+                readonly property var entry: Apps.heldEntries[slot.index] ?? null
+                readonly property string suit: root.suits[slot.index % root.suits.length]
+                readonly property bool redSuit: slot.suit === "♥" || slot.suit === "♦"
+                readonly property color suitColour: slot.redSuit ? Config.colours.urgent : Config.colours.accent
+
+                readonly property string iconSource: Config.launcherIcons && slot.entry?.icon ? Apps.icon(slot.entry.icon) : ""
+
+                readonly property bool dropTarget: root.dragging && tray.slotAt(root.dragX, root.dragY) === slot.index
+
+                // How far this card stands proud of wherever the tray as a whole
+                // is sitting. One card hovered comes up on its own; when the
+                // whole tray is already up, that is nothing extra to do.
+                // Not readonly: the Behavior below writes it on its way to the
+                // bound value, exactly as `fan` and `presence` do on the table.
+                property real extra: Math.max(0, ((hover.containsMouse && slot.entry) || slot.dropTarget ? root.trayFullLift : 0) - root.trayLift)
+
+                // 1 below the edge, 0 landed. The tray is dealt last, after the
+                // table has its hand - the table, then these, so opening the
+                // launcher reads as one deal that ends with your own cards.
+                property real arrive: 1
+
+                x: slot.index * (root.trayCardWidth + Config.launcherTrayGap)
+                y: -slot.extra + slot.arrive * (root.trayCardHeight + Config.launcherTrayLift)
+
+                width: root.trayCardWidth
+                height: root.trayCardHeight
+                radius: root.trayRadius
+
+                // An empty slot is a card back: the tray is always five wide, so
+                // you can always see there is room without having to go looking
+                // for where a sixth would go.
+                color: slot.entry ? Config.colours.surface : Config.colours.idle
+                border.width: slot.dropTarget ? 2 : 1
+                border.color: slot.dropTarget ? Config.colours.accent : Qt.rgba(1, 1, 1, slot.entry ? 0.14 : 0.08)
+
+                Component.onCompleted: land.start()
+
+                Connections {
+                    target: root
+
+                    function onOpenChanged(): void {
+                        if (!root.open)
+                            return;
+                        slot.arrive = 1;
+                        land.restart();
+                    }
+                }
+
+                Behavior on extra {
+                    NumberAnimation {
+                        duration: 160
+                        easing.type: Easing.OutCubic
+                    }
+                }
+
+                Behavior on border.color {
+                    ColorAnimation {
+                        duration: 120
+                    }
+                }
+
+                SequentialAnimation {
+                    id: land
+
+                    // Behind the whole table: its last card has to be pitched
+                    // and landed before these start, or the deal reads as two
+                    // things happening at once rather than one after the other.
+                    PauseAnimation {
+                        duration: Config.launcherSeats * Config.launcherDealStagger + Config.launcherDealDuration + slot.index * Config.launcherDealStagger
+                    }
+
+                    NumberAnimation {
+                        target: slot
+                        property: "arrive"
+                        from: 1
+                        to: 0
+                        duration: 260
+                        // Overshoots the tuck and settles back into it - a card
+                        // put down, rather than a panel sliding into place.
+                        easing.type: Easing.OutBack
+                    }
+                }
+
+                // The hairline of a card face. Not on a card back: an empty slot
+                // is a place, and a place with a face drawn on it looks broken.
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: root.trayInset
+                    radius: root.trayRadius - Math.round(3 * Config.launcherTrayScale)
+                    visible: slot.entry
+                    color: "transparent"
+                    border.width: 1
+                    border.color: slot.suitColour
+                    opacity: 0.35
+                }
+
+                // The corner index, which is also the slot's number - so alt+3
+                // is taught by the card itself, with nothing added to it. Above
+                // the fold at rest, along with the icon: the two things you would
+                // have glanced at anyway.
+                Text {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.margins: root.trayPad
+                    text: `${slot.index + 1}${slot.suit}`
+                    color: slot.suitColour
+                    opacity: slot.entry ? 1 : 0.4
+                    font.family: Config.font
+                    font.pointSize: root.trayFont
+                }
+
+                // The mirrored index, bottom-right, as on a real card. Below the
+                // fold at rest - it is the full-size card's flourish, not part of
+                // what the tucked strip has to carry.
+                Text {
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    anchors.margins: root.trayPad
+                    visible: slot.entry
+                    rotation: 180
+                    text: `${slot.index + 1}${slot.suit}`
+                    color: slot.suitColour
+                    font.family: Config.font
+                    font.pointSize: root.trayFont
+                }
+
+                IconImage {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: root.trayIconTop
+                    implicitSize: root.trayIconSize
+                    visible: slot.iconSource !== ""
+                    asynchronous: true
+                    source: slot.iconSource
+                }
+
+                // The pip stands in for a missing icon, exactly as it does on the
+                // table - and for an empty slot it is the whole card back.
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    y: root.trayIconTop
+                    visible: slot.iconSource === ""
+                    text: slot.entry ? slot.suit : "+"
+                    color: slot.entry ? slot.suitColour : Config.colours.subtext
+                    opacity: slot.entry ? 1 : (root.dragging ? 0.9 : 0.4)
+                    font.family: Config.font
+                    font.pointSize: root.trayPipFont
+                }
+
+                // Below the fold: only ever read when the tray is up, which is
+                // what lets the tucked strip stay as short as it is. At full size
+                // there is room for the second line the table's cards get.
+                Text {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.margins: root.trayPad
+                    y: Config.launcherTrayPeek + root.trayInset
+                    text: slot.entry?.name ?? ""
+                    color: Config.colours.text
+                    font.family: Config.font
+                    font.pointSize: root.trayFont
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                // Same press-and-travel as the table, so a slot can be emptied
+                // the way it was filled: drag the card out and drop it on the
+                // scrim. Click plays it.
+                MouseArea {
+                    id: hover
+
+                    property point origin
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: slot.entry ? Qt.PointingHandCursor : Qt.ArrowCursor
+
+                    onPressed: mouse => hover.origin = Qt.point(mouse.x, mouse.y)
+
+                    onPositionChanged: mouse => {
+                        if (!hover.pressed || !slot.entry)
+                            return;
+
+                        const p = hover.mapToItem(null, mouse.x, mouse.y);
+                        if (root.dragging) {
+                            root.dragX = p.x;
+                            root.dragY = p.y;
+                            return;
+                        }
+
+                        if (Math.abs(mouse.x - hover.origin.x) + Math.abs(mouse.y - hover.origin.y) < 10)
+                            return;
+                        root.startDrag(slot.entry, slot.index, p.x, p.y);
+                    }
+
+                    onReleased: {
+                        if (root.dragging)
+                            root.drop();
+                        else if (slot.entry)
+                            root.fire(slot.index);
+                    }
+
+                    onCanceled: root.cancelDrag()
+                }
+            }
+        }
+    }
+
+    // The card in flight. Last, so it is over everything, and transparent to the
+    // mouse - the press that started the drag still owns the pointer, and a
+    // ghost that could be hovered would take the drop target off the tray.
+    Item {
+        x: root.dragX
+        y: root.dragY
+        visible: root.dragging
+        z: 100
+
+        Rectangle {
+            // Held near its top-left corner rather than centred on the pointer,
+            // so the card hangs off the cursor the way a picked-up card does and
+            // does not hide the slot being aimed at.
+            x: -18
+            y: -14
+
+            width: root.trayCardWidth
+            height: root.trayCardHeight
+            radius: root.trayRadius
+            rotation: -6
+            opacity: 0.92
+
+            color: Config.colours.surface
+            border.width: 1
+            border.color: Config.colours.accent
+
+            IconImage {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: root.trayIconTop
+                implicitSize: root.trayIconSize
+                visible: source !== ""
+                asynchronous: true
+                source: Config.launcherIcons && root.dragEntry?.icon ? Apps.icon(root.dragEntry.icon) : ""
+            }
+
+            Text {
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.margins: root.trayPad
+                y: Config.launcherTrayPeek + root.trayInset
+                text: root.dragEntry?.name ?? ""
+                color: Config.colours.text
+                font.family: Config.font
+                font.pointSize: root.trayFont
+                wrapMode: Text.Wrap
+                maximumLineCount: 2
+                elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
+            }
         }
     }
 }

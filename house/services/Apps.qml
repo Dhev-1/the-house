@@ -18,6 +18,69 @@ Singleton {
     // startup hook, not to be launched - so they are not in the shoe at all.
     readonly property var all: DesktopEntries.applications.values.filter(e => !e.noDisplay)
 
+    // Icon name -> resolved path. Quickshell.iconPath is a theme lookup, which
+    // means stat()ing its way down the inherits chain, and the launcher asks for
+    // up to five of them on every keystroke - on the GUI thread, at the exact
+    // moment the deal animation is starting. The answer cannot change while the
+    // shell is up, so it is only ever paid for once per icon.
+    property var iconCache: ({})
+
+    function icon(name: string): string {
+        if (!name)
+            return "";
+        const hit = root.iconCache[name];
+        if (hit !== undefined)
+            return hit;
+        const path = Quickshell.iconPath(name, true);
+        root.iconCache[name] = path;
+        return path;
+    }
+
+    // Desktop-entry id -> entry, for resolving the tray's slots. Built off `all`,
+    // so a held app whose .desktop has gone away resolves to nothing and its slot
+    // simply shows empty rather than holding an id that can no longer be played.
+    readonly property var byId: {
+        const m = ({});
+        for (const e of root.all)
+            m[e.id] = e;
+        return m;
+    }
+
+    // The tray's five slots: desktop-entry ids, null where the slot is empty.
+    // Fixed length on purpose - the tray is always five wide, so a hole in the
+    // middle is somewhere to drop a card, not a gap to be closed up.
+    property var held: [null, null, null, null, null]
+
+    readonly property var heldEntries: root.held.map(id => id ? (root.byId[id] ?? null) : null)
+
+    // Put an app in a slot. An app already in the tray moves rather than being
+    // held twice: five slots is little enough that a duplicate costs you a real
+    // one, and there is no reading of "the same app in seats 2 and 4" that helps.
+    function hold(entry: var, slot: int): void {
+        if (!entry || slot < 0 || slot >= root.held.length)
+            return;
+
+        const next = root.held.slice();
+        for (let i = 0; i < next.length; i++)
+            if (next[i] === entry.id)
+                next[i] = null;
+        next[slot] = entry.id;
+
+        root.held = next;
+        heldFile.setText(JSON.stringify(root.held));
+    }
+
+    function release(slot: int): void {
+        if (slot < 0 || slot >= root.held.length || !root.held[slot])
+            return;
+
+        const next = root.held.slice();
+        next[slot] = null;
+
+        root.held = next;
+        heldFile.setText(JSON.stringify(root.held));
+    }
+
     // Desktop-entry id -> { n, t }: the tally `n` as it stood at epoch-millis `t`.
     // Breaks ties between equal matches and, with nothing typed, is the whole
     // order. Persisted below.
@@ -93,8 +156,17 @@ Singleton {
         // Nothing typed: the regulars, then everyone else alphabetically. This
         // is the state the launcher opens in, so it opens on the five apps you
         // actually use rather than on whatever sorts first.
-        if (q === "")
-            return root.all.slice().sort((a, b) => root.frecency(b.id, now) - root.frecency(a.id, now) || a.name.localeCompare(b.name));
+        //
+        // Minus whatever is in the tray. Those five are already on screen and
+        // already reachable in one keystroke, so dealing them again would spend
+        // the table showing you what the corner is showing you - the hand's job
+        // with nothing typed is everything else you use. Only here: a typed bet
+        // is a search, and a search that hides the app you asked for because you
+        // happen to hold it is a search that is wrong.
+        if (q === "") {
+            const held = root.held.filter(id => id);
+            return root.all.filter(e => !held.includes(e.id)).sort((a, b) => root.frecency(b.id, now) - root.frecency(a.id, now) || a.name.localeCompare(b.name));
+        }
 
         return root.all.map(e => ({
                     entry: e,
@@ -166,6 +238,37 @@ Singleton {
             // upgrade and not whenever the shell last restarted.
             if (rewrite)
                 playsFile.setText(JSON.stringify(root.plays));
+        }
+    }
+
+    // The tray, beside the scorecard. Same shape of thing and the same handling
+    // of a bad one - except that this is a file somebody might reasonably want to
+    // write by hand, so anything that is not five slots of id-or-null is padded
+    // and truncated into that rather than thrown away.
+    FileView {
+        id: heldFile
+
+        path: Quickshell.statePath("held.json")
+        printErrors: false
+
+        onLoaded: {
+            let raw = [];
+            try {
+                raw = JSON.parse(heldFile.text()) ?? [];
+            } catch (e) {
+                raw = [];
+            }
+
+            if (!Array.isArray(raw))
+                raw = [];
+
+            const held = [];
+            for (let i = 0; i < 5; i++) {
+                const id = raw[i];
+                held.push(typeof id === "string" && id !== "" ? id : null);
+            }
+
+            root.held = held;
         }
     }
 }

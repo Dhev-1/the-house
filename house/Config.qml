@@ -190,6 +190,35 @@ Singleton {
     readonly property int launcherBetHeight: 48
     readonly property int launcherBetRadius: 12
 
+    // The tray: your own five, tucked into the bottom-left edge of the launcher.
+    //
+    // Full card size, same as the seats on the table. What keeps the two apart
+    // is not scale but place and posture: the hand is centred, spread and fanned
+    // and answers the bet; the tray is cornered, square and tucked under the edge
+    // and never changes. Everything inside a tray card is derived off this, so
+    // dropping it back to 0.55 gives the small tucked version again.
+    readonly property real launcherTrayScale: 1
+    readonly property int launcherTrayGap: 10
+    readonly property int launcherTrayMargin: 28
+
+    // How much of a card stands above the screen edge at rest. Has to clear the
+    // corner index and the whole icon - everything you would have glanced at
+    // anyway. The name is what falls below the fold, and the name is the part
+    // you do not need when the icon is right there. Raise this with the scale:
+    // at full size the icon alone is 44 tall and starts 22 down.
+    readonly property int launcherTrayPeek: 76
+
+    // The three heights the tray sits at: tucked, noticed, and up.
+    //
+    // Nudge is the small rise when the pointer comes down to the edge or a card
+    // is being dragged towards it. Lift is the clearance above the edge when the
+    // whole tray comes up (alt held) or one card is hovered.
+    readonly property int launcherTrayNudge: 15
+    readonly property int launcherTrayLift: 14
+
+    // How close to the bottom edge the pointer has to be for the nudge.
+    readonly property int launcherTrayProximity: 140
+
     // The service tray: a handle under the top edge, near the top-right corner,
     // that drops a little column of icon buttons down beneath it. Each button
     // starts, stops and reflects a systemd --user unit - today just the

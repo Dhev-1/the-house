@@ -162,7 +162,18 @@ Item {
             // `dealing`, animated by the Behavior) and the pitch of this
             // individual card (driven by `entry`). They sum, so a card can be
             // arriving while the hand as a whole is also moving.
-            x: (root.dealing ? index * (root.cardWidth + root.gap) : -360) - entry * 300
+            //
+            // Which only works if they are kept apart. The seat is the behaviour'd
+            // half and holds the Behavior; `entry` is written every frame by the
+            // pitch below and is composed on top of it without one. Summed into a
+            // single behaviour'd x, the pitch would re-trigger the Behavior on
+            // every frame it moved - and since that Behavior opens with a pause,
+            // each re-trigger restarts the pause, so the deal never actually got
+            // under way until the pitch had finished. The two did not sum; the
+            // longer one swallowed the other.
+            property real seat: root.dealing ? index * (root.cardWidth + root.gap) : -360
+
+            x: dealtCard.seat - dealtCard.entry * 300
             y: root.dealing ? 0 : 46
             opacity: root.dealing ? 1 : 0
             // A pitched card does not land perfectly square, and a hand of them
@@ -187,7 +198,7 @@ Item {
                 }
             }
 
-            Behavior on x {
+            Behavior on seat {
                 SequentialAnimation {
                     PauseAnimation {
                         duration: root.dealing ? dealtCard.stagger : 0
