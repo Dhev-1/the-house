@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
-# Copy dotfiles into place.  No symlinks, on purpose: once this finishes, the
-# repo and your live config are two independent copies.  Editing ~/.config
-# never dirties this git tree, and `git checkout` never changes your desktop.
-# The tradeoff is that changes flow one way only - re-run this to push the
-# repo's version out, and copy by hand when you want to bring changes back in.
+# Copy dotfiles into place. No symlinks, on purpose: the repo and your live
+# config end up as two independent copies, so editing ~/.config never dirties
+# this tree. The tradeoff is that changes flow one way - re-run this to push the
+# repo's version out, and copy by hand to bring changes back in.
 #
 # Usage: ./install.sh            # copy everything
 #        ./install.sh hypr kitty # copy only named packages
@@ -50,9 +49,8 @@ for pkg in "${PACKAGES[@]}"; do
   echo "   - $pkg"
 done
 
-# Also a copy, not a path into this repo: the bar is a live part of the
-# desktop, and it should not stop working because the repo moved or got
-# checked out to an older commit.
+# A copy, not a path into this repo: the bar should not stop working because
+# the repo moved or got checked out to an older commit.
 if [ -d house ]; then
   dest="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/house"
   if [ -L "$dest" ]; then

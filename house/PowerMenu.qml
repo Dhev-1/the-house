@@ -8,15 +8,12 @@ import Quickshell.Hyprland
 import qs
 import qs.services
 
-// The cash-out corner: a small power chip tucked into the border's bottom-left
-// nook - the dead space inside the frame's rounding, the same trick as the
-// sidebar tab - and the card of three chips (lock, sleep, power off) that
-// slides out above it when clicked.
+// The cash-out corner: a power chip in the border's bottom-left nook, and the
+// card of three chips (lock, sleep, power off) that slides out above it.
 //
-// Trigger and card share this one surface; the mask keeps the click region to
-// just the chip (and the card while open), so the rest of the transparent
-// canvas never eats clicks. State still runs through PowerPanel so the `power`
-// IPC keybind works the same.
+// Trigger and card share one surface; the mask keeps the click region to the
+// chip (and the card while open), so the rest of the transparent canvas never
+// eats clicks. State runs through PowerPanel so the `power` IPC keybind works.
 PanelWindow {
     id: root
 

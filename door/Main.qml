@@ -1,21 +1,16 @@
 import QtQuick
 import "Palette.js" as Palette
 
-// The Door — an SDDM greeter.
+// The Door — an SDDM greeter. Logging in is a hand of blackjack: every
+// character typed drops a clay chip onto a stack, enter pushes the bet into the
+// pot and deals. Right password and the hand is twenty-one; wrong and it is
+// seventeen, the house hits you, and you bust.
 //
-// The conceit is that logging in is a hand of blackjack. You are a card, your
-// password is a bet: every character you type drops a clay chip onto a stack,
-// and pressing enter pushes the bet into the pot and deals. Get it right and
-// the hand is twenty-one. Get it wrong and it is seventeen, the house makes you
-// take a third card, and you bust.
+// Not connected to the desktop's four tables - see Palette.js for why.
 //
-// Deliberately not connected to the four tables the desktop inside can wear.
-// See Palette.js for why.
-//
-// Layout, top to bottom: the marquee (house name and clock), the players' cards
-// (one per account, fanned, face up on the selected one), the pit (betting
-// circle, bet, and where the showdown lands), and the lacquered rail carrying
-// the session plaque and the power chips.
+// Top to bottom: the marquee (house name and clock), the players' cards (one
+// per account), the pit (betting circle, bet, showdown), and the lacquered rail
+// carrying the session plaque and the power chips.
 //
 // Keys:
 //   type            place a chip
@@ -32,12 +27,10 @@ Rectangle {
     height: Screen.height
     color: Palette.tableDeep
 
-    // Everything on this screen is laid out in pixels against a 1080p table and
-    // then multiplied by this. A greeter is the one surface with no user, no
-    // session and therefore no scale factor to inherit - it gets whatever panel
-    // the machine happens to have - so a fixed layout is a layout that is tiny
-    // on a 4K monitor and clipped on a laptop. Clamped at both ends: past 1.6
-    // the cards stop reading as cards and start reading as posters.
+    // Everything here is laid out in pixels against a 1080p table and scaled by
+    // this. A greeter has no user and no session, so no scale factor to inherit
+    // - a fixed layout would be tiny on 4K and clipped on a laptop. Clamped at
+    // both ends: past 1.6 the cards start reading as posters.
     readonly property real u: Math.max(0.8, Math.min(1.6, height / 1080))
 
     // --- configuration --------------------------------------------------------
@@ -47,17 +40,12 @@ Rectangle {
     readonly property string face: config.fontFamily || "JetBrainsMono Nerd Font"
     readonly property bool clock24h: (config.clock24h || "true") === "true"
     readonly property bool showdown: (config.showdown || "true") === "true"
-    // "10,4,9,7,5" -> [10, 4, 9, 7, 5]. Anything that does not parse to a
-    // positive number is dropped, and an empty result falls back to the default
-    // shape, so a typo in theme.conf costs the arrangement rather than the
-    // password field.
+    // "10,4,9,7,5" -> [10, 4, 9, 7, 5], falling back to the default shape, so a
+    // typo in theme.conf costs the arrangement rather than the password field.
     //
     // Forced through a string first because SDDM splits any comma-bearing value
-    // into a list before the theme sees it. Without that, .split is missing, the
-    // binding throws TypeError, the property is left undefined, and ChipStack
-    // renders nothing at all with no visible error. The list stringifies back to
-    // exactly the "10,4,9,7,5" that was written in the file, so both shapes take
-    // one path.
+    // into a list before the theme sees it - without that .split is missing, the
+    // binding throws, and ChipStack renders nothing with no visible error.
     readonly property var stackHeights: {
         var spec = config.stackHeights;
         var raw = (spec === undefined || spec === null ? "" : "" + spec).split(",");
@@ -84,10 +72,8 @@ Rectangle {
     property string verdict: ""
     property bool dealt: false
 
-    // Whether the losing hand has taken its third card yet. The bust is two
-    // beats, not one - seventeen on the table, then the card that kills it -
-    // because a hand that is simply born bust is a picture, and a hand that is
-    // made to take another card is a decision being made about you.
+    // Whether the losing hand has taken its third card. The bust is two beats:
+    // seventeen on the table, then the card that kills it.
     property bool hit: false
 
     // Which seat and which session. Both start where SDDM says they last were.
@@ -104,12 +90,8 @@ Rectangle {
     property string pitBoss: ""
 
     // --- the hands ------------------------------------------------------------
-    // Fixed hands, not random, so the outcome is legible in half a second to
-    // anyone who has seen a deck: ace and a king is twenty-one, and a seventeen
-    // that gets hit is the most familiar way in the world to lose.
-    //
-    // Both open on two cards, so the deal is identical either way until they
-    // turn over - nothing on the way out tells you what is coming.
+    // Fixed, not random, so the outcome is legible at a glance. Both open on two
+    // cards, so nothing on the way out tells you what is coming.
     readonly property var winHand: [
         {
             rank: "A",
@@ -130,8 +112,7 @@ Rectangle {
             suit: "♣"
         }
     ]
-    // The card that busts it. Eight, so seventeen goes to twenty-two: over by
-    // the smallest margin the hand allows.
+    // The card that busts it: eight, so seventeen goes to twenty-two.
     readonly property var bustCard: ({
             rank: "8",
             suit: "♠"
@@ -139,9 +120,8 @@ Rectangle {
 
     readonly property var hand: verdict === "win" ? winHand : (hit ? loseHand.concat([bustCard]) : loseHand)
 
-    // What the pot reads once the hand is turned over. Blank until then - the
-    // count is the verdict, and showing it early would give the game away
-    // before the cards do.
+    // What the pot reads once the hand turns over. Blank until then: the count
+    // is the verdict, and would give it away before the cards do.
     readonly property string count: {
         if (root.phase !== "in" && root.phase !== "denied")
             return "";
@@ -185,8 +165,8 @@ Rectangle {
         if (!root.dealt || root.verdict === "")
             return;
         root.phase = root.verdict === "win" ? "in" : "denied";
-        // A losing hand is not swept straight away: it sits at seventeen for a
-        // beat, takes the third card, and only then does the table clear.
+        // A losing hand sits at seventeen for a beat and takes its third card
+        // before the table clears.
         if (root.phase === "denied")
             hitClock.start();
     }
@@ -195,10 +175,9 @@ Rectangle {
     // cleared. Also the escape key, so a half-typed password can be abandoned
     // without holding backspace.
     function sweep(): void {
-        // Every clock, not only the ones that have already fired: escape works
-        // in every phase and the stall watchdog can call sweep() with the cards
-        // still in the air. A timer left running would land on the swept table a
-        // beat later and turn a card over on a hand nobody is playing.
+        // Every clock, not just the ones that have fired: escape works in any
+        // phase, and one left running would land on the swept table a beat
+        // later and turn a card over on a hand nobody is playing.
         dealClock.stop();
         hitClock.stop();
         sweepClock.stop();
@@ -215,11 +194,8 @@ Rectangle {
     Timer {
         id: dealClock
 
-        // Long enough for both cards to slide out and settle - Hand.qml staggers
-        // them 70ms apart with a 320ms travel, so the second lands at 390. The
-        // margin on top is deliberate: this races the session starting, and a
-        // reveal that begins before the cards have stopped moving reads worse
-        // than one that begins a moment late.
+        // Both cards out and settled: Hand.qml staggers them 70ms apart with a
+        // 320ms travel, so the second lands at 390, plus margin.
         interval: 460
         onTriggered: {
             root.dealt = true;
@@ -230,8 +206,7 @@ Rectangle {
     Timer {
         id: hitClock
 
-        // Seventeen on the table, then the house hits it. Long enough to read
-        // the two cards and understand you are not being let in yet.
+        // Long enough to read seventeen before the house hits it.
         interval: 620
         onTriggered: {
             root.hit = true;
@@ -242,9 +217,7 @@ Rectangle {
     Timer {
         id: sweepClock
 
-        // How long the busted hand stays face up before the table is cleared.
-        // Long enough to read the third card, short enough not to be a
-        // punishment - you are going to be typing again in a moment.
+        // How long the busted hand stays face up before the table clears.
         interval: 1500
         onTriggered: root.sweep()
     }
@@ -252,22 +225,16 @@ Rectangle {
     Timer {
         id: stallClock
 
-        // Every other clock here measures a beat in an animation; this one
-        // measures the house not answering at all.
-        //
-        // Only onLoginSucceeded and onLoginFailed bring the table back to `bet`.
-        // A PAM stack that answers neither - a module blocking on a directory
-        // server that is not there, a wedged sddm-helper - leaves the greeter in
-        // `deal` forever with nothing on screen moving, and the only ways out
-        // are a VT switch or the power button.
-        //
-        // Thirty seconds is past any honest PAM stack and short of the point
-        // where somebody decides the machine is broken.
+        // The watchdog: only onLoginSucceeded and onLoginFailed bring the table
+        // back to `bet`, so a PAM stack that answers neither - a module blocking
+        // on an absent directory server, a wedged sddm-helper - would leave the
+        // greeter in `deal` forever with a VT switch as the only way out.
+        // Thirty seconds is past any honest PAM stack.
         interval: 30000
         onTriggered: {
-            // Said plainly. This is the one message on this screen that is not
-            // in character, because the person reading it needs to know the
-            // machine is not broken and their password was never judged.
+            // The one message here deliberately not in character: the reader
+            // needs to know the machine is not broken and their password was
+            // never judged.
             root.pitBoss = "no answer from the house - the bet has been returned. try again.";
             root.sweep();
         }
@@ -276,10 +243,9 @@ Rectangle {
     Connections {
         target: sddm
 
-        // The house answered, so the watchdog has nothing left to catch. Stopped
-        // here rather than in reveal(), which returns early on its first call
-        // and would leave the clock running whenever the answer beats the deal
-        // animation.
+        // Stopped here rather than in reveal(), which returns early on its
+        // first call and would leave the clock running whenever the answer
+        // beats the deal animation.
         function onLoginSucceeded(): void {
             stallClock.stop();
             root.verdict = "win";
@@ -330,8 +296,7 @@ Rectangle {
             color: Palette.gold
             font.family: root.face
             font.pixelSize: Math.round(15 * root.u)
-            // Wide tracking is what makes six lowercase letters read as signage
-            // rather than as a label.
+            // Wide tracking is what makes this read as signage, not a label.
             font.letterSpacing: 7
             font.bold: true
         }
@@ -345,9 +310,8 @@ Rectangle {
             font.pixelSize: Math.round(62 * root.u)
             font.letterSpacing: 2
 
-            // Rebuilt every second rather than bound to a ticking property: the
-            // greeter can sit here for days and this is the only thing on screen
-            // that has to keep time.
+            // Rebuilt every second rather than bound to a ticking property -
+            // this is the only thing on screen that has to keep time.
             function tick(): void {
                 text = Qt.formatTime(new Date(), root.clock24h ? "HH:mm" : "h:mm AP");
             }
@@ -374,8 +338,7 @@ Rectangle {
 
     // --- the seats ------------------------------------------------------------
     // One card per account, fanned. The selected one is face up and lifted; the
-    // rest are face down, because whose machine this is is not a thing a login
-    // screen should be announcing to the room.
+    // rest stay face down rather than announcing every account to the room.
     Item {
         id: seats
 
@@ -384,9 +347,8 @@ Rectangle {
         width: fan.width
         height: Math.round(200 * root.u)
 
-        // Out of the way while the hand is being dealt: two sets of cards on a
-        // table at once reads as a mess, and the showdown is the one that
-        // matters at that moment.
+        // Out of the way while the hand is dealt - the showdown is the set of
+        // cards that matters at that moment.
         opacity: root.phase === "bet" ? 1 : 0.25
 
         Behavior on opacity {
@@ -399,8 +361,8 @@ Rectangle {
             id: fan
 
             anchors.centerIn: parent
-            // Negative, so the cards overlap the way a fan does. The corner index
-            // on Card.qml is placed to survive exactly this.
+            // Negative, so the cards overlap. Card.qml's corner index is placed
+            // to survive exactly this.
             spacing: userModel.count > 1 ? Math.round(-22 * root.u) : 0
 
             Repeater {
@@ -420,9 +382,9 @@ Rectangle {
                     height: seats.height
                     z: chosen ? 10 : 0
 
-                    // Publish the selected account outward. A Binding rather than
-                    // an assignment in a signal handler, so it re-resolves if the
-                    // model changes underneath us.
+                    // Publish the selected account outward. A Binding rather
+                    // than an assignment, so it re-resolves if the model
+                    // changes underneath us.
                     Binding {
                         target: root
                         property: "seatName"
@@ -452,19 +414,15 @@ Rectangle {
                         // See Card.qml's `court` for why a seat is a court card.
                         court: true
 
-                        // The suit follows the seat, so every account gets a card
-                        // that is recognisably its own without a photo. The rank
-                        // is the account's first letter, which a court card does
-                        // not print - it is set so the card is still whole if
-                        // `court` is ever turned off.
+                        // The suit follows the seat, so every account gets a
+                        // recognisable card without a photo. The rank is set
+                        // even though a court card does not print it, so the
+                        // card is still whole if `court` is turned off.
                         rank: (seatCard.realName || seatCard.name).charAt(0).toUpperCase()
                         suit: ["♠", "♥", "♦", "♣"][seatCard.index % 4]
-                        // No picture: a court card carries a monogram, not a
-                        // photograph. See the note in Card.qml.
                         faceUp: seatCard.chosen
 
-                        // The chosen card is pulled out of the fan and stood
-                        // slightly proud; the others lie back at a fan angle.
+                        // The chosen card stands proud of the fan.
                         y: seatCard.chosen ? 0 : Math.round(26 * root.u)
                         rotation: seatCard.chosen ? 0 : (seatCard.index - root.seat) * 5
 
@@ -520,9 +478,8 @@ Rectangle {
     }
 
     // --- the pit --------------------------------------------------------------
-    // The betting circle, the bet standing in it, and where the showdown lands.
-    // All three share this spot on the cloth and take turns: chips are pushed
-    // into the pot, then the cards come out over them.
+    // The betting circle, the bet standing in it, and where the showdown lands -
+    // all three share this spot on the cloth and take turns.
     Item {
         id: pit
 
@@ -531,9 +488,8 @@ Rectangle {
         width: Math.round(460 * root.u)
         height: Math.round(200 * root.u)
 
-        // The circle. An ellipse, not a circle: everything else in this room is
-        // drawn as though seen from a player's chair, including the chips, and a
-        // true circle here would be the one thing lying flat.
+        // An ellipse, not a circle: the room is drawn from a player's chair, so
+        // a true circle would be the one thing lying flat.
         Rectangle {
             id: circle
 
@@ -557,8 +513,7 @@ Rectangle {
             }
         }
 
-        // The instruction, inside the empty circle. Gone the moment the first
-        // chip lands - it is a prompt, not a label.
+        // A prompt, not a label: gone the moment the first chip lands.
         Text {
             anchors.centerIn: circle
             text: "PLACE YOUR BET"
@@ -575,9 +530,8 @@ Rectangle {
             }
         }
 
-        // What the hand came to, printed in the pot the chips just went into.
-        // The same spot the bet occupied a moment ago, which is the point: you
-        // put chips in, and this is what came back out.
+        // What the hand came to, printed in the spot the bet occupied a moment
+        // ago: you put chips in, and this is what came back out.
         Column {
             anchors.centerIn: circle
             spacing: Math.round(2 * root.u)
@@ -610,9 +564,8 @@ Rectangle {
             }
         }
 
-        // The bet. Wrapped so the whole stack can be pushed into the pot on a
-        // deal, or swept off the felt on a refusal, without ChipStack itself
-        // having to know about either.
+        // The bet, wrapped so the stack can be pushed into the pot or swept off
+        // the felt without ChipStack knowing about either.
         Item {
             id: betStack
 
@@ -667,16 +620,15 @@ Rectangle {
 
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: circle.top
-            // Clear of the circle, not overlapping it: the cards are the hand
-            // and the circle is what it paid, and a total printed under the
-            // corner of a king reads as neither.
+            // Clear of the circle: a total printed under the corner of a king
+            // reads as neither the hand nor the pot.
             anchors.bottomMargin: Math.round(16 * root.u)
             fontFamily: root.face
             cardWidth: Math.round(100 * root.u)
             gap: Math.round(14 * root.u)
             cards: root.hand
-            // The hand is on the table for every phase but "bet"; dropping back
-            // to "bet" is what pulls the cards back off it, which is the muck.
+            // On the table for every phase but "bet"; dropping back to "bet" is
+            // what pulls the cards into the muck.
             dealing: root.phase !== "bet"
             faceUp: root.phase === "in" || root.phase === "denied"
         }
@@ -694,10 +646,9 @@ Rectangle {
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WordWrap
         text: root.pitBoss
-        // Whatever PAM hands over is a message, not markup. The default AutoText
-        // sniffs the string and switches to the HTML engine if it looks like
-        // tags, and that engine resolves <img src> - not something a string
-        // arriving at a login screen should be able to ask for.
+        // PAM hands over a message, not markup. The default AutoText sniffs the
+        // string and switches to the HTML engine if it looks like tags, and
+        // that engine resolves <img src>.
         textFormat: Text.PlainText
         color: root.phase === "denied" ? Palette.hot : Palette.muted
         font.family: root.face
@@ -713,8 +664,6 @@ Rectangle {
     }
 
     // --- caps lock ------------------------------------------------------------
-    // The one genuinely useful warning on a login screen, and the reason people
-    // stare at a password field wondering what they are typing wrong.
     Row {
         anchors.horizontalCenter: table.horizontalCenter
         anchors.bottom: table.bottom
@@ -778,11 +727,10 @@ Rectangle {
     }
 
     // --- the keyboard ---------------------------------------------------------
-    // The actual password field, which is never seen. It holds the text and the
-    // focus; the chip stack above is its only display. echoMode is still Password
-    // so the string never lands in a paint buffer, and the field is one pixel of
-    // fully transparent nothing rather than `visible: false` - an invisible item
-    // cannot hold focus.
+    // The password field, never seen: it holds the text and the focus, and the
+    // chip stack is its only display. echoMode stays Password so the string
+    // never lands in a paint buffer, and it is one transparent pixel rather
+    // than `visible: false`, since an invisible item cannot hold focus.
     TextInput {
         id: bet
 
@@ -795,11 +743,9 @@ Rectangle {
         activeFocusOnPress: false
         focus: true
 
-        // readOnly, not `enabled: root.phase === "bet"`. A disabled item is sent
-        // no key events at all, so Keys.onEscapePressed below would be dead in
-        // precisely the phases somebody reaches for it. readOnly refuses the
-        // edit but keeps the focus and the keys, so escape reaches sweep() from
-        // any phase.
+        // readOnly, not `enabled`. A disabled item gets no key events at all,
+        // so escape would be dead in precisely the phases somebody reaches for
+        // it; readOnly refuses the edit but keeps the focus and the keys.
         readOnly: root.phase !== "bet"
 
         onAccepted: root.deal()
@@ -807,10 +753,9 @@ Rectangle {
         Keys.onEscapePressed: root.sweep()
 
         Keys.onPressed: event => {
-            // The seat and the session only move while the table is open for
-            // bets. Now that the field keeps its keys through a hand (see
-            // readOnly above), that has to be said out loud, or f2 would shuffle
-            // the session under a login already in flight.
+            // Said out loud because the field keeps its keys through a hand
+            // (see readOnly): otherwise f2 would shuffle the session under a
+            // login already in flight.
             if (root.phase !== "bet")
                 return;
 
@@ -819,8 +764,7 @@ Rectangle {
                 event.accepted = true;
                 return;
             }
-            // Ctrl, so the plain arrows stay with the text field - moving the
-            // caret in a password you cannot see is not useful, but nor is
+            // Ctrl, so the plain arrows stay with the text field rather than
             // stealing a key people press by reflex.
             if (event.modifiers & Qt.ControlModifier) {
                 if (event.key === Qt.Key_Left) {
@@ -836,16 +780,13 @@ Rectangle {
         }
     }
 
-    // The greeter opens with the field live, so you can start typing into a
-    // screen you have only just looked at. And any click on the felt puts the
-    // focus back, since losing it silently is the one failure mode a login
-    // screen must not have.
+    // Opens with the field live, and any click on the felt puts the focus back
+    // - losing it silently is the one failure mode a login screen must not have.
     Component.onCompleted: bet.forceActiveFocus()
 
     MouseArea {
         anchors.fill: parent
-        // Behind everything: the cards, the plaque and the chips all take their
-        // clicks first.
+        // Behind everything, so the cards, plaque and chips take clicks first.
         z: -1
         onClicked: bet.forceActiveFocus()
     }

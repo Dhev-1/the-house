@@ -1,14 +1,12 @@
 import QtQuick
 import "Palette.js" as Palette
 
-// One clay chip, face on. Used for the power controls on the rail and for the
-// chip that sits in the betting circle; the bet stack draws its own edge-on
-// chips, which are a different shape entirely (see ChipStack.qml).
+// One clay chip, face on, for the power controls on the rail. The bet stack
+// draws its own edge-on chips, a different shape entirely - see ChipStack.qml.
 //
-// Built from plain Rectangles rather than a Canvas or an SVG: a chip is a disc,
-// a ring, six edge spots and an inlay, all of which are rectangles with a
-// radius once you are allowed to rotate them. That keeps it animatable - the
-// power chips press and glow - and costs nothing to have a dozen on screen.
+// Plain Rectangles rather than a Canvas or an SVG: a disc, a ring, six edge
+// spots and an inlay are all rectangles with a radius once you can rotate them,
+// which keeps the whole thing animatable.
 Item {
     id: root
 
@@ -36,10 +34,9 @@ Item {
         radius: width / 2
         color: root.body
 
-        // A chip is not flat-coloured: it is a disc catching a light from above,
-        // so the top edge is lifted and the bottom sits in its own shade. Drawn
-        // as an overlay rather than by mixing colours into `body`, so a caller
-        // only ever has to name one colour per chip.
+        // A disc catching light from above: top edge lifted, bottom in shade.
+        // An overlay rather than colours mixed into `body`, so a caller only
+        // names one colour per chip.
         Rectangle {
             anchors.fill: parent
             radius: width / 2
@@ -61,10 +58,9 @@ Item {
         }
     }
 
-    // The edge spots: the pale blocks let into the rim. Each one is a small
-    // rounded rectangle at the top of a full-size item that has been rotated
-    // into place, which is far less arithmetic than positioning them on a circle
-    // and keeps them square to the rim for free.
+    // The edge spots. Each is a small rounded rectangle at the top of a
+    // full-size item rotated into place - less arithmetic than positioning on a
+    // circle, and square to the rim for free.
     Repeater {
         model: root.spots
 

@@ -2,23 +2,16 @@ import QtQuick
 import Quickshell
 import qs
 
-// A poker chip, wearing the active table.
+// A poker chip, wearing the active table. A sprite rather than a rectangle, so
+// there is nothing to bind a colour to: one chip is baked per table by
+// scripts/make-chips.py, and this picks the file. Re-run that after adding a
+// table or changing an existing one's surface / text / accent.
 //
-// The rest of the shell re-tints live off Config.colours, but this is a sprite
-// rather than a rectangle, so there is nothing to bind a colour to. Instead one
-// chip is baked per table (scripts/make-chips.py writes assets/chip-<table>.png)
-// and this picks the file. Re-run that script after adding a table or changing
-// an existing one's surface / text / accent.
+// Config.activeName, not themeName, so it follows the picker's live preview -
+// at the cost of a file load per flick, so the swap steps rather than crossfades.
 //
-// Config.activeName, not themeName: activeName follows the theme picker's live
-// preview, so flicking through the hand swaps the chip along with everything
-// else. It costs a file load per flick rather than a colour animation, so the
-// swap lands in one step instead of crossfading like the rectangles do.
-//
-// The source art is 33x33. That is the native grid, so 33 and its multiples
-// stay crisp; anything else resamples. smooth is left off to keep the pixels
-// hard at those sizes - set it true on the instance if you need an odd size and
-// would rather have it soft than uneven.
+// The source art is 33x33: that grid and its multiples stay crisp, anything
+// else resamples. smooth is off to keep the pixels hard at those sizes.
 Image {
     id: root
 

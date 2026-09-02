@@ -16,18 +16,16 @@ Singleton {
     // poll below.
     property var running: []
 
-    // Game dirs whose wrapper actually exists on disk, filled by the scan
-    // below. Empty until it lands, which is the honest answer: nothing is
-    // launchable yet.
+    // Game dirs whose wrapper exists on disk, filled by the scan below.
     property var found: []
 
-    // Which of Config.pitRepos the games were actually found under - the
-    // earliest one with anything in it. Empty until the scan lands; toggle()
-    // can't fire before then anyway, because the bar has no buttons to click.
+    // Which of Config.pitRepos the games were found under - the earliest one
+    // with anything in it. Empty until the scan lands, which is fine: the bar
+    // has no buttons to click before then.
     property string repo: ""
 
     // What the bar draws. The games are an optional submodule, so a checkout
-    // without them shows no buttons at all rather than five that do nothing.
+    // without them shows no buttons rather than five that do nothing.
     readonly property var games: Config.pitGames.filter(g => root.found.includes(g.dir))
 
     function isRunning(dir: string): bool {
@@ -35,9 +33,8 @@ Singleton {
     }
 
     // One shell pass over every wrapper under every candidate root, printing
-    // "<root index> <dir>" for the ones that are there. Runs once at startup:
-    // a submodule does not appear mid-session, and re-checking on a timer
-    // would be a stat per game per tick for nothing.
+    // "<root index> <dir>" for the ones present. Once at startup - a submodule
+    // does not appear mid-session.
     Process {
         id: scan
 
@@ -52,9 +49,8 @@ Singleton {
                     root.found = [];
                     return;
                 }
-                // The first root with anything under it wins outright - the
-                // games are one checkout, not a merge of several, so a partial
-                // hit on an earlier root should not pull dirs off a later one.
+                // The first root with anything under it wins outright: the
+                // games are one checkout, not a merge of several.
                 const which = Math.min(...hits.map(h => parseInt(h[0], 10)));
                 root.repo = Config.pitRepos[which];
                 root.found = hits.filter(h => parseInt(h[0], 10) === which).map(h => h[1]);
@@ -62,12 +58,10 @@ Singleton {
         }
     }
 
-    // One table at a time: the games all deal into the same bottom-right corner.
-    //
-    // Over every game that can be *found* rather than every game `running` says
-    // is up - that list is a 3s tick behind, and a game dealt in a moment ago is
-    // exactly the one that needs shutting. A `hide` at a game that isn't there
-    // costs a client exiting 255 into /dev/null. Backgrounded, so opening a game
+    // One table at a time. Over every game *found* rather than every game
+    // `running` says is up - that list is a 3s tick behind, and the game dealt
+    // in a moment ago is exactly the one needing shut. A `hide` at a game that
+    // isn't there costs a client exiting 255. Backgrounded, so opening a game
     // doesn't wait on four of them in series.
     function closeOthers(dir: string): string {
         return root.games.filter(g => g.dir !== dir).map(g => `qs -p '${root.repo}/${g.dir}/${g.file}' ipc call '${g.target}' hide 2>/dev/null &`).join(" ");
@@ -75,14 +69,11 @@ Singleton {
 
     function toggle(game: var): void {
         const wrapper = `${root.repo}/${game.dir}/${game.file}`;
-        // `hide` quits every game when standalone (`toggle` only lowers some of
-        // their cards, leaving the engine resident); exit 255 with no process to
-        // answer means it wasn't running, so deal it in instead.
-        //
-        // Nobody answering is also the one unambiguous signal that this click is
-        // an open - `running` is a stale guess, and guessing wrong clears the pit
-        // on a click that only meant to shut one game. So the rest of the pit is
-        // cleared on that branch and nowhere else.
+        // `hide` quits a standalone game (`toggle` would only lower its cards,
+        // leaving the engine resident); exit 255 with nobody to answer means it
+        // wasn't running, so deal it in instead. That is also the one
+        // unambiguous signal this click is an open, which is why the rest of
+        // the pit is cleared on that branch and nowhere else.
         Quickshell.execDetached(["sh", "-c", `qs -p '${wrapper}' ipc call '${game.target}' hide 2>/dev/null || { ${root.closeOthers(game.dir)} qs -p '${wrapper}'; }`]);
         // Poke the poll so the button lights without waiting a full tick.
         relight.restart();

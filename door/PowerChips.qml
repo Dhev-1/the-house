@@ -3,10 +3,8 @@ import "Palette.js" as Palette
 
 // Power controls as chips on the rail — cash out, re-buy, step away.
 //
-// Deliberately not in the denominations. These are house chips, dark clay with
-// a gold inlay, because a gold 500 that shuts the machine down is a gold 500
-// somebody is going to click while looking at the stack they are building.
-// Colour here means "not part of the bet".
+// Deliberately not in the denominations - dark clay with a gold inlay, so
+// colour says "not part of the bet".
 //
 // Each one only appears if logind will actually do it: a suspend chip on a
 // machine that cannot suspend is a button that lies.

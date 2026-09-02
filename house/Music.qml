@@ -13,11 +13,9 @@ import qs.services
 // The music tab, on the right edge against the bar: transport controls on the
 // strip itself, and a card that slides out to the left with the track on it.
 //
-// The strip and the card are one shape, not two that touch. Two would leave a
-// seam down the join no matter how carefully they were lined up. The outline is
-// traced once, around both, and the flare that curves the strip into the bar is
-// scaled away as the card opens - so shut, it is a tab growing out of the bar,
-// and open, it is a single unbroken rectangle reaching in from it.
+// The strip and the card are one shape, not two that touch - two would leave a
+// seam down the join. The outline is traced once around both, and the flare
+// curving the strip into the bar is scaled away as the card opens.
 //
 // The whole window comes and goes with the player, so there is no tab to click
 // when nothing is running.

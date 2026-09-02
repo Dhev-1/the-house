@@ -1,21 +1,15 @@
 #!/bin/sh
 # apply-theme.sh — mirror the house bar's active table onto the rest of the
-# desktop: Hyprland borders, the wallpaper, kitty, rofi, btop, GTK, Qt and
-# starship.
-#
-# The theme picker (Config.setTheme in the house shell) calls this with the
-# table's name and its six role colours. It is the single place system-wide
-# theming is spelled out: to also drive another app, add a block here rather
-# than teaching the shell about it.
+# desktop: Hyprland, the wallpaper, kitty, rofi, btop, GTK, Qt and starship.
+# Called by Config.setTheme. To drive another app, add a block here rather than
+# teaching the shell about it.
 #
 # Args, in Config.themes order: name surface text subtext accent idle urgent
-# Colours are "#rrggbb" hex strings; the leading # is optional.
+# Colours are "#rrggbb"; the leading # is optional.
 #
-# Per-table palettes that need more than the six roles (kitty's 16-colour deck,
-# starship's segments) live pre-baked in tables/ next to this script, along with
-# Kvantum's chassis - the one file in there that is the same on every table;
-# things the six roles can express (hypr, rofi, GTK, the Qt palette) are
-# generated right here.
+# Palettes needing more than the six roles (kitty's 16-colour deck, starship's
+# segments) are pre-baked in tables/; anything the six roles can express is
+# generated here.
 
 set -eu
 
@@ -40,8 +34,6 @@ repo=$(readlink -f "$here/../..")
 config="${XDG_CONFIG_HOME:-$HOME/.config}"
 
 # --- colour helpers -----------------------------------------------------------
-# Up here rather than beside the first block that happens to use them: Hyprland
-# is generated first and needs mix() for the middle stop of the border gradient.
 
 # dec RRGGBB -> "r, g, b", for the decimal rgba() hyprlock wants.
 dec() {
@@ -61,9 +53,8 @@ mix() {
     }'
 }
 
-# lift AABBCC n -> every channel raised by n, clamped. Brightening a colour by
-# mixing it toward white desaturates it on the way; adding a flat step keeps the
-# hue where it was, which is what the games' brighter reds and golds want.
+# lift AABBCC n -> every channel raised by n, clamped. A flat step keeps the hue
+# where it is; mixing toward white desaturates on the way.
 lift() {
     awk -v h="$1" -v n="$2" 'BEGIN {
         for (i = 0; i < 3; i++) {
@@ -73,31 +64,21 @@ lift() {
     }'
 }
 
-# Is this a light table? Daylight Robbery is the only one today, but nothing
-# below hardcodes that - several derivations have to run the other way round on
-# a light surface, and getting it from the colour is more honest than getting it
-# from the name.
+# Is this a light table? Read off the luminance rather than the name - several
+# derivations below have to run the other way round on a light surface.
 light=$(awk -v h="$surface" 'BEGIN {
     r = strtonum("0x" substr(h,1,2)); g = strtonum("0x" substr(h,3,2)); b = strtonum("0x" substr(h,5,2));
     print (0.2126 * r + 0.7152 * g + 0.0722 * b > 140) ? 1 : 0;
 }')
 
 # --- Hyprland -----------------------------------------------------------------
-# The whole window style, not just the border colour: the rail (the line round
-# the focused window) and the spotlight (how hard everything else is dimmed, and
-# what colour the glow over the live one is). hyprland.conf holds the geometry
-# and the motion; everything with a colour in it is here, so switching tables
-# restyles the windows and not just the bar.
-#
-# Most of it falls out of the six roles. The exceptions get a case below, the
-# same way kitty's 16-colour deck and starship's segments are pre-baked: the
-# rail wants a third stop the roles do not name, and the dim wants a different
-# weight on a light table, where 0.25 reads as muddy rather than as unlit.
+# The whole window style: the rail (the line round the focused window) and the
+# spotlight (how hard everything else is dimmed, and the glow over the live
+# one). hyprland.conf holds the geometry and motion, everything with a colour in
+# it is here. Most falls out of the six roles; the exceptions get a case below.
 
-# The default rail is a flat line of the accent, kept thin. The highlight on the
-# focused window is meant to come from the glow underneath it, not from the
-# border shouting - a multi-stop gradient round every window reads as busy once
-# it is on screen all day rather than in a screenshot.
+# The default rail is a flat line of the accent - the highlight on the focused
+# window comes from the glow underneath it, not from the border.
 rail="rgba(${accent}ee)"
 bordersize=2
 dim=0.25
@@ -109,11 +90,9 @@ case "$name" in
     felt)
         dim=0.22 ;;                # green is already dark; a full 0.25 buries it
     vegas)
-        # The one table that keeps the gradient. Vegas is the strip at midnight
-        # and is supposed to be loud, so it gets the full rail - pink, through
-        # cyan bulbs, through the warm marquee orange and back - on a thicker
-        # border, and the borderangle sweep on open actually has something to
-        # move. Everywhere else that animation is a no-op, which is fine.
+        # The one table that keeps the gradient rail, on a thicker border - so
+        # the borderangle sweep on open has something to move. It is a no-op
+        # everywhere else.
         rail="rgba(${accent}ee) rgba(2ee5ffee) rgba(${urgent}ee) rgba(${accent}ee) 115deg"
         bordersize=3
         dim=0.28 ;;
@@ -148,10 +127,9 @@ decoration:shadow:color_inactive = rgba(000000${unlit})
 EOF
 
 # --- hyprlock -----------------------------------------------------------------
-# hyprlock.conf is static structure sourcing these $-variables, so the lock
-# screen wears the active table. hyprlock reads its config each time it starts,
-# so the next lock is already on the new table. Decimal rgba(), matching the
-# format the shipped config used - dec() is up with the other colour helpers.
+# hyprlock.conf is static structure sourcing these $-variables, and re-reads its
+# config on every start, so the next lock is already on the new table. Decimal
+# rgba(), which is the format it wants.
 
 cat > "$config/hypr/lock-colours.conf" <<EOF
 # AUTOGENERATED by cloon/newdot/house scripts/apply-theme.sh — do not edit by
@@ -169,12 +147,11 @@ EOF
 
 # --- Wallpaper ----------------------------------------------------------------
 # One generated wallpaper per table, shipped in the repo. awww is the daemon the
-# hypr config autostarts; fall back to swww for setups that use that instead.
-
-# $repo is only the clone when this script runs from inside it - true when house/
-# is stowed as a symlink, not when it has been copied. Copied, $repo lands on
-# ~/.config/quickshell, which has no wallpapers/, and this block alone would
-# silently do nothing. So fall back to the clone's usual home before giving up.
+# hypr config autostarts; swww is the fallback.
+#
+# $repo is only the clone when this script runs from inside it. Copied into
+# ~/.config/quickshell it has no wallpapers/, and this block would silently do
+# nothing - so fall back to the clone's usual home first.
 walls="$repo/wallpapers"
 [ -d "$walls" ] || walls="$HOME/cloon/newdot/wallpapers"
 
@@ -188,9 +165,8 @@ if [ -f "$wall" ]; then
 fi
 
 # --- kitty --------------------------------------------------------------------
-# The 16-colour deck can't be derived from six roles, so each table ships a
-# pre-baked palette. kitty.conf includes current-table.conf; SIGUSR1 makes every
-# running kitty re-read its config, so open terminals retint immediately.
+# The 16-colour deck can't come from six roles, so each table ships a pre-baked
+# palette. SIGUSR1 makes running kitties re-read the config and retint.
 
 if [ -f "$tables/kitty-$name.conf" ]; then
     cp "$tables/kitty-$name.conf" "$config/kitty/current-table.conf"
@@ -198,9 +174,8 @@ if [ -f "$tables/kitty-$name.conf" ]; then
 fi
 
 # --- rofi ---------------------------------------------------------------------
-# house.rasi imports table-colours.rasi for its palette; everything rofi needs
-# fits in the six roles, so generate it. rofi starts fresh per launch, so the
-# next Super+D is already on the new table.
+# house.rasi imports this. rofi starts fresh per launch, so the next one is
+# already on the new table.
 
 cat > "$config/rofi/themes/table-colours.rasi" <<EOF
 /* AUTOGENERATED by cloon/newdot/house scripts/apply-theme.sh — do not edit.
@@ -217,24 +192,21 @@ cat > "$config/rofi/themes/table-colours.rasi" <<EOF
 EOF
 
 # --- btop ---------------------------------------------------------------------
-# One pre-baked .theme per table (they ship in the btop stow package). Running
-# btop instances pick it up on restart.
+# One pre-baked .theme per table, shipped in the btop stow package. Running
+# instances pick it up on restart.
 
 if [ -f "$config/btop/themes/house-$name.theme" ]; then
     sed -i "s/^color_theme = .*/color_theme = \"house-$name\"/" "$config/btop/btop.conf" 2>/dev/null || true
 fi
 
 # --- GTK ----------------------------------------------------------------------
-# gtk-3.0/gtk.css and gtk-4.0/gtk.css are static structure referencing named
-# colours; the palettes below are generated from the six roles. GTK apps read
-# CSS once at startup, so open windows keep the old table until relaunched
-# (thunar daemonises - `thunar -q` makes the next window pick it up).
+# gtk.css is static structure referencing these named colours. GTK reads CSS
+# once at startup, so open windows keep the old table until relaunched (thunar
+# daemonises - `thunar -q` makes the next window pick it up).
 
-# "Brighter" means further from the background, not closer to white. On a dark
-# table those are the same thing, so this read as `mix text -> white` and nobody
-# noticed; on the light table it pushed the text *toward* the page and
-# button:checked ended up at 2.38:1, which is unreadable. Pick the pole the
-# surface is furthest from and head for that instead.
+# "Brighter" means further from the background, not closer to white. Heading for
+# white put light-table text *toward* the page, landing button:checked at
+# 2.38:1. Pick the pole the surface is furthest from instead.
 [ "$light" = 1 ] && pole=000000 || pole=ffffff
 
 window=$(mix "$surface" "$idle" 0.20)
@@ -303,32 +275,21 @@ $roles
 EOF
 
 # --- Qt -----------------------------------------------------------------------
-# Qt has no single place to say this, so there are two layers and they do
-# different jobs:
+# Two layers, different jobs:
 #
-#   qt6ct   is the platform theme (QT_QPA_PLATFORMTHEME, set in hyprland.conf).
-#           It owns the palette - a flat list of QPalette roles - and a palette
-#           is honoured whatever style ends up drawing the widgets. This is the
-#           layer that guarantees a Qt window is on the table at all.
-#   Kvantum is the style: the actual painting of scrollbars, tabs, menus, frames.
-#           Optional, and better when it is there. When its plugin is installed
-#           qt6ct is pointed at it and it colours itself from the theme written
-#           below; when it is not, Fusion draws the palette and nothing breaks.
+#   qt6ct   the platform theme (QT_QPA_PLATFORMTHEME). Owns the QPalette, which
+#           is honoured whatever style draws the widgets.
+#   Kvantum the style - scrollbars, tabs, menus, frames. Optional: with the
+#           plugin installed qt6ct is pointed at it and it colours itself from
+#           the theme below, without it Fusion draws the palette instead.
 #
-# Both are generated from the six roles, reusing the GTK derivations above
-# rather than inventing a second set - a Qt dialog and a GTK dialog on the same
-# table should be the same grey, not two guesses at it.
+# Both reuse the GTK derivations above rather than inventing a second set, so a
+# Qt dialog and a GTK dialog come out the same grey.
 
-# Qt's Button is GTK's button, so it is $idle for the same reason gtk.css uses
-# it there, and the two toolkits' dialogs come out the same colour.
-#
-# The bevel ramp around it (Light/Midlight/Dark/Mid) is the one thing here that
-# does not flip with the table: it reads as light falling from above onto a
-# raised button, so Light stays lighter than the button on cream as well as on
-# lacquer, and pinning it to $pole would invert it on the light table and make
-# every button look pressed. lift() rather than mix(), for the reason lift()
-# exists - a flat step keeps the brown in the brown, where heading for white
-# turns the whole ramp into grey bevels on a warm button.
+# The bevel ramp (Light/Midlight/Dark/Mid) is the one thing that does not flip
+# with the table: it reads as light from above onto a raised button, so pinning
+# it to $pole would invert it on cream and make every button look pressed.
+# lift() not mix(), to keep the brown in the brown.
 qlight=$(lift "$idle" 26)
 qmidlight=$(lift "$idle" 12)
 qdark=$(lift "$idle" -22)
@@ -338,9 +299,8 @@ qvisited=$(mix "$accent" "$urgent" 0.50)  # a visited link, halfway from the acc
 qdimhl=$(mix "$accent" "$surface" 0.45)   # the selection in a window that does not have focus
 
 # --- Kvantum ---
-# One theme, House, retinted in place rather than four themes with one of them
-# chosen: Kvantum picks by name from kvantum.kvconfig, and rewriting a name is a
-# second thing to keep in step for no gain.
+# One theme, House, retinted in place rather than four themes to pick between -
+# Kvantum picks by name, and a name is a second thing to keep in step.
 kvdir="$config/Kvantum/House"
 if [ -f "$tables/kvantum-general.kvconfig.in" ]; then
     mkdir -p "$kvdir"
@@ -377,8 +337,8 @@ link.visited.color=#$qvisited
 progress.indicator.text.color=#$surface
 EOF
     } > "$kvdir/House.kvconfig"
-    # Kvantum keeps a parsed copy beside the theme and decides to reread by
-    # timestamp. Dropping it is cheaper than trusting that comparison.
+    # Kvantum caches a parsed copy beside the theme and rereads by timestamp.
+    # Dropping it is cheaper than trusting that comparison.
     rm -f "$kvdir"/*.cache
 fi
 
@@ -408,15 +368,11 @@ disabled_colors=$(scheme "$disabled" "$idle" "$disabled")
 inactive_colors=$(scheme "$text" "$qdimhl" "$text")
 EOF
 
-# The rest of qt6ct.conf is settings (fonts, single-click, icons in menus) and
-# is stowed, so only the three lines that are ours get patched - the same
-# one-line edit btop's theme name gets, for the same reason.
-#
-# Which style draws the widgets is a property of the machine rather than of the
-# table, but this is the thing that runs on every switch and can see whether the
-# plugin is installed, so it decides here. With Kvantum the palette is turned
-# off: Kvantum colours itself from the theme above, and two sources for the same
-# colours is how they drift apart.
+# The rest of qt6ct.conf is stowed settings, so only our three lines get
+# patched. Which style draws the widgets is a property of the machine, but this
+# is what runs on every switch and can see whether the plugin is installed. With
+# Kvantum the palette is turned off - it colours itself from the theme above,
+# and two sources for the same colours is how they drift apart.
 if [ -f "$config/qt6ct/qt6ct.conf" ]; then
     if find /usr/lib/qt6/plugins/styles /usr/lib/qt/plugins/styles -maxdepth 1 \
             -iname 'libkvantum*' 2>/dev/null | grep -q .; then
@@ -427,24 +383,22 @@ if [ -f "$config/qt6ct/qt6ct.conf" ]; then
         qtpalette=true
     fi
 
-    # An absolute path because qt6ct hands the string to QFile as it stands - no
-    # ~ and no $HOME - which is why it is written here rather than shipped.
+    # An absolute path: qt6ct hands the string to QFile as it stands, expanding
+    # neither ~ nor $HOME. Hence generated here rather than shipped.
     sed -i \
         -e "s|^style=.*|style=$qtstyle|" \
         -e "s|^custom_palette=.*|custom_palette=$qtpalette|" \
         -e "s|^color_scheme_path=.*|color_scheme_path=$config/qt6ct/colors/house.conf|" \
         "$config/qt6ct/qt6ct.conf"
 
-    # qt6ct's plugin watches qt6ct.conf, not the scheme file it points at, so a
-    # table change that only rewrites the palette would sit there unnoticed
-    # until the next launch. Touching it is what makes open Qt apps retint.
+    # qt6ct's plugin watches qt6ct.conf, not the scheme file it points at, so
+    # touching it is what makes open Qt apps retint.
     touch "$config/qt6ct/qt6ct.conf"
 fi
 
 # --- folder icons -------------------------------------------------------------
-# One House-<Table> icon theme per table (gold, brass, neon pink, old gold
-# folders over stock Adwaita). GTK on Wayland takes the icon theme from
-# gsettings, and running GTK apps re-resolve icons live when it changes.
+# One House-<Table> icon theme per table, over stock Adwaita. GTK on Wayland
+# takes this from gsettings and re-resolves icons live when it changes.
 
 icons="House-$(printf '%s' "$name" | awk '{ print toupper(substr($0,1,1)) substr($0,2) }')"
 if [ -d "$HOME/.local/share/icons/$icons" ] && command -v gsettings >/dev/null 2>&1; then
@@ -453,28 +407,15 @@ fi
 
 # --- the games ----------------------------------------------------------------
 # The five widgets in ../games are their own repo and their own quickshell
-# processes, so they cannot import the house's Config. They read this file
-# instead, and fall back to their own hardcoded block when it is absent - which
-# is what happens when the games repo is cloned on its own, with no house at all.
-#
-# One JSON with every colour the five of them name between them (blackjack,
-# poker and ride the bus share a set; bones adds tiles, roulette adds a wheel),
-# derived here rather than in five theme blocks.
+# processes, so they cannot import the house's Config. They read this JSON
+# instead and fall back to a hardcoded block when it is absent.
 #
 # Two things do not come from the six roles and are pinned per table below:
+# `green`, which is a verdict rather than decoration and so keeps its hue on
+# every table, and `felt`, the baize, which is a different cloth per room.
 #
-#   green  is a verdict, not decoration - it is what says you won. Like a
-#          terminal's green it keeps its hue on every table and only moves
-#          enough to stay legible against that table's chrome.
-#   felt   is the baize. Green by tradition, but each room has its own cloth,
-#          and vegas is not a room that owns any green at all.
-#
-# On a light table almost every relationship inverts. Elevation goes darker
-# rather than lighter (following the GTK roles above, which already do this),
-# `gold` has to deepen rather than brighten or it vanishes into cream, and
-# `inactive` recedes by going lighter. The card faces stay near-white and read
-# against light chrome because PlayingCard outlines them with a 1px 35% black
-# border, which is theme-independent and works either way round.
+# On a light table almost every relationship inverts: elevation goes darker,
+# `gold` deepens rather than brightens, `inactive` recedes by going lighter.
 
 if [ "$light" = 1 ]; then
     g_bg=$surface
@@ -482,9 +423,8 @@ if [ "$light" = 1 ]; then
     g_raised=$(mix "$idle" "$subtext" 0.25)
     g_fg=$text
     g_muted=$(mix "$subtext" "$text" 0.35)
-    # Inactive is meant to be faint, but not fainter here than everywhere else:
-    # 0.30 toward the page put it at 2.2:1 where the dark tables sit at 3.2:1,
-    # and a disabled control you cannot see at all is not disabled, it is gone.
+    # Faint, but no fainter here than elsewhere: 0.30 toward the page put it at
+    # 2.2:1 where the dark tables sit at 3.2:1.
     g_inactive=$(mix "$subtext" "$surface" 0.06)
     g_gold=$(mix "$accent" "$text" 0.35)
     g_red=$urgent
@@ -502,8 +442,7 @@ else
     g_fg=$text
     g_muted=$subtext
     g_inactive=$(mix "$subtext" "$surface" 0.25)
-    # Warm white rather than plain white: a gold lifted straight toward #fff
-    # goes chalky, and this is the colour on the winning figures.
+    # Warm white rather than plain: gold lifted toward #fff goes chalky.
     g_gold=$(mix "$accent" "fff0c0" 0.55)
     g_red=$(lift "$urgent" 32)
     g_cardface=$(mix "$text" "ffffff" 0.35)
@@ -515,38 +454,24 @@ else
     g_fret=$(mix "$idle" "$accent" 0.38)
 fi
 
-# feltLine is the cloth's printing - "DEALER", "BLACKJACK PAYS 3 TO 2" - and
-# every hairline drawn on the cloth: the bet circle, the felt panel's edge, the
-# tile borders. At 1.3:1 against the baize it looked like real printing on real
-# cloth and was, at 9px with 2.4 of letter spacing, unreadable. Lifted to 2.4:1.
-#
-# tileBack is deliberately NOT this value any more. It is a fill - the back of a
-# domino - so carrying it up with the printing would repaint every tile in
-# bones. It keeps the old, quieter step off the cloth.
+# feltLine is the cloth's printing and every hairline drawn on it. Held at
+# 2.4:1 against the baize: at the 1.3:1 that looked like real printing it was
+# unreadable at 9px. tileBack is deliberately not this value - it is a fill, so
+# carrying it up with the printing would repaint every tile in bones.
 case "$name" in
     noir)
-        # Oxblood, not green: this room is black lacquer and deep crimson, and a
-        # green cloth in it was the one thing still wearing another table's
-        # colours. Pitched at the luminance the green had, so the cloth keeps
-        # exactly the separation it always had from the chrome around it (1.30)
-        # and from its own printing (1.43) - only the hue moves.
-        #
-        # Charcoal was the other candidate and lost: at this luminance it lands
-        # on #2a2825, which is `raised` to within a hair, and the cloth stops
-        # reading as a surface of its own.
+        # Oxblood, not green - the one thing in this room still wearing another
+        # table's colours. Pitched at the luminance the green had, so the cloth
+        # keeps its separation from the chrome (1.30) and its printing (1.43).
         g_green=7fb069; g_felt=441720; g_feltline=934957; g_tileback=642e39; g_numgreen=12684a ;;
     felt)
-        # The one table that owns the baize, which is the problem: the cloth was
-        # a shade off the desktop green and the two blended into each other.
-        # Deeper and more saturated - velvet rather than baize - so the widget
-        # reads as sitting on the table instead of dissolving into it.
-        # The printing is pinned to the house ratio (~1.32:1) rather than scaled
-        # down with the cloth - taking the felt this dark drags it to 1.19:1 if
-        # you let it follow, and the table stops saying what game it is.
+        # The table that owns the baize, so the cloth has to be deeper than the
+        # desktop green or the two blend. The printing stays pinned to the house
+        # ratio (~1.32:1) rather than following the felt down to 1.19:1.
         g_green=8fc47a; g_felt=04140c; g_feltline=255b40; g_tileback=123021; g_numgreen=157a56 ;;
     vegas)
-        # No green in this room at all, so the cloth goes deep violet - the
-        # marquee's own dark - and the win colour is the neon the tray uses.
+        # No green in this room, so the cloth is the marquee's own dark violet
+        # and the win colour is the neon the tray uses.
         g_green=2de2e6; g_felt=141034; g_feltline=5045a9; g_tileback=2a1f5c; g_numgreen=1b8f7a ;;
     daylight)
         # A light cloth, and a green dark enough to read on it.
@@ -592,18 +517,17 @@ cat > "$config/house/table.json" <<EOF
 EOF
 
 # --- starship -----------------------------------------------------------------
-# Same story as kitty: segment palettes are pre-baked per table. starship
-# re-reads its config every prompt, so the very next Enter is on the new table.
+# Pre-baked per table, as kitty. starship re-reads its config every prompt, so
+# the next Enter is on the new table.
 
 if [ -f "$tables/starship-$name.toml" ]; then
     cp "$tables/starship-$name.toml" "$config/starship.toml"
 fi
 
 # --- Hyprland, live -----------------------------------------------------------
-# `keyword` alone updates the stored value but doesn't redraw borders already on
-# screen until the window is refocused - so a theme switch wouldn't visibly land.
-# A reload re-sources hyprland.conf (hence colors.conf, just written above) and
-# repaints every border; it does not re-run exec-once, so it's cheap and safe.
+# `keyword` alone updates the stored value but doesn't redraw borders until the
+# window is refocused. A reload re-sources colors.conf and repaints every
+# border; it does not re-run exec-once, so it is cheap and safe.
 if command -v hyprctl >/dev/null 2>&1 && hyprctl version >/dev/null 2>&1; then
     hyprctl reload >/dev/null 2>&1 || true
 fi

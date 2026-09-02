@@ -5,27 +5,21 @@ import "Palette.js" as Palette
 // The room: cloth, lamp, lattice, vignette. Everything with no behaviour.
 //
 // Drawn rather than shipped as a PNG so it is resolution-independent - the
-// greeter runs before anything has told it what monitor it is on, and a baked
-// 1920x1080 backdrop on a 4K panel is the first thing you see of the machine.
+// greeter runs before anything has told it what monitor it is on.
 //
-// The lamp is the whole composition. A casino table is lit from directly
-// above, hard, and everything the light misses falls away fast; that single
-// cone is what stops a flat black rectangle from reading as a flat black
-// rectangle. Shapes' RadialGradient does it without pulling in the Qt5Compat
-// effects module, which is not guaranteed to be installed on a machine that
-// only has sddm.
+// Shapes' RadialGradient for the lamp, rather than the Qt5Compat effects
+// module, which is not guaranteed to be installed on a machine that only has
+// sddm.
 Item {
     id: root
 
-    // Where the lamp hangs, as a fraction of the screen. Slightly above centre:
-    // the light pools on the cards and the bet, and the foot of the screen is
-    // the far edge of the pool rather than in it.
+    // Where the lamp hangs, as a fraction of the screen. Slightly above centre,
+    // so the light pools on the cards and the bet.
     readonly property real lampX: 0.5
     readonly property real lampY: 0.42
 
-    // The strip kept clear at the foot of the screen, which Main.qml reads to
-    // park the session plaque and the power chips in it. Nothing is drawn there;
-    // the cloth runs all the way down.
+    // The strip Main.qml parks the session plaque and power chips in. Nothing
+    // is drawn there; the cloth runs all the way down.
     readonly property int railHeight: Math.max(84, root.height * 0.11)
 
     // --- the cloth ------------------------------------------------------------
@@ -35,9 +29,8 @@ Item {
     }
 
     // --- the lamp -------------------------------------------------------------
-    // Two cones rather than one: a wide soft pool that lifts the middle third of
-    // the screen, and a tighter hotter one inside it. A single stop from lit to
-    // deep reads as a vignette; two reads as a light with a filament in it.
+    // Two cones: a wide soft pool and a tighter hotter one inside it. A single
+    // stop reads as a vignette; two read as a light with a filament in it.
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer
@@ -89,16 +82,14 @@ Item {
     }
 
     // --- the lattice ----------------------------------------------------------
-    // The pattern printed on good cloth: a diamond grid, at the threshold of
-    // visible. It exists to give the light something to fall across - under the
-    // lamp you can just make it out, at the corners it is gone entirely, and
-    // that difference is most of what sells the cone above as a light source.
+    // A diamond grid at the threshold of visible, there to give the light
+    // something to fall across: legible under the lamp, gone at the corners.
     Item {
         id: lattice
 
         anchors.fill: parent
-        // Nothing about this changes after load; caching it hands the whole grid
-        // to the GPU once instead of compositing a few hundred nodes per frame.
+        // Nothing here changes after load, so cache it rather than compositing
+        // a few hundred nodes per frame.
         layer.enabled: true
 
         readonly property int step: 84
@@ -134,10 +125,9 @@ Item {
     }
 
     // --- the vignette ---------------------------------------------------------
-    // The cone above lights the middle; this puts the corners out. Separate
-    // because they are not the same operation - one adds warmth, one removes
-    // everything, and doing it in one gradient means the corners go a dead
-    // brown rather than going properly black.
+    // The cone lights the middle; this puts the corners out. Separate because
+    // one adds warmth and the other removes everything - done in one gradient
+    // the corners go a dead brown rather than properly black.
     Shape {
         anchors.fill: parent
         preferredRendererType: Shape.CurveRenderer

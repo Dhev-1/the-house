@@ -25,35 +25,28 @@ Singleton {
     readonly property int sidebarTabWidth: 20 // the clickable tab on the left edge
     readonly property int sidebarIconSize: 18
 
-    // Music tab (right edge, tucked against the bar). The tab only exists while
-    // the player below is running; clicking it slides the controls out.
-    //
-    // Matched against the MPRIS bus name and identity, case-insensitively, so
-    // "spotify" catches both org.mpris.MediaPlayer2.spotify and "Spotify".
+    // Music tab (right edge, against the bar). Only exists while this player is
+    // running. Matched case-insensitively against the MPRIS bus name and
+    // identity, so "spotify" catches org.mpris.MediaPlayer2.spotify too.
     readonly property string musicPlayer: "spotify"
 
-    // The tab: a tall strip carrying the transport controls, so previous, pause
-    // and next are one click away without opening anything. It doesn't meet the
-    // bar at a corner - its top and bottom edges curve away over musicTabFlare
-    // pixels, so it grows out of the bar instead of being stuck onto it. The
-    // flare is part of the height, so it can't exceed half of it.
+    // The tab carrying the transport controls. Its top and bottom edges curve
+    // away over musicTabFlare pixels so it grows out of the bar rather than
+    // being stuck onto it; the flare is part of the height, so it can't exceed
+    // half of it.
     readonly property int musicTabWidth: 32
     readonly property int musicTabHeight: 280
     readonly property int musicTabFlare: 40
 
-    // The panel it slides out: album art, the track, and how far through it is.
-    // It is as tall as the tab, so the two make one rectangle, and only rounded on
-    // the far side - the edge where they meet is not an outside edge.
+    // The panel it slides out. As tall as the tab so the two make one rectangle,
+    // rounded only on the far side.
     readonly property int musicWidth: 380
     readonly property int musicRounding: 12
     readonly property int musicPadding: 14
     readonly property int musicArtSize: 110
 
-    // Notification toasts. These are a port of the dunstrc this shell replaced,
-    // so the geometry, palette and timings below are dunst's rather than the
-    // bar's: square corners, a 3px frame, and the teal urgency palette.
-    //
-    // Popups only. There is no history, so a dismissed notification is gone.
+    // Notification toasts, ported from the dunstrc this shell replaced - the
+    // geometry and timings below are dunst's. Popups only, no history.
 
     readonly property int notifWidth: 300
     readonly property int notifOffsetX: 20     // from the bar, not the screen
@@ -61,9 +54,8 @@ Singleton {
     readonly property int notifPadding: 10     // padding, horizontal_padding
     readonly property int notifIconSize: 44    // min_icon_size (bumped from dunst's 32)
 
-    // Not dunst's: it drew the stack as one flat slab (corner_radius = 0,
-    // gap_size = 0, a 3px frame around the lot). Separate rounded cards with a
-    // thin, dimmed frame instead.
+    // Not dunst's: it drew the stack as one flat slab. Separate rounded cards
+    // with a thin frame instead.
     readonly property int notifRadius: 10
     readonly property int notifFrameWidth: 1
     readonly property int notifSpacing: 8
@@ -82,16 +74,14 @@ Singleton {
     readonly property int notifTimeoutLow: 10
     readonly property int notifTimeoutNormal: 10
 
-    // word_wrap was never set in the dunstrc, so it took dunst's default of off.
-    // Not copied: markup means the body is rich text, and Qt ignores elide on rich
-    // text, so not wrapping doesn't ellipsize the overflow - it just cuts it off
-    // mid-word. Wrapping instead, up to notifBodyLines.
+    // dunst defaulted word_wrap off. Not copied: without wrapping, overflow is
+    // cut mid-word rather than ellipsized.
     readonly property bool notifWordWrap: true
     readonly property int notifBodyLines: 6
 
-    // The dunstrc asked for "Mononoki Nerd Font Mono 11.5", which isn't installed
-    // - dunst had been quietly falling back for who knows how long. Install
-    // ttf-mononoki-nerd and swap this over if you want the real thing.
+    // The dunstrc asked for "Mononoki Nerd Font Mono 11.5", which isn't
+    // installed - it had been quietly falling back. Install ttf-mononoki-nerd
+    // and swap this over for the real thing.
     readonly property string notifFont: font
     readonly property real notifFontSize: 11.5
 
@@ -103,11 +93,9 @@ Singleton {
         readonly property color high: activeProgress.high
     }
 
-    // One palette per urgency: background, frame, title, body, accent. Held as
-    // stable QtObjects because Notifications.palette() hands the reference to a
-    // toast, which compares it by identity to pick expiry behaviour - the object
-    // stays put while its colours track the active theme underneath. Noir pins
-    // its own candle-lit golds; derived (deriveNotif) otherwise.
+    // One palette per urgency. Held as stable QtObjects because a toast compares
+    // the reference by identity to pick its expiry behaviour, so the object has
+    // to stay put while its colours track the theme underneath.
     readonly property QtObject notifLow: QtObject {
         readonly property color background: activeNotif.low.background
         readonly property color frame: activeNotif.low.frame
@@ -138,34 +126,25 @@ Singleton {
     readonly property int clockPanelRadius: 12
     readonly property int clockPanelPadding: 16
 
-    // The theme picker: a centred overlay of theme tiles, one per entry in
-    // `themes`, opened by the palette button in the bar or the `theme` keybind.
-    // Arrow / hover to preview a theme live, enter or click to keep it, escape to
-    // revert. ThemePicker.qml.
+    // The theme picker: one tile per entry in `themes`. Arrow or hover previews
+    // live, enter keeps, escape reverts. ThemePicker.qml.
     readonly property int themePanelWidth: 360
     readonly property int themePanelRadius: 16
     readonly property int themePanelPadding: 16
 
-    // The launcher's hand - Launcher.qml, off the Apps service.
-    //
-    // Five seats because that is a poker hand, and because a launcher that can
-    // show you fifty results is a launcher you scroll instead of read. Anything
-    // past the fifth card is reported as a count still in the shoe - the answer
-    // to which is another character, not a longer list.
+    // The launcher's hand - Launcher.qml, off the Apps service. Five seats, a
+    // poker hand; anything past the fifth is reported as a count still in the
+    // shoe rather than scrolled.
     readonly property int launcherSeats: 5
     readonly property int launcherCardWidth: 120
     readonly property int launcherCardHeight: 170
     readonly property int launcherCardGap: 16
     readonly property int launcherIconSize: 44
 
-    // Whether the cards wear the apps' own icons. Off, every card shows its
-    // suit pip instead and the hand reads as a deck rather than as a menu -
-    // which is the more honest look for a table, at the cost of having to read
-    // the name rather than recognising the shape.
-    //
-    // The pip is also the fallback while this is on: an app whose .desktop has
-    // no Icon= (Xwayland, zenity), or names one the current icon theme does not
-    // carry, falls back to it rather than drawing Qt's magenta checkerboard.
+    // Whether the cards wear the apps' own icons; off, every card shows its suit
+    // pip instead. The pip is also the fallback while this is on - an app whose
+    // .desktop has no Icon= (Xwayland, zenity) or names one the icon theme
+    // lacks gets it rather than Qt's magenta checkerboard.
     readonly property bool launcherIcons: true
 
     // The fan: degrees of tilt per seat off-centre, and how far a card travels
@@ -173,15 +152,10 @@ Singleton {
     readonly property real launcherFan: 4
     readonly property int launcherPitch: 260
 
-    // The pitch itself: how long one card takes to cross the table, and how far
-    // behind the card before it. A dealer's hands are quick, and the whole
-    // animation runs again on every keystroke - long enough to admire is long
-    // enough to be in the way.
-    //
-    // DealFade is how much of that flight the card spends fading up: 1 the whole
-    // way, 0 fully there the moment it leaves the shoe. Part way, so the movement
-    // is what reads - at this pitch a card that fades all the way looks wiped on
-    // rather than dealt.
+    // How long one card takes to cross the table, and how far behind the card
+    // before it. Kept short: the whole animation runs again on every keystroke.
+    // DealFade is how much of the flight the card spends fading up - 1 the whole
+    // way, 0 fully opaque the moment it leaves the shoe.
     readonly property int launcherDealDuration: 190
     readonly property int launcherDealStagger: 38
     readonly property real launcherDealFade: 0.45
@@ -191,43 +165,31 @@ Singleton {
     readonly property int launcherBetRadius: 12
 
     // The tray: your own five, tucked into the bottom-left edge of the launcher.
-    //
-    // Full card size, same as the seats on the table. What keeps the two apart
-    // is not scale but place and posture: the hand is centred, spread and fanned
-    // and answers the bet; the tray is cornered, square and tucked under the edge
-    // and never changes. Everything inside a tray card is derived off this, so
-    // dropping it back to 0.55 gives the small tucked version again.
+    // Full card size - place and posture keep it apart from the hand, not scale.
+    // Everything inside a tray card derives off this, so 0.55 gives the small
+    // tucked version back.
     readonly property real launcherTrayScale: 1
     readonly property int launcherTrayGap: 10
     readonly property int launcherTrayMargin: 28
 
-    // How much of a card stands above the screen edge at rest. Has to clear the
-    // corner index and the whole icon - everything you would have glanced at
-    // anyway. The name is what falls below the fold, and the name is the part
-    // you do not need when the icon is right there. Raise this with the scale:
-    // at full size the icon alone is 44 tall and starts 22 down.
+    // How much of a card stands above the screen edge at rest - enough to clear
+    // the corner index and the icon, leaving the name below the fold. Raise it
+    // with the scale: at full size the icon alone is 44 tall and starts 22 down.
     readonly property int launcherTrayPeek: 76
 
-    // The three heights the tray sits at: tucked, noticed, and up.
-    //
-    // Nudge is the small rise when the pointer comes down to the edge or a card
-    // is being dragged towards it. Lift is the clearance above the edge when the
-    // whole tray comes up (alt held) or one card is hovered.
+    // Nudge is the small rise when the pointer nears the edge or a card is
+    // dragged toward it; lift is the clearance when the whole tray comes up
+    // (alt held) or one card is hovered.
     readonly property int launcherTrayNudge: 15
     readonly property int launcherTrayLift: 14
 
     // How close to the bottom edge the pointer has to be for the nudge.
     readonly property int launcherTrayProximity: 140
 
-    // The service tray: a handle under the top edge, near the top-right corner,
-    // that drops a little column of icon buttons down beneath it. Each button
-    // starts, stops and reflects a systemd --user unit - today just the
-    // voice-bridge mic toggle. The unit itself is machine-local, not stowed;
-    // on a box without it the button simply reads stopped.
-    //
-    // The widget (ButtonTray) is generic: it only shows icons and reports clicks.
-    // ServiceTray wires those to the units below, and the Systemd service does
-    // the polling and toggling.
+    // The service tray: a handle under the top edge dropping a column of icon
+    // buttons, each starting/stopping a systemd --user unit. The units are
+    // machine-local, not stowed; on a box without one the button reads stopped.
+    // ButtonTray is generic, ServiceTray wires it to the units below.
     readonly property int trayWidth: 50        // breadth of the strip
     readonly property int trayTabHeight: 24    // the always-visible handle
     readonly property int trayInset: 12        // gap from the bar
@@ -241,8 +203,7 @@ Singleton {
     readonly property color trayOn: colours.trayOn ?? colours.accent
     readonly property color trayOff: colours.trayOff ?? colours.urgent
 
-    // Each entry is one button: the unit it toggles and the glyphs for its running
-    // and stopped states. Hermes shows the same one either way, voice-bridge swaps.
+    // One entry per button: the unit it toggles, and its running/stopped glyphs.
     readonly property var trayServices: [
         {
             unit: "voice-bridge.service",
@@ -251,28 +212,16 @@ Singleton {
         }
     ]
 
-    // The pit: the games on the bottom bar, one button per game. Each entry is
-    // the wrapper qml `qs -p` launches, the game's IPC target (how a running
-    // one is told to quit), and its glyph. Pit.qml drives these; the buttons
-    // light while the game's process is up.
-    //
-    // The games are their own repo, checked out at <repo>/games as a submodule
-    // (`git submodule update --init`). The path is derived from where the shell
-    // was launched from rather than written out, so the house works wherever it
-    // is cloned - and Pit only shows the games it can actually find, so a
-    // checkout without the submodule just gets a bare bottom bar rather than
-    // five dead buttons. Point this somewhere else if the games live elsewhere.
+    // The pit: the games on the bottom bar. Each entry is the wrapper qml
+    // `qs -p` launches, the game's IPC target, and its glyph. Pit.qml lights a
+    // button while that game's process is up, and only draws games it can find -
+    // a checkout without the `games` submodule gets a bare bottom bar.
     //
     // shellPath(), not Qt.resolvedUrl(): singletons are compiled into
     // quickshell's qrc, so a relative url from in here resolves against
-    // qrc:/qs-blackhole and never touches the disk.
-    //
-    // Two candidates because shellPath is only the clone when the house is *run*
-    // from it (stowed as a symlink, or launched in place). Copied into
-    // ~/.config/quickshell instead, it points at a games dir that does not
-    // exist - and since Pit only draws what it finds, the pit would silently
-    // vanish rather than error. The clone's usual home is the fallback; Pit
-    // takes the first root that actually has games under it.
+    // qrc:/qs-blackhole and never touches the disk. Two candidates because
+    // shellPath is only the clone when the house is *run* from it; copied into
+    // ~/.config/quickshell it points at a games dir that does not exist.
     readonly property var pitRepos: [Quickshell.shellPath("../games"), `${Quickshell.env("HOME")}/cloon/newdot/games`]
     readonly property var pitGames: [
         {
@@ -311,11 +260,9 @@ Singleton {
 
     // --- Theming -------------------------------------------------------------
     //
-    // Every widget reads its colours through Config.colours, so swapping the
-    // active theme re-tints the whole shell live - the ColorAnimation Behaviors
-    // dotted around the widgets animate the crossfade for free.
+    // Every widget reads its colours through Config.colours, so switching theme
+    // re-tints the shell live. Each theme fills the same six roles:
     //
-    // Each theme fills the same six roles:
     //   surface  the bar/card background
     //   text     primary foreground
     //   subtext  dimmed foreground - inactive icons, secondary lines
@@ -323,16 +270,12 @@ Singleton {
     //   idle     hover/fill wash, hairline borders
     //   urgent   errors, critical battery, the urgent status colour
     //
-    // The notification cards and the service-tray dots follow the theme too, but
-    // through more colours than the six above (a background/frame/title/body/accent
-    // per urgency, a progress gradient, a running/stopped pair). Rather than spell
-    // all of those out per theme, they are derived from the six roles - see
-    // deriveNotif / deriveProgress below. Noir and Vegas pin some of
-    // their own; Felt and Daylight Robbery derive everything.
+    // Notification cards and tray dots need more colours than those six, so they
+    // are derived from them - see deriveNotif / deriveProgress. Noir and Vegas
+    // pin some of their own; Felt and Daylight derive everything.
     //
-    // The picker (ThemeButton in the bar, opening the ThemePicker overlay) writes
-    // the chosen name to theme.json below, so it survives a restart. To add one,
-    // drop another entry in here - the picker lists whatever is in this array.
+    // The picker writes the chosen name to theme.json below, so it survives a
+    // restart. To add a theme, drop another entry in here.
     readonly property var themes: [
         {
             name: "noir",
@@ -345,9 +288,7 @@ Singleton {
             idle: "#2a2320",
             urgent: "#c13a4e",
 
-            // Pinned so the default table is exact: candle-lit cards with gold
-            // frames, a champagne progress climb, gold/crimson tray dots. The
-            // other tables leave these out and derive from their six roles.
+            // Pinned so the default table is exact; the others derive.
             notif: {
                 low: {
                     background: "#1a1512",
@@ -390,11 +331,9 @@ Singleton {
             idle: "#1d4030",
             urgent: "#c0392f",
 
-            // Pinned because deriveNotif blends in straight RGB, and on a
-            // saturated green every mix toward accent or urgent lands in olive -
-            // derived, a *critical* card came out khaki (#2e2e1f). So: frames
-            // keep red clearly ahead of green, and critical drops onto wine
-            // instead of baize so it reads hot against the table.
+            // Pinned: deriveNotif blends in straight RGB, and on a saturated
+            // green every mix toward accent or urgent lands in olive - a
+            // derived *critical* card came out khaki (#2e2e1f).
             notif: {
                 low: {
                     background: "#143224",
@@ -419,7 +358,7 @@ Singleton {
                 }
             },
             // Brass, flanked by a dark step and an ivory one. Derived, the low
-            // step was #756c22 - olive again.
+            // step was olive again (#756c22).
             progress: {
                 low: "#5f5220",
                 mid: "#c9a227",
@@ -456,12 +395,9 @@ Singleton {
             idle: "#e6dcc6",
             urgent: "#b3372f",
 
-            // Pinned because deriveNotif is written for a dark table and this
-            // is the only light one: "surface lifted toward idle" comes out
-            // *darker* than cream, and subtext bodies land at 3.1:1, under the
-            // 4.5 they need. So: quiet cards go lighter than the table, bodies
-            // are darkened until they read, and critical goes the other way onto
-            // a blush - on cream you say "hot" with colour, not with light.
+            // Pinned: deriveNotif is written for a dark table and this is the
+            // only light one - "surface lifted toward idle" comes out *darker*
+            // than cream and subtext bodies land at 3.1:1, under the 4.5 needed.
             notif: {
                 low: {
                     background: "#faf5ea",
@@ -485,11 +421,9 @@ Singleton {
                     accent: "#a33028"
                 }
             },
-            // low/mid/high are gradient stops along the bar, not thresholds, so
-            // the ramp has to gain presence left to right. On a dark table that
-            // means getting brighter; here it means getting deeper. Derived, it
-            // already ran the right way but topped out at 4.66:1 against the
-            // card - this pins a ramp with somewhere to go.
+            // low/mid/high are gradient stops, not thresholds: the ramp gains
+            // presence left to right, which on cream means deeper, not
+            // brighter. Derived, it topped out at 4.66:1 against the card.
             progress: {
                 low: "#c9ad64",
                 mid: "#9c7a1e",
@@ -499,10 +433,8 @@ Singleton {
     ]
 
     // themeName is the persisted choice, changed only through setTheme() so the
-    // write to disk follows. previewName is the picker's transient override, which
-    // colours resolves first - flicking through themes re-tints the whole shell
-    // without touching the file. An unknown name (hand-edited, or a theme since
-    // removed) falls back to the first entry.
+    // write to disk follows; previewName is the picker's transient override,
+    // resolved first. An unknown name falls back to the first entry.
     readonly property string themeName: prefs.theme
     property string previewName: ""
     readonly property string activeName: previewName !== "" ? previewName : themeName
@@ -513,9 +445,7 @@ Singleton {
     readonly property var activeNotif: colours.notif ?? deriveNotif(colours)
     readonly property var activeProgress: colours.progress ?? deriveProgress(colours)
 
-    // Linear blend of two "#rrggbb" strings, t from a (0) to b (1). The building
-    // block the derivations lean on - most roles are a role colour nudged toward
-    // surface, accent or urgent.
+    // Linear blend of two "#rrggbb" strings, t from a (0) to b (1).
     function _mix(a: string, b: string, t: real): color {
         const x = _hex(a);
         const y = _hex(b);
@@ -531,9 +461,8 @@ Singleton {
         };
     }
 
-    // Build the three urgency palettes out of the six roles: cards are surface
-    // lifted toward idle, text stays text/subtext, and the accent/frame carry the
-    // theme's accent - urgent for critical, so a critical toast reads red-hot.
+    // The three urgency palettes off the six roles: cards are surface lifted
+    // toward idle, frames carry the accent, critical carries urgent.
     function deriveNotif(c: var): var {
         return {
             low: {
@@ -570,8 +499,8 @@ Singleton {
         };
     }
 
-    // Flick to a theme without committing - the picker calls this as the selection
-    // moves, so the whole shell previews it live. "" clears back to the saved one.
+    // Flick to a theme without committing, as the picker's selection moves.
+    // "" clears back to the saved one.
     function preview(name: string): void {
         if (name === "" || themes.some(t => t.name === name))
             previewName = name;
@@ -582,9 +511,8 @@ Singleton {
         previewName = "";
     }
 
-    // Commit a theme: persist it, clear any preview so colours reads the file,
-    // and mirror it onto the rest of the system (Hyprland) so the choice is
-    // shell-wide, not just the bar.
+    // Commit a theme: persist it, drop the preview, and mirror it out to the
+    // rest of the system.
     function setTheme(name: string): void {
         if (!themes.some(t => t.name === name))
             return;
@@ -594,31 +522,26 @@ Singleton {
         applyToSystem(name);
     }
 
-    // Push a theme out to the rest of the desktop. Today that is Hyprland:
-    // scripts/apply-theme.sh writes ~/.config/hypr/colors.conf (sourced from
-    // hyprland.conf so it survives a restart) and retints the window borders live
-    // via hyprctl. The shell already previews live off Config.colours; this is the
-    // bit that reaches beyond it. Only commits call here - preview stays in-process
-    // so arrow-keying the picker doesn't spawn a script per keystroke.
+    // Push a theme out past the shell: scripts/apply-theme.sh writes
+    // ~/.config/hypr/colors.conf and retints Hyprland's borders live. Only
+    // commits call here, so arrow-keying the picker doesn't spawn a script per
+    // keystroke.
     function applyToSystem(name: string): void {
         const c = themes.find(t => t.name === name);
         if (!c)
             return;
-        // scripts/apply-theme.sh, resolved next to this file. execDetached wants a
-        // plain path, so drop the file:// the url carries.
+        // execDetached wants a plain path, so drop the url's file:// prefix.
         const script = Qt.resolvedUrl("scripts/apply-theme.sh").toString().replace("file://", "");
         Quickshell.execDetached(["sh", script, c.name, c.surface, c.text, c.subtext, c.accent, c.idle, c.urgent]);
     }
 
-    // Sync Hyprland to the saved theme once at startup, so the compositor matches
-    // theme.json even if colors.conf was never written (first run) or the file was
-    // hand-edited while the shell was down. Cheap: one detached script.
+    // Sync Hyprland once at startup, so the compositor matches theme.json even
+    // if colors.conf was never written or was edited while the shell was down.
     Component.onCompleted: applyToSystem(themeName)
 
     // Persisted in Quickshell's per-shell state dir. watchChanges means an
-    // external edit re-themes live too; on first run the file is absent, which is
-    // expected rather than an error, so the read failure is silenced. We only
-    // write from setTheme(), so our own write doesn't loop back through reload().
+    // external edit re-themes live too. The file is absent on first run, hence
+    // printErrors: false.
     FileView {
         id: prefsFile
 

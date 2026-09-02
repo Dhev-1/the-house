@@ -28,24 +28,13 @@ MouseArea {
     readonly property double created: Date.now()
     readonly property int age: Math.floor((Notifications.now.getTime() - root.created) / 1000)
 
-    // The body, with any image tags taken back out.
-    //
-    // The body comes from any process that can reach the session bus, so the
-    // format it is drawn in is the whole of what that process may do with this
-    // card. RichText is the obvious reading of the old dunstrc's `markup = full`
-    // and the wrong one: Qt's HTML engine resolves <img src="...">, which is
-    // enough for a notification to make the shell fetch a remote url, pull an
-    // arbitrary local image onto the screen, or set its own type and pass itself
-    // off as another app's card.
-    //
-    // StyledText is the same idea with a documented tag list instead of a parser
-    // - everything the spec's markup names, which is all dunst rendered either.
-    // It still honours <img>, so that one is stripped here; the closing `>` is
-    // optional in the pattern because Qt reads an unterminated tag to the end of
-    // the string rather than giving up on it.
-    //
-    // Second effect worth knowing: Qt ignores `elide` on rich text but honours it
-    // on styled text, so a long body is now ellipsized rather than cut mid-word.
+    // The body, with any image tags taken back out. It comes from any process
+    // that can reach the session bus, so it is drawn as StyledText, not
+    // RichText: Qt's HTML engine resolves <img src="...">, which is enough for a
+    // notification to make the shell fetch a remote url or pull an arbitrary
+    // local image onto the screen. StyledText still honours <img>, hence the
+    // strip. The closing `>` is optional in the pattern because Qt reads an
+    // unterminated tag to the end of the string rather than giving up on it.
     readonly property string body: (root.modelData.body ?? "").replace(/<\s*img\b[^>]*>?/gi, "")
 
     // "default" is what activating the notification body does, so it answers to
@@ -55,11 +44,10 @@ MouseArea {
 
     readonly property string iconUrl: "image://icon/"
 
-    // An app can send its icon as a theme name or as a path, and Quickshell wraps
-    // either in an image://icon/ url without checking a name is one the theme
-    // actually has. A name it doesn't have loads as Qt's magenta checkerboard, so
-    // unwrap and re-check names; paths and real urls are fine as they are.
-    // iconPath with check returns "" for a name the theme lacks, hiding the slot.
+    // An app can send its icon as a theme name or a path, and Quickshell wraps
+    // either in an image://icon/ url without checking the theme has the name -
+    // one it lacks loads as Qt's magenta checkerboard. So unwrap and re-check
+    // names; iconPath(name, true) returns "" for a miss, hiding the slot.
     readonly property string iconSource: {
         const raw = modelData.image || modelData.appIcon;
         if (!raw)
@@ -97,11 +85,9 @@ MouseArea {
     }
 
     // Critical notifications never expire (timeout = 0), as in dunst. Hovering
-    // holds the timer so a toast can't vanish out from under the cursor mid-read.
-    //
-    // The tracked check matters: a notification closed from elsewhere (dismissAll,
-    // or the app withdrawing it) can outlive this delegate by a frame, and
-    // expiring an already-closed one is an error.
+    // holds the timer. The `tracked` check matters: a notification closed from
+    // elsewhere can outlive this delegate by a frame, and expiring an
+    // already-closed one is an error.
     Timer {
         running: root.modelData.tracked && !root.containsMouse && interval > 0
         interval: {
@@ -121,9 +107,9 @@ MouseArea {
         onTriggered: root.modelData.expire()
     }
 
-    // Dealt onto the table: the card slides in from the bar side, straightens
-    // out of a slight tilt, and fades up - all on the background, so the layout
-    // height (which the stack animates separately) never jumps.
+    // Dealt in: slides from the bar side, straightens, fades up. All on the
+    // background, so the layout height (animated separately by the stack) never
+    // jumps.
     Component.onCompleted: dealIn.start()
 
     ParallelAnimation {
@@ -180,9 +166,8 @@ MouseArea {
             opacity: 0.45
         }
 
-        // The corner pip, indexed by urgency like a card's rank: clubs are
-        // small talk, spades the table standard, hearts the high stakes. The
-        // heart beats, because a critical card never leaves on its own.
+        // The corner pip, indexed by urgency: clubs low, spades normal, hearts
+        // critical. The heart beats, since a critical card never leaves on its own.
         Text {
             id: pip
 
@@ -253,11 +238,9 @@ MouseArea {
                         font.bold: true
                         elide: Text.ElideMiddle
 
-                        // Spelled out, because AutoText is not "plain": it runs
-                        // the string past Qt.mightBeRichText() and switches to the
-                        // HTML engine if it looks like markup. The spec has no
-                        // markup in a summary, so say so rather than letting the
-                        // sender decide by what it typed.
+                        // Spelled out: AutoText is not "plain", it switches to
+                        // the HTML engine if Qt.mightBeRichText() likes the
+                        // look of the string. The spec has no markup here.
                         textFormat: Text.PlainText
                     }
 
@@ -295,9 +278,7 @@ MouseArea {
                     font.pointSize: Config.notifFontSize
 
                     // markup = full: the body arrives as Pango-flavoured HTML.
-                    // Styled, not rich - see root.body for what the difference
-                    // buys and why the image tags are gone by the time they
-                    // get here.
+                    // Styled, not rich - see root.body.
                     textFormat: Text.StyledText
                     wrapMode: Config.notifWordWrap ? Text.Wrap : Text.NoWrap
                     maximumLineCount: Config.notifBodyLines
@@ -346,9 +327,8 @@ MouseArea {
                     }
                 }
 
-                // dunst only hinted that actions existed (show_indicators) and put
-                // them behind a context menu. Buttons say the same thing and can
-                // be clicked directly.
+                // dunst only hinted that actions existed (show_indicators) and
+                // hid them behind a context menu. These can be clicked directly.
                 RowLayout {
                     Layout.topMargin: 4
                     visible: root.buttons.length > 0

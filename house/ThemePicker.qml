@@ -12,10 +12,9 @@ import qs.services
 // opened by the ♠ button in the bar or the `theme` keybind (shell.qml wires
 // that IPC call to ThemePanel).
 //
-// Each card wears the table it stands for - its surface, its accent, its suit -
-// fanned like a hand the dealer just spread. Arrows / hjkl / number keys or a
+// Each card wears the table it stands for. Arrows / hjkl / number keys or a
 // hover preview that table across the whole shell without writing to disk;
-// enter or a click keeps it; escape or a click outside reverts.
+// enter or a click keeps it, escape or a click outside reverts.
 //
 // A full-screen layer surface: it dims the desktop behind the hand and, while
 // open, takes exclusive keyboard focus so the keys land here without a click.
