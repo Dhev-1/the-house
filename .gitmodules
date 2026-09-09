@@ -1,3 +1,3 @@
 [submodule "games"]
 	path = games
-	url = git@github.com:Dhev-1/qml-games.git
+	url = https://github.com/Dhev-1/qml-games.git

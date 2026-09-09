@@ -11,6 +11,9 @@ home/**/.daemon*
 # scratch notes
 cleanup.md
 
+# local tool settings - absolute paths, machine-specific
+.claude/settings.local.json
+
 # editor / OS cruft
 *.swp
 *~
