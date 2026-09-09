@@ -19,5 +19,5 @@ cleanup.md
 *~
 .DS_Store
 
-# personal GTK bookmarks (local mount paths) — uncomment to exclude
-# home/gtk/.config/gtk-3.0/bookmarks
+# personal GTK bookmarks (local mount paths)
+home/gtk/.config/gtk-3.0/bookmarks

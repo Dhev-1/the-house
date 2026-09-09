@@ -1,9 +1,0 @@
-android-studio
-brave-bin
-eww
-onlyoffice-bin
-spotify
-woeusb-ng
-yay
-yay-debug
-zen-browser-bin

@@ -204,6 +204,8 @@ Singleton {
     readonly property color trayOff: colours.trayOff ?? colours.urgent
 
     // One entry per button: the unit it toggles, and its running/stopped glyphs.
+    // Units that do not exist on this machine are dropped rather than drawn
+    // dead, so this list is yours to edit - voice-bridge is a personal one.
     readonly property var trayServices: [
         {
             unit: "voice-bridge.service",

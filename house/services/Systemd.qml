@@ -20,9 +20,21 @@ Singleton {
 
     readonly property var units: Config.trayServices.map(s => s.unit)
 
+    // Unit id -> true when the unit exists on this machine. is-active cannot
+    // tell a stopped unit from a missing one - both read "inactive" - so a
+    // config listing a unit you do not have would leave a permanently dead
+    // button. Probed once; the tray drops whatever is not here.
+    property var loaded: ({})
+
     function isRunning(unit: string): bool {
         return root.state[unit] === true;
     }
+
+    function isLoaded(unit: string): bool {
+        return root.loaded[unit] === true;
+    }
+
+    readonly property var presentUnits: Config.trayServices.filter(s => root.isLoaded(s.unit))
 
     function toggle(unit: string): void {
         Quickshell.execDetached(["systemctl", "--user", root.isRunning(unit) ? "stop" : "start", unit]);
@@ -51,6 +63,24 @@ Singleton {
                 for (let i = 0; i < root.units.length; i++)
                     next[root.units[i]] = lines[i] === "active";
                 root.state = next;
+            }
+        }
+    }
+
+    // LoadState is "loaded" or "not-found", one line per unit, blank-separated.
+    Process {
+        id: presence
+
+        running: root.units.length > 0
+        command: ["systemctl", "--user", "show", "--property=LoadState", "--value"].concat(root.units)
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const lines = this.text.trim().split("\n").filter(l => l.trim().length > 0);
+                const next = {};
+                for (let i = 0; i < root.units.length; i++)
+                    next[root.units[i]] = lines[i] === "loaded";
+                root.loaded = next;
             }
         }
     }

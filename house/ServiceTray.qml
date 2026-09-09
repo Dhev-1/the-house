@@ -8,10 +8,10 @@ import qs.services
 // This is the only place that knows the tray drives services at all. The widget
 // itself (ButtonTray) carries none of it, so it can be lifted out on its own.
 ButtonTray {
-    buttons: Config.trayServices.map(s => ({
+    buttons: Systemd.presentUnits.map(s => ({
                 icon: Systemd.isRunning(s.unit) ? s.iconOn : s.iconOff,
                 active: Systemd.isRunning(s.unit)
             }))
 
-    onActivated: index => Systemd.toggle(Config.trayServices[index].unit)
+    onActivated: index => Systemd.toggle(Systemd.presentUnits[index].unit)
 }
