@@ -61,7 +61,7 @@ PanelWindow {
 
     Behavior on reveal {
         NumberAnimation {
-            duration: 220
+            duration: Config.dur(220)
             easing.type: Easing.OutCubic
         }
     }
@@ -176,7 +176,7 @@ PanelWindow {
 
             Behavior on fillColor {
                 ColorAnimation {
-                    duration: 120
+                    duration: Config.dur(120)
                 }
             }
         }
@@ -334,7 +334,7 @@ PanelWindow {
 
                         Behavior on width {
                             NumberAnimation {
-                                duration: 400
+                                duration: Config.dur(400)
                                 easing.type: Easing.OutCubic
                             }
                         }
@@ -373,13 +373,13 @@ PanelWindow {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Config.dur(150)
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 100
+                    duration: Config.dur(100)
                 }
             }
         }

@@ -74,7 +74,7 @@ PanelWindow {
 
     Behavior on reveal {
         NumberAnimation {
-            duration: 180
+            duration: Config.dur(180)
             easing.type: Easing.OutCubic
         }
     }
@@ -248,21 +248,21 @@ PanelWindow {
 
                             Behavior on rotation {
                                 NumberAnimation {
-                                    duration: 160
+                                    duration: Config.dur(160)
                                     easing.type: Easing.OutCubic
                                 }
                             }
 
                             Behavior on y {
                                 NumberAnimation {
-                                    duration: 160
+                                    duration: Config.dur(160)
                                     easing.type: Easing.OutBack
                                 }
                             }
 
                             Behavior on border.color {
                                 ColorAnimation {
-                                    duration: 120
+                                    duration: Config.dur(120)
                                 }
                             }
 

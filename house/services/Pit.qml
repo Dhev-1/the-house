@@ -97,7 +97,7 @@ Singleton {
     }
 
     Timer {
-        interval: 3000
+        interval: Config.eco ? 15000 : 3000
         running: true
         repeat: true
         triggeredOnStart: true

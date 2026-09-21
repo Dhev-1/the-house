@@ -21,13 +21,13 @@ gone.
 ## Run
 
 ```bash
-qs -p ~/cloon/newdot/house
+qs -p ~/.config/quickshell/house
 ```
 
 Autostart it from `hyprland.conf`:
 
 ```
-exec-once = qs -p ~/cloon/newdot/house
+exec-once = qs -p ~/.config/quickshell/house
 ```
 
 > If `~/.config/quickshell/shell.qml` exists, Quickshell registers it as the
@@ -119,7 +119,7 @@ centred overlay of table tiles, each painted in its own colours as a live
 preview. Move the highlight and the whole shell re-tints in real time; commit or
 cancel to keep or drop it.
 
-Four tables ship:
+Five tables ship:
 
 | Table | The room |
 | --- | --- |
@@ -127,6 +127,7 @@ Four tables ship:
 | **Felt** | The poker table. Green baize, brass rail, ivory chips. |
 | **Vegas** | The strip at midnight. Neon pink marquee, cyan bulbs, gold glow. |
 | **Daylight Robbery** | The one light table. Cream carpet, old gold, card red. |
+| **Penny Slots** | The battery table. Flat copper on near-black. See below. |
 
 | Action | Keybind | Also |
 | --- | --- | --- |
@@ -144,6 +145,36 @@ Add a table by dropping another entry in the `themes` array in `Config.qml` —
 each entry fills six roles (`surface`, `text`, `subtext`, `accent`, `idle`,
 `urgent`); notification palettes, the progress gradient and the tray dots are
 derived from those unless the theme pins its own (Noir and Vegas do).
+
+A table also needs its per-table files: `python3 scripts/make-chips.py` for the
+chip, `scripts/tables/kitty-<name>.conf` and `starship-<name>.toml`,
+`home/btop/.config/btop/themes/house-<name>.theme`, a `House-<Name>` folder-icon
+theme, and an arm in `apply-theme.sh`'s games block — that `case` has no default,
+so a table without one aborts the script under `set -u` partway through.
+
+## The battery table
+
+**Penny Slots** is a table with `eco: true`, and that one flag is the whole
+switch. It is committed-only: arrowing across its tile in the picker previews the
+colours, and the savings start when you keep it.
+
+| What | Off on an eco table |
+| --- | --- |
+| Hyprland | window and workspace animations, blur, shadow and the dim pass over unfocused windows (written to `colors.conf`; `hyprctl reload` puts them back on the next table) |
+| Wallpaper | the image — `awww clear` fills the surface colour instead |
+| Shell animations | every animation length goes through `Config.dur()`, which returns 0 on an eco table, so panels and hovers snap rather than tween |
+| Endless loops | the critical-toast pulse and the tray icon's hover spinner |
+| Polling | the pit's `pgrep` goes from every 3s to every 15s, the service tray's `systemctl` from 5s to 20s |
+| Prompt | starship's random suit (a shell and `shuf` on every prompt) is a fixed spade |
+
+Window rounding, gaps and the border are left alone: the frame's cutout is cut to
+the same radius, and squaring the windows would poke their corners past it.
+
+Any other table can opt in with `eco: true` in its `themes` entry; the script
+takes it as an optional eighth argument. New animations should use
+`Config.dur(ms)` for their `duration` so they honour it. Monitor refresh rate is
+the other big lever and is per machine, so it is not touched here — lower it in
+`monitors.conf` if the panel has a faster mode than you need on battery.
 
 ## The deal (launcher)
 
@@ -213,7 +244,7 @@ restart.
 
 ```
 shell.qml            root; pragmas, IPC handlers, one set of windows per screen
-Config.qml           all the knobs, and the four tables
+Config.qml           all the knobs, and the five tables
 Border.qml           the frame (QtQuick.Shapes, click-through)
 Bar.qml              the right-edge bar
 Sidebar.qml          the left-edge dock tab

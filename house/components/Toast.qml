@@ -120,7 +120,7 @@ MouseArea {
             property: "x"
             from: 48
             to: 0
-            duration: 260
+            duration: Config.dur(260)
             easing.type: Easing.OutCubic
         }
 
@@ -129,7 +129,7 @@ MouseArea {
             property: "rotation"
             from: 4
             to: 0
-            duration: 260
+            duration: Config.dur(260)
             easing.type: Easing.OutCubic
         }
 
@@ -138,7 +138,7 @@ MouseArea {
             property: "opacity"
             from: 0
             to: 1
-            duration: 200
+            duration: Config.dur(200)
         }
     }
 
@@ -181,20 +181,20 @@ MouseArea {
             font.pointSize: Config.notifFontSize - 1
 
             SequentialAnimation on scale {
-                running: root.palette === Config.notifCritical
+                running: root.palette === Config.notifCritical && !Config.eco
                 loops: Animation.Infinite
 
                 NumberAnimation {
                     from: 1
                     to: 1.35
-                    duration: 500
+                    duration: Config.dur(500)
                     easing.type: Easing.InOutQuad
                 }
 
                 NumberAnimation {
                     from: 1.35
                     to: 1
-                    duration: 500
+                    duration: Config.dur(500)
                     easing.type: Easing.InOutQuad
                 }
             }

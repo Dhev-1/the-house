@@ -61,14 +61,14 @@ ColumnLayout {
 
                     Behavior on font.pixelSize {
                         NumberAnimation {
-                            duration: 200
+                            duration: Config.dur(200)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 150
+                            duration: Config.dur(150)
                         }
                     }
 

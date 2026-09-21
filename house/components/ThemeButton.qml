@@ -24,7 +24,7 @@ MouseArea {
 
         Behavior on color {
             ColorAnimation {
-                duration: 120
+                duration: Config.dur(120)
             }
         }
     }
@@ -41,13 +41,13 @@ MouseArea {
 
         Behavior on color {
             ColorAnimation {
-                duration: 120
+                duration: Config.dur(120)
             }
         }
 
         Behavior on scale {
             NumberAnimation {
-                duration: 100
+                duration: Config.dur(100)
             }
         }
     }

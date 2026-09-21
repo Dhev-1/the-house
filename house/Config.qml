@@ -221,10 +221,9 @@ Singleton {
     //
     // shellPath(), not Qt.resolvedUrl(): singletons are compiled into
     // quickshell's qrc, so a relative url from in here resolves against
-    // qrc:/qs-blackhole and never touches the disk. Two candidates because
-    // shellPath is only the clone when the house is *run* from it; copied into
-    // ~/.config/quickshell it points at a games dir that does not exist.
-    readonly property var pitRepos: [Quickshell.shellPath("../games"), `${Quickshell.env("HOME")}/cloon/newdot/games`]
+    // qrc:/qs-blackhole and never touches the disk. install.sh puts games/
+    // beside house/, so the same relative path holds copied or stowed.
+    readonly property var pitRepos: [Quickshell.shellPath("../games")]
     readonly property var pitGames: [
         {
             dir: "bjak",
@@ -275,6 +274,8 @@ Singleton {
     // Notification cards and tray dots need more colours than those six, so they
     // are derived from them - see deriveNotif / deriveProgress. Noir and Vegas
     // pin some of their own; Felt and Daylight derive everything.
+    //
+    // A theme may also set `eco: true`, making it a battery table - see `eco`.
     //
     // The picker writes the chosen name to theme.json below, so it survives a
     // restart. To add a theme, drop another entry in here.
@@ -431,6 +432,19 @@ Singleton {
                 mid: "#9c7a1e",
                 high: "#6b5214"
             }
+        },
+        {
+            name: "penny",
+            label: "Penny Slots",
+            // The quiet corner of the floor: flat copper on near-black, no
+            // marquee. `eco` is what makes it the battery table - see below.
+            surface: "#0b0a09",
+            text: "#d8d0c0",
+            subtext: "#847d71",
+            accent: "#b87a4b",
+            idle: "#1c1a18",
+            urgent: "#cb5847",
+            eco: true
         }
     ]
 
@@ -441,6 +455,21 @@ Singleton {
     property string previewName: ""
     readonly property string activeName: previewName !== "" ? previewName : themeName
     readonly property var colours: themes.find(t => t.name === activeName) ?? themes[0]
+
+    // Battery table. A theme with `eco: true` makes everything that costs power do
+    // less: the shell's animations (dur() below), the two endless loops and the
+    // polling cadence, and - through apply-theme.sh's eighth argument -
+    // Hyprland's animations, blur, shadow and dim, and the wallpaper image.
+    // Follows the committed table, not the preview: arrowing through the picker
+    // only ever changes colours.
+    readonly property bool eco: themes.find(t => t.name === themeName)?.eco ?? false
+
+    // An animation's length: what the design wants, or nothing on an eco table.
+    // Zero rather than disabled so finished handlers (a toast's removal, a
+    // panel unmapping) still fire, on the next frame instead of at the end.
+    function dur(ms: real): int {
+        return eco ? 0 : Math.round(ms);
+    }
 
     // The theme's own pinned block if it has one, otherwise derived from its six
     // roles so the cards and dots follow whatever theme is on.
@@ -534,7 +563,7 @@ Singleton {
             return;
         // execDetached wants a plain path, so drop the url's file:// prefix.
         const script = Qt.resolvedUrl("scripts/apply-theme.sh").toString().replace("file://", "");
-        Quickshell.execDetached(["sh", script, c.name, c.surface, c.text, c.subtext, c.accent, c.idle, c.urgent]);
+        Quickshell.execDetached(["sh", script, c.name, c.surface, c.text, c.subtext, c.accent, c.idle, c.urgent, c.eco ? "1" : "0"]);
     }
 
     // Sync Hyprland once at startup, so the compositor matches theme.json even

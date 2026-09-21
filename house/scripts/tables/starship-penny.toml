@@ -1,0 +1,80 @@
+"$schema" = 'https://starship.rs/config-schema.json'
+
+# the house — starship on the Penny Slots table.
+# The Noir powerline train in copper. The suit opening the hand is a fixed
+# spade rather than a `custom` module: that one forks a shell and `shuf` on
+# every prompt, which is the kind of thing a battery table does without.
+
+format = """
+[](#b87a4b)\
+[ ♠ ](bg:#b87a4b fg:#0b0a09)\
+$directory\
+[](fg:#b87a4b bg:#433225)\
+$git_branch\
+$git_status\
+[](fg:#433225 bg:#1c1a18)\
+$nodejs\
+$rust\
+$golang\
+$php\
+$python\
+[](fg:#1c1a18 bg:none)\
+\n$character"""
+
+[fill]
+symbol = " "
+style = "bg:#1c1a18"
+
+[username]
+show_always = false
+format = "[ $user ](fg:#0b0a09 bg:#b87a4b)"
+
+[hostname]
+ssh_only = true
+format = "[@$hostname](fg:#0b0a09 bg:#b87a4b)"
+
+[directory]
+style = "fg:#0b0a09 bg:#b87a4b"
+format = "[ $path ]($style)"
+truncation_length = 0
+
+[directory.substitutions]
+
+[git_branch]
+symbol = ""
+style = "bg:#433225"
+format = '[[ $symbol $branch ](fg:#d8d0c0 bg:#433225)]($style)'
+
+[git_status]
+style = "bg:#433225"
+format = '[[ $all_status$ahead_behind ](fg:#b87a4b bg:#433225)]($style)'
+
+[nodejs]
+symbol = ""
+style = "bg:#1c1a18"
+format = '[[ $symbol ($version) ](fg:#b87a4b bg:#1c1a18)]($style)'
+
+[rust]
+symbol = ""
+style = "bg:#1c1a18"
+format = '[[ $symbol ($version) ](fg:#b87a4b bg:#1c1a18)]($style)'
+
+[golang]
+symbol = ""
+style = "bg:#1c1a18"
+format = '[[ $symbol ($version) ](fg:#b87a4b bg:#1c1a18)]($style)'
+
+[php]
+symbol = ""
+style = "bg:#1c1a18"
+format = '[[ $symbol ($version) ](fg:#b87a4b bg:#1c1a18)]($style)'
+
+[python]
+symbol = ""
+style = "bg:#1c1a18"
+format = '[[ $symbol ($version) ](fg:#b87a4b bg:#1c1a18)]($style)'
+
+# The bet: copper when the last hand won, red when it lost.
+[character]
+success_symbol = "[❯](fg:#b87a4b)"
+error_symbol = "[❯](fg:#cb5847)"

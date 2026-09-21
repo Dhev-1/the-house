@@ -16,7 +16,7 @@ ShellRoot {
     settings.watchFiles: true
 
     // Hyprland keybinds call in here:
-    //   qs -p ~/cloon/newdot/house ipc call sidebar dock
+    //   qs -p ~/.config/quickshell/house ipc call sidebar dock
     IpcHandler {
         target: "sidebar"
 

@@ -8,7 +8,7 @@ import "Palette.js" as Palette
 //
 // Each one only appears if logind will actually do it: a suspend chip on a
 // machine that cannot suspend is a button that lies.
-Row {
+Item {
     id: root
 
     property string fontFamily: "JetBrainsMono Nerd Font"
@@ -18,10 +18,13 @@ Row {
 
     property int chipSize: Math.round(44 * u)
 
-    spacing: Math.round(12 * u)
+    implicitWidth: chips.implicitWidth
+    implicitHeight: chips.implicitHeight
 
     // The label rides above whichever chip is under the pointer, so four chips
-    // on a rail are not four mystery glyphs.
+    // on a rail are not four mystery glyphs. Outside the Row: inside it, the
+    // label took a slot of its own, and every hover resized the Row under the
+    // pointer.
     property string hovered: ""
 
     Text {
@@ -42,111 +45,117 @@ Row {
         }
     }
 
-    Repeater {
-        model: [
-            {
-                name: "suspend",
-                glyph: "󰤄",
-                enabled: sddm.canSuspend,
-                hot: false
-            },
-            {
-                name: "hibernate",
-                glyph: "󰤁",
-                enabled: sddm.canHibernate,
-                hot: false
-            },
-            {
-                name: "restart",
-                glyph: "",
-                enabled: sddm.canReboot,
-                hot: false
-            },
-            {
-                name: "cash out",
-                glyph: "",
-                enabled: sddm.canPowerOff,
-                hot: true
-            }
-        ]
+    Row {
+        id: chips
 
-        Item {
-            id: slot
+        spacing: Math.round(12 * root.u)
 
-            required property var modelData
+        Repeater {
+            model: [
+                {
+                    name: "suspend",
+                    glyph: "󰤄",
+                    enabled: sddm.canSuspend,
+                    hot: false
+                },
+                {
+                    name: "hibernate",
+                    glyph: "󰤁",
+                    enabled: sddm.canHibernate,
+                    hot: false
+                },
+                {
+                    name: "restart",
+                    glyph: "",
+                    enabled: sddm.canReboot,
+                    hot: false
+                },
+                {
+                    name: "cash out",
+                    glyph: "",
+                    enabled: sddm.canPowerOff,
+                    hot: true
+                }
+            ]
 
-            visible: modelData.enabled
-            width: visible ? root.chipSize : 0
-            height: root.chipSize
+            Item {
+                id: slot
 
-            Chip {
-                id: chip
+                required property var modelData
 
-                anchors.fill: parent
-                fontFamily: root.fontFamily
-                label: slot.modelData.glyph
-                labelSize: root.chipSize * 0.36
+                visible: modelData.enabled
+                width: visible ? root.chipSize : 0
+                height: root.chipSize
 
-                // The shutdown chip goes red the moment you reach for it. It is
-                // the one control on this screen that loses work.
-                readonly property var clay: (slot.modelData.hot && chipHover.hovered) ? Palette.powerChipHot : Palette.powerChip
+                Chip {
+                    id: chip
 
-                body: clay.body
-                spot: clay.spot
-                ink: chipHover.hovered ? Palette.goldBright : clay.ink
+                    anchors.fill: parent
+                    fontFamily: root.fontFamily
+                    label: slot.modelData.glyph
+                    labelSize: root.chipSize * 0.36
 
-                // Lifts off the rail on hover, presses into it on click - a chip
-                // you are picking up, then putting down.
-                y: chipHover.hovered ? -5 : 0
-                scale: chipTap.pressed ? 0.92 : 1
+                    // The shutdown chip goes red the moment you reach for it. It
+                    // is the one control on this screen that loses work.
+                    readonly property var clay: (slot.modelData.hot && chipHover.hovered) ? Palette.powerChipHot : Palette.powerChip
 
-                Behavior on y {
-                    NumberAnimation {
-                        duration: 130
-                        easing.type: Easing.OutCubic
+                    body: clay.body
+                    spot: clay.spot
+                    ink: chipHover.hovered ? Palette.goldBright : clay.ink
+
+                    // Lifts off the rail on hover, presses into it on click - a
+                    // chip you are picking up, then putting down.
+                    y: chipHover.hovered ? -5 : 0
+                    scale: chipTap.pressed ? 0.92 : 1
+
+                    Behavior on y {
+                        NumberAnimation {
+                            duration: 130
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 90
+                        }
+                    }
+                    Behavior on body {
+                        ColorAnimation {
+                            duration: 140
+                        }
+                    }
+                    Behavior on spot {
+                        ColorAnimation {
+                            duration: 140
+                        }
                     }
                 }
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: 90
-                    }
+
+                HoverHandler {
+                    id: chipHover
+
+                    cursorShape: Qt.PointingHandCursor
+                    onHoveredChanged: root.hovered = hovered ? slot.modelData.name : ""
                 }
-                Behavior on body {
-                    ColorAnimation {
-                        duration: 140
-                    }
-                }
-                Behavior on spot {
-                    ColorAnimation {
-                        duration: 140
-                    }
-                }
-            }
 
-            HoverHandler {
-                id: chipHover
+                TapHandler {
+                    id: chipTap
 
-                cursorShape: Qt.PointingHandCursor
-                onHoveredChanged: root.hovered = hovered ? slot.modelData.name : ""
-            }
-
-            TapHandler {
-                id: chipTap
-
-                onTapped: {
-                    switch (slot.modelData.name) {
-                    case "suspend":
-                        sddm.suspend();
-                        break;
-                    case "hibernate":
-                        sddm.hibernate();
-                        break;
-                    case "restart":
-                        sddm.reboot();
-                        break;
-                    default:
-                        sddm.powerOff();
-                        break;
+                    onTapped: {
+                        switch (slot.modelData.name) {
+                        case "suspend":
+                            sddm.suspend();
+                            break;
+                        case "hibernate":
+                            sddm.hibernate();
+                            break;
+                        case "restart":
+                            sddm.reboot();
+                            break;
+                        default:
+                            sddm.powerOff();
+                            break;
+                        }
                     }
                 }
             }

@@ -197,6 +197,29 @@ place_house() {
   fi
 }
 
+# wallpapers/ and games/ go in beside house/, mirroring their layout in the
+# repo. That is what makes "$repo/wallpapers" and shellPath("../games") resolve
+# for a copied house as well as a stowed one, with no clone path in either.
+place_beside_house() {
+  local dir="$1" dest
+  [ -d "$dir" ] || return 0
+  dest="$(dirname "$quickshell")/$dir"
+
+  if [ -L "$dest" ]; then
+    rm "$dest"
+  elif [ -d "$dest" ]; then
+    rm -rf "$dest"
+  fi
+
+  if [ "$MODE" = stow ]; then
+    ln -s "$repo/$dir" "$dest"
+    echo "   - $dir -> $dest (link)"
+  else
+    cp -a "$dir" "$dest"
+    echo "   - $dir -> $dest"
+  fi
+}
+
 # --- go -----------------------------------------------------------------------
 
 if [ "$MODE" = unstow ]; then
@@ -210,6 +233,12 @@ if [ "$MODE" = unstow ]; then
     rm "$quickshell"
     echo "   - house (quickshell) link removed"
   fi
+  for beside in wallpapers games; do
+    if ours "$(dirname "$quickshell")/$beside"; then
+      rm "$(dirname "$quickshell")/$beside"
+      echo "   - $beside link removed"
+    fi
+  done
   echo
   echo ":: done. ~/.dotfiles-backup holds whatever was displaced when you stowed."
   exit 0
@@ -226,6 +255,8 @@ for pkg in "${PACKAGES[@]}"; do
 done
 
 place_house
+place_beside_house wallpapers
+place_beside_house games
 
 # qt6ct hands color_scheme_path to QFile as-is, expanding neither ~ nor $HOME,
 # so it ships empty and is filled in here. apply-theme.sh rewrites it on every
@@ -254,8 +285,8 @@ if [ "$MODE" = stow ]; then
   echo "   - the repo is now load-bearing: moving or deleting it breaks the links."
   echo "     ./install.sh --unstow undoes this."
 else
-  echo "   - wallpapers are still read from this repo (hyprland.conf: awww img ...);"
-  echo "     copy them somewhere outside it if you want that dependency gone too."
+  echo "   - wallpapers and games were copied beside the shell, so this repo can"
+  echo "     move or go away without breaking the desktop. Re-run to push changes."
 fi
 # door is not handled here: the greeter's theme lives under /usr/share, not
 # $HOME, so it needs sudo and its own deliberate command.

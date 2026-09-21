@@ -166,23 +166,23 @@ ColumnLayout {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration: 150
+                    duration: Config.dur(150)
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 150
+                    duration: Config.dur(150)
                     easing.type: Easing.OutBack
                 }
             }
 
             RotationAnimator on rotation {
-                running: icon.containsMouse
+                running: icon.containsMouse && !Config.eco
                 loops: Animation.Infinite
                 from: 0
                 to: 360
-                duration: 8000
+                duration: Config.dur(8000)
             }
 
             Rectangle {
@@ -225,13 +225,13 @@ ColumnLayout {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Config.dur(150)
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 100
+                    duration: Config.dur(100)
                 }
             }
         }

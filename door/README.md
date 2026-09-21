@@ -5,6 +5,8 @@ password is a bet, and pressing enter deals.
 
 ![the door](screenshot.png)
 
+![a bet part-placed](screenshot-bet.png)
+
 Type, and every character drops a clay chip onto a stack standing in the betting
 circle. There is no row of asterisks anywhere in this theme — the stack is the
 whole of the feedback. The chips fill five stacks of uneven height set out along
@@ -70,7 +72,7 @@ Colours are not in `theme.conf` — they live in `Palette.js`.
 
 ## It does not follow your desktop theme
 
-The desktop inside can wear any of four tables, which
+The desktop inside can wear any of the tables, which
 `house/scripts/apply-theme.sh` mirrors onto everything from Hyprland to the
 games. The door is deliberately outside all of that:
 

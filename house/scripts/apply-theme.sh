@@ -4,8 +4,9 @@
 # Called by Config.setTheme. To drive another app, add a block here rather than
 # teaching the shell about it.
 #
-# Args, in Config.themes order: name surface text subtext accent idle urgent
-# Colours are "#rrggbb"; the leading # is optional.
+# Args, in Config.themes order: name surface text subtext accent idle urgent [eco]
+# Colours are "#rrggbb"; the leading # is optional. eco is 1 for a battery
+# table (Config's `eco: true`) and defaults to 0.
 #
 # Palettes needing more than the six roles (kitty's 16-colour deck, starship's
 # segments) are pre-baked in tables/; anything the six roles can express is
@@ -27,6 +28,7 @@ subtext=${4#\#}
 accent=${5#\#}
 idle=${6#\#}
 urgent=${7#\#}
+eco=${8:-0}
 
 here=$(dirname "$(readlink -f "$0")")
 tables="$here/tables"
@@ -126,6 +128,22 @@ decoration:shadow:color = rgba(${accent}${glow})
 decoration:shadow:color_inactive = rgba(000000${unlit})
 EOF
 
+# A battery table asks the compositor to do the least it can: no window or
+# workspace animation (every frame of one is a GPU wake-up), no blur (the
+# costliest pass Hyprland has), no shadow, and no dim pass over the unfocused.
+# hyprctl reload below re-reads hyprland.conf first, so the next table that is
+# not eco gets all four back without anything here undoing them.
+if [ "$eco" = 1 ]; then
+    cat >> "$config/hypr/colors.conf" <<EOF
+
+# Battery table.
+animations:enabled = false
+decoration:blur:enabled = false
+decoration:shadow:enabled = false
+decoration:dim_inactive = false
+EOF
+fi
+
 # --- hyprlock -----------------------------------------------------------------
 # hyprlock.conf is static structure sourcing these $-variables, and re-reads its
 # config on every start, so the next lock is already on the new table. Decimal
@@ -149,14 +167,21 @@ EOF
 # One generated wallpaper per table, shipped in the repo. awww is the daemon the
 # hypr config autostarts; swww is the fallback.
 #
-# $repo is only the clone when this script runs from inside it. Copied into
-# ~/.config/quickshell it has no wallpapers/, and this block would silently do
-# nothing - so fall back to the clone's usual home first.
+# $repo is the clone when this runs from inside it, and ~/.config/quickshell
+# when the house was copied there - install.sh puts wallpapers/ beside house/
+# either way, so this one path covers both.
 walls="$repo/wallpapers"
-[ -d "$walls" ] || walls="$HOME/cloon/newdot/wallpapers"
 
 wall="$walls/$name.png"
-if [ -f "$wall" ]; then
+if [ "$eco" = 1 ]; then
+    # A flat fill of the surface: no image to decode or keep resident, and no
+    # transition to animate on the way in.
+    if command -v awww >/dev/null 2>&1; then
+        awww clear "$surface" >/dev/null 2>&1 || true
+    elif command -v swww >/dev/null 2>&1; then
+        swww clear "$surface" >/dev/null 2>&1 || true
+    fi
+elif [ -f "$wall" ]; then
     if command -v awww >/dev/null 2>&1; then
         awww img "$wall" >/dev/null 2>&1 || true
     elif command -v swww >/dev/null 2>&1; then
@@ -476,6 +501,10 @@ case "$name" in
     daylight)
         # A light cloth, and a green dark enough to read on it.
         g_green=15703a; g_felt=dcd7c2; g_feltline=958a5b; g_tileback=c3bda4; g_numgreen=0f6b4a ;;
+    penny)
+        # Charcoal baize, no hue of its own, with copper printing at the same
+        # 2.4:1 the other cloths keep.
+        g_green=7fb069; g_felt=2c2925; g_feltline=7d604a; g_tileback=3f3a34; g_numgreen=12684a ;;
 esac
 
 mkdir -p "$config/house"

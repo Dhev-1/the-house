@@ -61,7 +61,7 @@ PanelWindow {
 
     Behavior on reveal {
         NumberAnimation {
-            duration: 200
+            duration: Config.dur(200)
             easing.type: Easing.OutCubic
         }
     }
@@ -104,13 +104,13 @@ PanelWindow {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 120
+                    duration: Config.dur(120)
                 }
             }
 
             Behavior on border.color {
                 ColorAnimation {
-                    duration: 120
+                    duration: Config.dur(120)
                 }
             }
         }
@@ -125,13 +125,13 @@ PanelWindow {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 120
+                    duration: Config.dur(120)
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration: 100
+                    duration: Config.dur(100)
                 }
             }
         }
@@ -235,13 +235,13 @@ PanelWindow {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 120
+                        duration: Config.dur(120)
                     }
                 }
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 100
+                        duration: Config.dur(100)
                     }
                 }
             }
@@ -267,7 +267,7 @@ PanelWindow {
 
                         Behavior on color {
                             ColorAnimation {
-                                duration: 120
+                                duration: Config.dur(120)
                             }
                         }
                     }
@@ -284,7 +284,7 @@ PanelWindow {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 120
+                        duration: Config.dur(120)
                     }
                 }
             }

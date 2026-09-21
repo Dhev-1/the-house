@@ -85,9 +85,9 @@ Singleton {
         }
     }
 
-    // The cadence the waybar scripts ran at, kept.
+    // The cadence the waybar scripts ran at, kept - slower on an eco table.
     Timer {
-        interval: 5000
+        interval: Config.eco ? 20000 : 5000
         running: true
         repeat: true
         triggeredOnStart: true

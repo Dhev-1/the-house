@@ -1,0 +1,74 @@
+# house-penny — btop on the Penny Slots table.
+# Near-black background, copper accents, brick-red highs: graphs climb from
+# green through copper to red, like a bet going wrong.
+
+# Main background and foreground
+theme[main_bg]="#0b0a09"
+theme[main_fg]="#d8d0c0"
+
+# Title and highlight
+theme[title]="#d8d0c0"
+theme[hi_fg]="#b87a4b"
+
+# Selected box
+theme[selected_bg]="#1c1a18"
+theme[selected_fg]="#b87a4b"
+
+# Inactive/dimmed
+theme[inactive_fg]="#847d71"
+theme[graph_text]="#847d71"
+
+# Process box misc
+theme[proc_misc]="#b87a4b"
+
+# Box outlines
+theme[cpu_box]="#433225"
+theme[mem_box]="#433225"
+theme[net_box]="#433225"
+theme[proc_box]="#433225"
+theme[div_line]="#1c1a18"
+
+# Temperature graph
+theme[temp_start]="#5e8d5a"
+theme[temp_mid]="#b87a4b"
+theme[temp_end]="#cb5847"
+
+# CPU graph
+theme[cpu_start]="#5e8d5a"
+theme[cpu_mid]="#b87a4b"
+theme[cpu_end]="#cb5847"
+
+# Mem/Disk free meter
+theme[free_start]="#433225"
+theme[free_mid]="#b87a4b"
+theme[free_end]="#ebcfb0"
+
+# Mem/Disk cached meter
+theme[cached_start]="#433225"
+theme[cached_mid]="#b87a4b"
+theme[cached_end]="#ebcfb0"
+
+# Mem/Disk available meter
+theme[available_start]="#433225"
+theme[available_mid]="#b87a4b"
+theme[available_end]="#ebcfb0"
+
+# Mem/Disk used meter
+theme[used_start]="#5e8d5a"
+theme[used_mid]="#b87a4b"
+theme[used_end]="#cb5847"
+
+# Download graph
+theme[download_start]="#5e8d5a"
+theme[download_mid]="#7fa08c"
+theme[download_end]="#9dc0aa"
+
+# Upload graph
+theme[upload_start]="#6f3126"
+theme[upload_mid]="#cb5847"
+theme[upload_end]="#dc6c58"
+
+# Process box color gradient
+theme[process_start]="#5e8d5a"
+theme[process_mid]="#b87a4b"
+theme[process_end]="#cb5847"

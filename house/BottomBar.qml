@@ -71,13 +71,13 @@ PanelWindow {
 
                     Behavior on color {
                         ColorAnimation {
-                            duration: 50
+                            duration: Config.dur(50)
                         }
                     }
 
                     Behavior on scale {
                         NumberAnimation {
-                            duration: 70
+                            duration: Config.dur(70)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -94,13 +94,13 @@ PanelWindow {
 
                 Behavior on color {
                     ColorAnimation {
-                        duration: 120
+                        duration: Config.dur(120)
                     }
                 }
 
                 Behavior on border.color {
                     ColorAnimation {
-                        duration: 150
+                        duration: Config.dur(150)
                     }
                 }
             }

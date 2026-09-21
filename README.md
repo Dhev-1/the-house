@@ -20,7 +20,7 @@ champagne gold, green felt and neon marquee. The house always wins.
 
 ## The tables
 
-One shell, four palettes — switch live with `Super+T` (the `♠` button in the
+One shell, five palettes — switch live with `Super+T` (the `♠` button in the
 bar). The picker previews as you arrow through; the choice retints the bar, the
 notifications, kitty-adjacent chrome and Hyprland's window borders together.
 
@@ -30,6 +30,7 @@ notifications, kitty-adjacent chrome and Hyprland's window borders together.
 | **♣ Felt** | The poker table — green baize, brass rail, ivory chips | `#0e2b1c` `#c9a227` `#c0392f` |
 | **♦ Vegas** | The strip at midnight — neon pink marquee, cyan bulbs, gold glow | `#0a0a14` `#ff2e88` `#ff6247` |
 | **♥ Daylight Robbery** | The one light table — cream carpet, old gold, card red | `#f5efe2` `#9c7a1e` `#b3372f` |
+| **¢ Penny Slots** | The battery table — flat copper on near-black, nothing moves | `#0b0a09` `#b87a4b` `#cb5847` |
 
 Workspaces in the bar are dealt as suits (`♠ ♥ ♦ ♣ ★`); the active one lights
 up in the table's accent.
@@ -43,6 +44,11 @@ up in the table's accent.
 
 `Super+T` deals the picker — arrow through to preview the room, enter to keep it,
 esc to fold.
+
+**¢ Penny Slots** is the one table that is about power rather than looks. Keeping
+it turns off Hyprland's animations, blur, shadow and dim, swaps the wallpaper for
+a flat fill, zeroes the shell's own animations and slows its background polling.
+Nothing about the other four changes.
 
 ![the table picker](assets/screenshots/table-picker.png)
 
@@ -62,6 +68,8 @@ the pot and deals. Right password, the cards turn over ace and king. Wrong, they
 turn over seventeen, the house hits you, you bust, and the table sweeps itself.
 
 ![the door](door/screenshot.png)
+
+![a bet part-placed](door/screenshot-bet.png)
 
 Gold on black, and deliberately *not* wired to the tables above — the greeter
 runs as the `sddm` user with no access to anyone's `~/.config`, and a login
@@ -118,14 +126,14 @@ puts the stock greeter back.
 
 ## Post-install
 
-- **Repo location matters:** the hypr config launches and talks to the shell by
-  absolute path — `qs -p ~/cloon/newdot/house` (autostart in `hyprland.conf`,
-  plus the notification / theme / dock keybinds). Clone this repo to
-  `~/cloon/newdot`, or find-and-replace that path across
-  `home/hypr/.config/hypr/*.conf` to match where you put it.
+- **Clone it wherever you like.** Everything at runtime goes through
+  `~/.config/quickshell/` — the hypr config autostarts `qs -p
+  ~/.config/quickshell/house`, and `install.sh` puts `wallpapers/` and `games/`
+  in beside it (copied, or linked back to the clone with `--stow`). Copy-mode
+  installs keep working if this repo moves or goes away.
 - Wallpapers per table live in `wallpapers/` — set one with
-  `awww img wallpapers/noir.png` (or `felt` / `vegas` / `daylight`) — though the
-  table picker (`Super+T`) sets it for you.
+  `awww img ~/.config/quickshell/wallpapers/noir.png` (or `felt` / `vegas` /
+  `daylight`; Penny Slots has no image, it is a flat fill) — though the table picker (`Super+T`) sets it for you.
 
 ## Layout
 

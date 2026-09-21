@@ -40,7 +40,7 @@ MouseArea {
 
         Behavior on color {
             ColorAnimation {
-                duration: 120
+                duration: Config.dur(120)
             }
         }
     }
@@ -86,14 +86,14 @@ MouseArea {
 
         Behavior on rotation {
             NumberAnimation {
-                duration: 150
+                duration: Config.dur(150)
                 easing.type: Easing.OutCubic
             }
         }
 
         Behavior on color {
             ColorAnimation {
-                duration: 150
+                duration: Config.dur(150)
             }
         }
 
@@ -108,7 +108,7 @@ MouseArea {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 150
+                    duration: Config.dur(150)
                 }
             }
         }

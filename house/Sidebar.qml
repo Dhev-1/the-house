@@ -37,7 +37,7 @@ PanelWindow {
 
         Behavior on color {
             ColorAnimation {
-                duration: 120
+                duration: Config.dur(120)
             }
         }
 
@@ -106,7 +106,7 @@ PanelWindow {
 
                         Behavior on opacity {
                             NumberAnimation {
-                                duration: 120
+                                duration: Config.dur(120)
                             }
                         }
                     }

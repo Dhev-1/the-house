@@ -172,7 +172,7 @@ PanelWindow {
 
     Behavior on reveal {
         NumberAnimation {
-            duration: 180
+            duration: Config.dur(180)
             easing.type: Easing.OutCubic
         }
     }
@@ -299,7 +299,7 @@ PanelWindow {
 
             Behavior on color {
                 ColorAnimation {
-                    duration: 160
+                    duration: Config.dur(160)
                 }
             }
 
@@ -456,7 +456,7 @@ PanelWindow {
 
             Behavior on spread {
                 NumberAnimation {
-                    duration: 220
+                    duration: Config.dur(220)
                     easing.type: Easing.OutCubic
                 }
             }
@@ -554,27 +554,27 @@ PanelWindow {
 
                     Behavior on presence {
                         NumberAnimation {
-                            duration: 140
+                            duration: Config.dur(140)
                         }
                     }
 
                     Behavior on fan {
                         NumberAnimation {
-                            duration: 160
+                            duration: Config.dur(160)
                             easing.type: Easing.OutCubic
                         }
                     }
 
                     Behavior on y {
                         NumberAnimation {
-                            duration: 160
+                            duration: Config.dur(160)
                             easing.type: Easing.OutBack
                         }
                     }
 
                     Behavior on border.color {
                         ColorAnimation {
-                            duration: 120
+                            duration: Config.dur(120)
                         }
                     }
 
@@ -584,7 +584,7 @@ PanelWindow {
                         id: deal
 
                         PauseAnimation {
-                            duration: (root.dealFrom > 0 ? Config.launcherSeats - 1 - card.index : card.index) * Config.launcherDealStagger
+                            duration: Config.dur((root.dealFrom > 0 ? Config.launcherSeats - 1 - card.index : card.index) * Config.launcherDealStagger)
                         }
 
                         NumberAnimation {
@@ -592,7 +592,7 @@ PanelWindow {
                             property: "pitch"
                             from: 1
                             to: 0
-                            duration: Config.launcherDealDuration
+                            duration: Config.dur(Config.launcherDealDuration)
                             easing.type: Easing.OutCubic
                         }
                     }
@@ -754,7 +754,7 @@ PanelWindow {
 
         Behavior on y {
             NumberAnimation {
-                duration: 200
+                duration: Config.dur(200)
                 easing.type: Easing.OutCubic
             }
         }
@@ -827,14 +827,14 @@ PanelWindow {
 
                 Behavior on extra {
                     NumberAnimation {
-                        duration: 160
+                        duration: Config.dur(160)
                         easing.type: Easing.OutCubic
                     }
                 }
 
                 Behavior on border.color {
                     ColorAnimation {
-                        duration: 120
+                        duration: Config.dur(120)
                     }
                 }
 
@@ -844,7 +844,7 @@ PanelWindow {
                     // Behind the whole table: its last card has to land before
                     // these start, or the deal reads as two things at once.
                     PauseAnimation {
-                        duration: Config.launcherSeats * Config.launcherDealStagger + Config.launcherDealDuration + slot.index * Config.launcherDealStagger
+                        duration: Config.dur(Config.launcherSeats * Config.launcherDealStagger + Config.launcherDealDuration + slot.index * Config.launcherDealStagger)
                     }
 
                     NumberAnimation {
@@ -852,7 +852,7 @@ PanelWindow {
                         property: "arrive"
                         from: 1
                         to: 0
-                        duration: 260
+                        duration: Config.dur(260)
                         // Overshoots the tuck and settles back into it.
                         easing.type: Easing.OutBack
                     }
