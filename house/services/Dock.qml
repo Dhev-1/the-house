@@ -17,6 +17,10 @@ Singleton {
 
     // Hyprland addresses, without the 0x prefix (that's how Quickshell reports
     // them; dispatch wants it back on).
+    //
+    // Hyprland runs a Lua config, so everything handed to Hyprland.dispatch is
+    // a Lua dispatcher expression (hl.dsp.*) - the old "pin address:0x..."
+    // strings are no longer understood.
     property var addresses: []
 
     property bool shown: false
@@ -26,8 +30,10 @@ Singleton {
 
     readonly property ShellScreen screen: Quickshell.screens[0]
 
+    // A Lua string literal naming the window, for the `window` field of a
+    // dispatcher.
     function target(addr: string): string {
-        return `address:0x${addr}`;
+        return `"address:0x${addr}"`;
     }
 
     // Float it, size it to the sidebar, park it on the left inside the border,
@@ -40,10 +46,10 @@ Singleton {
         const y = root.screen.y + gap;
         const t = target(addr);
 
-        Hyprland.dispatch(`setfloating ${t}`);
-        Hyprland.dispatch(`resizewindowpixel exact ${w} ${h},${t}`);
-        Hyprland.dispatch(`movewindowpixel exact ${x} ${y},${t}`);
-        Hyprland.dispatch(`pin ${t}`);
+        Hyprland.dispatch(`hl.dsp.window.float({ window = ${t}, action = "enable" })`);
+        Hyprland.dispatch(`hl.dsp.window.resize({ window = ${t}, x = ${w}, y = ${h}, relative = false })`);
+        Hyprland.dispatch(`hl.dsp.window.move({ window = ${t}, x = ${x}, y = ${y}, relative = false })`);
+        Hyprland.dispatch(`hl.dsp.window.pin({ window = ${t}, action = "enable" })`);
     }
 
     function dock(): void {
@@ -68,10 +74,10 @@ Singleton {
         root.addresses = root.addresses.filter(a => a !== addr);
 
         const t = target(addr);
-        if (root.shown)
-            Hyprland.dispatch(`pin ${t}`); // pin toggles; drop it before re-tiling
-        Hyprland.dispatch(`movetoworkspacesilent ${Hyprland.focusedWorkspace?.id ?? 1},${t}`);
-        Hyprland.dispatch(`settiled ${t}`);
+        // Drop the pin before re-tiling.
+        Hyprland.dispatch(`hl.dsp.window.pin({ window = ${t}, action = "disable" })`);
+        Hyprland.dispatch(`hl.dsp.window.move({ window = ${t}, workspace = ${Hyprland.focusedWorkspace?.id ?? 1}, follow = false })`);
+        Hyprland.dispatch(`hl.dsp.window.float({ window = ${t}, action = "disable" })`);
     }
 
     // Undocks the focused window, or the last docked one if focus is elsewhere.
@@ -95,7 +101,7 @@ Singleton {
 
         const ws = Hyprland.focusedWorkspace?.id ?? 1;
         for (const w of root.windows) {
-            Hyprland.dispatch(`movetoworkspacesilent ${ws},${target(w.address)}`);
+            Hyprland.dispatch(`hl.dsp.window.move({ window = ${target(w.address)}, workspace = ${ws}, follow = false })`);
             place(w.address);
         }
     }
@@ -108,8 +114,8 @@ Singleton {
         root.shown = false;
 
         for (const w of root.windows) {
-            Hyprland.dispatch(`pin ${target(w.address)}`); // toggles pin off
-            Hyprland.dispatch(`movetoworkspacesilent name:${Config.sidebarWorkspace},${target(w.address)}`);
+            Hyprland.dispatch(`hl.dsp.window.pin({ window = ${target(w.address)}, action = "disable" })`);
+            Hyprland.dispatch(`hl.dsp.window.move({ window = ${target(w.address)}, workspace = "name:${Config.sidebarWorkspace}", follow = false })`);
         }
     }
 
@@ -140,8 +146,8 @@ Singleton {
         if (!root.shown)
             show();
 
-        Hyprland.dispatch(`alterzorder top,${target(addr)}`);
-        Hyprland.dispatch(`focuswindow ${target(addr)}`);
+        Hyprland.dispatch(`hl.dsp.window.alter_zorder({ window = ${target(addr)}, mode = "top" })`);
+        Hyprland.dispatch(`hl.dsp.focus({ window = ${target(addr)} })`);
     }
 
     function prune(): void {

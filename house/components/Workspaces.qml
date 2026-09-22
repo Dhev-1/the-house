@@ -17,7 +17,9 @@ ColumnLayout {
 
         onWheel: event => {
             const dir = event.angleDelta.y > 0 ? -1 : 1;
-            Hyprland.dispatch(`workspace r${dir > 0 ? "+" : ""}${dir}`);
+            // A Lua dispatcher: Hyprland runs a Lua config, so the old
+            // "workspace r+1" string is no longer understood.
+            Hyprland.dispatch(`hl.dsp.focus({ workspace = "r${dir > 0 ? "+" : ""}${dir}" })`);
         }
 
         ColumnLayout {
@@ -75,7 +77,7 @@ ColumnLayout {
                     MouseArea {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: Hyprland.dispatch(`workspace ${suit.wsId}`)
+                        onClicked: Hyprland.dispatch(`hl.dsp.focus({ workspace = ${suit.wsId} })`)
                     }
                 }
             }

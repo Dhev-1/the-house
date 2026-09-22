@@ -554,7 +554,7 @@ Singleton {
     }
 
     // Push a theme out past the shell: scripts/apply-theme.sh writes
-    // ~/.config/hypr/colors.conf and retints Hyprland's borders live. Only
+    // ~/.config/hypr/colors.lua and retints Hyprland's borders live. Only
     // commits call here, so arrow-keying the picker doesn't spawn a script per
     // keystroke.
     function applyToSystem(name: string): void {
@@ -567,7 +567,7 @@ Singleton {
     }
 
     // Sync Hyprland once at startup, so the compositor matches theme.json even
-    // if colors.conf was never written or was edited while the shell was down.
+    // if colors.lua was never written or was edited while the shell was down.
     Component.onCompleted: applyToSystem(themeName)
 
     // Persisted in Quickshell's per-shell state dir. watchChanges means an

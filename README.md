@@ -10,7 +10,7 @@ champagne gold, green felt and neon marquee. The house always wins.
 | | |
 |---|---|
 | **Distro** | Arch Linux |
-| **WM** | [Hyprland](https://hyprland.org) |
+| **WM** | [Hyprland](https://hyprland.org) 0.55+, configured in Lua |
 | **Shell (bar/dock/notifications)** | quickshell — [`house`](house/README.md), replacing dunst |
 | **Terminal** | kitty |
 | **Launcher** | quickshell `house` — a hand of apps, `Super+D` (rofi kept for its other modes) |
@@ -152,7 +152,7 @@ newdot/
 
 ## Keybinds
 
-`$mainMod` = SUPER. Full list in `home/hypr/.config/hypr/binds.conf`.
+`mainMod` = SUPER. Full list in `home/hypr/.config/hypr/binds.lua`.
 
 | Keys | Action |
 |---|---|

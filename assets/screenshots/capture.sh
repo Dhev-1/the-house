@@ -124,7 +124,7 @@ cleanup() {
     hyprctl -j clients | python3 -c 'import json,sys
 for c in json.load(sys.stdin):
     if c["class"].startswith("shots-"): print(c["address"])' | while read -r a; do
-        hyprctl dispatch closewindow "address:$a" >/dev/null 2>&1 || true
+        hyprctl dispatch "hl.dsp.window.close({ window = \"address:$a\" })" >/dev/null 2>&1 || true
     done
     ipc launcher close
     ipc theme close
@@ -132,7 +132,7 @@ for c in json.load(sys.stdin):
     if [ "$was_table" != "$current_table" ]; then
         set_table "$was_table" >/dev/null 2>&1 || true
     fi
-    hyprctl dispatch workspace "$was_ws" >/dev/null 2>&1 || true
+    hyprctl dispatch "hl.dsp.focus({ workspace = \"$was_ws\" })" >/dev/null 2>&1 || true
 }
 current_table=$was_table
 trap cleanup EXIT INT TERM
@@ -158,7 +158,7 @@ want_group() {
 }
 
 echo "capture: monitor $mon, staging on $stage"
-hyprctl dispatch workspace "$stage" >/dev/null
+hyprctl dispatch "hl.dsp.focus({ workspace = \"$stage\" })" >/dev/null
 
 # --- desktop + tables ---------------------------------------------------------
 
@@ -224,10 +224,10 @@ game() {
         n=$((n + 1))
     done
     [ -n "$addr" ] || { echo "capture: $slug never opened, skipping" >&2; return; }
-    hyprctl dispatch focuswindow "address:$addr" >/dev/null 2>&1 || true
-    hyprctl dispatch centerwindow >/dev/null 2>&1 || true
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:$addr\" })" >/dev/null 2>&1 || true
+    hyprctl dispatch "hl.dsp.window.center()" >/dev/null 2>&1 || true
     shot_window "$addr" "game-$slug"
-    hyprctl dispatch closewindow "address:$addr" >/dev/null 2>&1 || true
+    hyprctl dispatch "hl.dsp.window.close({ window = \"address:$addr\" })" >/dev/null 2>&1 || true
     sleep 0.5
 }
 

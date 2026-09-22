@@ -24,10 +24,12 @@ gone.
 qs -p ~/.config/quickshell/house
 ```
 
-Autostart it from `hyprland.conf`:
+Autostart it from `hyprland.lua`:
 
-```
-exec-once = qs -p ~/.config/quickshell/house
+```lua
+hl.on("hyprland.start", function()
+    hl.exec_cmd("qs -p ~/.config/quickshell/house")
+end)
 ```
 
 > If `~/.config/quickshell/shell.qml` exists, Quickshell registers it as the
@@ -100,7 +102,7 @@ The tab on the left edge shows one icon per docked window.
 
 **The dock does not persist.** If the shell restarts while windows are hidden,
 they stay parked on the `sidebar` workspace and the tab forgets them. Get them
-back with `hyprctl dispatch workspace name:sidebar`.
+back with `hyprctl dispatch 'hl.dsp.focus({ workspace = "name:sidebar" })'`.
 
 ## The music tab (right edge)
 
@@ -160,7 +162,7 @@ colours, and the savings start when you keep it.
 
 | What | Off on an eco table |
 | --- | --- |
-| Hyprland | window and workspace animations, blur, shadow and the dim pass over unfocused windows (written to `colors.conf`; `hyprctl reload` puts them back on the next table) |
+| Hyprland | window and workspace animations, blur, shadow and the dim pass over unfocused windows (written to `colors.lua`; `hyprctl reload` puts them back on the next table) |
 | Wallpaper | the image — `awww clear` fills the surface colour instead |
 | Shell animations | every animation length goes through `Config.dur()`, which returns 0 on an eco table, so panels and hovers snap rather than tween |
 | Endless loops | the critical-toast pulse and the tray icon's hover spinner |
@@ -174,7 +176,7 @@ Any other table can opt in with `eco: true` in its `themes` entry; the script
 takes it as an optional eighth argument. New animations should use
 `Config.dur(ms)` for their `duration` so they honour it. Monitor refresh rate is
 the other big lever and is per machine, so it is not touched here — lower it in
-`monitors.conf` if the panel has a faster mode than you need on battery.
+`monitors.lua` if the panel has a faster mode than you need on battery.
 
 ## The deal (launcher)
 
@@ -230,7 +232,7 @@ menu. With it on, the pip is still what an app gets when its `.desktop` has no
 
 rofi is still installed and still themed per table (`home/rofi`) — its `run`,
 `filebrowser` and `window` modes are things the hand does not do. The old bind
-sits commented under the new one in `binds.conf`.
+sits commented under the new one in `binds.lua`.
 
 ## Configuring
 
@@ -269,7 +271,7 @@ scripts/tables/             what six roles can't express: kitty's 16-colour deck
 
 - `shell.qml` sets `QT_QPA_PLATFORMTHEME=xdgdesktopportal` so native tray menus
   follow the portal's colour scheme. Without it Qt ignores it and paints them
-  light. Everything else Qt goes to qt6ct instead (`hyprland.conf` sets that
+  light. Everything else Qt goes to qt6ct instead (`hyprland.lua` sets that
   globally); the shell's pragma only rebinds it for the shell's own process.
 - Qt is themed in two layers. qt6ct holds the palette, which every Qt app obeys
   whatever draws it — that layer works with nothing else installed. Kvantum is

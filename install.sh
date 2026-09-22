@@ -49,7 +49,7 @@ backed_up=0
 quickshell="${XDG_CONFIG_HOME:-$HOME/.config}/quickshell/house"
 
 # Every file a package owns, relative to the package root
-# (home/hypr/.config/hypr/hyprland.conf -> .config/hypr/hyprland.conf).
+# (home/hypr/.config/hypr/hyprland.lua -> .config/hypr/hyprland.lua).
 pkg_files() {
   find "home/$1" -type f -printf '%P\0'
 }
